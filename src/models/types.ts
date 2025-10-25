@@ -9,7 +9,8 @@ export enum Location {
   CraftingHall = 'Crafting Hall',
   Downtown = 'Downtown',
   SanguineSprings = 'Sanguine Springs',
-  GrimerustHeights = 'Grimerust Heights'
+  GrimerustHeights = 'Grimerust Heights',
+  Unknown = 'Unknown'
 }
 
 export type BaseSpecies = 
@@ -19,7 +20,8 @@ export type BaseSpecies =
   | 'Mutant'
   | 'Nomad'
   | 'Stray'
-  | 'Unturned';
+  | 'Unturned'
+  | 'Unknown';
 
 export type PrestigeSpecies =
   | 'Cyborg'
@@ -112,6 +114,9 @@ export const SPECIES_BASE_STATS: Record<Species, SpeciesStats> = {
     baseLimit: 3,
     healthCap: 0,
     limitCap: 10
+  },
+  Unknown: {
+    ...organicDefaultSpeciesStats
   },
   
   // Prestige Species
