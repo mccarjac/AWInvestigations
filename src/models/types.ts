@@ -3,6 +3,15 @@ import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from './gameData';
 export type PerkId = typeof AVAILABLE_PERKS[number]['id'];
 export type DistinctionId = typeof AVAILABLE_DISTINCTIONS[number]['id'];
 
+export enum Location {
+  Hospital = 'Hospital',
+  Garage = 'Garage',
+  CraftingHall = 'Crafting Hall',
+  Downtown = 'Downtown',
+  SanguineSprings = 'Sanguine Springs',
+  GrimerustHeights = 'Grimerust Heights'
+}
+
 export type BaseSpecies = 
   | 'Android'
   | 'Drone'
@@ -34,7 +43,7 @@ export interface SpeciesStats {
   canTakeMalfunctions: boolean;
 }
 
-const ORGANIC_SPECIES: Species[] = [
+export const ORGANIC_SPECIES: Species[] = [
   'Human',
   'Mutant',
   'Nomad',
@@ -49,7 +58,7 @@ const ORGANIC_SPECIES: Species[] = [
   'Tech-Mutant'
 ];
 
-const ROBOTIC_SPECIES: Species[] = [
+export const ROBOTIC_SPECIES: Species[] = [
   'Android',
   'Drone'
 ];
@@ -168,6 +177,7 @@ export interface GameCharacter {
   }[];
   imageUri?: string;
   notes?: string;
+  location?: Location;
   createdAt: string;
   updatedAt: string;
 }

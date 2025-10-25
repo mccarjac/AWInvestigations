@@ -1,4 +1,4 @@
-import { Species, Recipe, Distinction } from './types';
+import { Species, Recipe, Distinction, ORGANIC_SPECIES } from './types';
 
 export type PerkTag = 
   | 'Agility'
@@ -133,7 +133,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       limit: 1
     },
-    allowedSpecies: ['Android', 'Cyborg', 'Tech-Mutant']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'p2',
@@ -143,7 +143,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       limit: 2
     },
-    allowedSpecies: ['Human', 'Unturned']
+    allowedSpecies: ['Unturned']
   },
   {
     id: 'p3',
@@ -203,7 +203,7 @@ export const AVAILABLE_PERKS: Perk[] = [
   }
 ] as const;
 
-export const AVAILABLE_DISTINCTIONS = [
+export const AVAILABLE_DISTINCTIONS: Distinction[] = [
   {
     id: 'd1',
     name: 'Apathetic',

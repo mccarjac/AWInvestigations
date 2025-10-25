@@ -144,7 +144,7 @@ export const CharacterDetailScreen: React.FC = () => {
         <Text style={styles.name}>{character.name}</Text>
         <View style={styles.headerInfo}>
           <Text style={styles.subheader}>
-            Species: {character.species}
+            Species: {character.species} / Location: {character.location}
           </Text>
           <View style={styles.statsContainer}>
             {(() => {
@@ -354,6 +354,7 @@ const styles = StyleSheet.create({
   statItem: {
     fontSize: 14,
     color: '#1976d2',
+    flex: 1,
   },
   statValue: {
     fontWeight: 'bold',

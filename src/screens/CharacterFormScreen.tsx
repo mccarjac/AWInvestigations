@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '@/navigation/types';
-import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS } from '@models/types';
+import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS, Location } from '@models/types';
 import { addCharacter, updateCharacter } from '@utils/characterStorage';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '@models/gameData';
 
@@ -25,6 +25,7 @@ export const CharacterFormScreen: React.FC = () => {
       factions: [...editingCharacter.factions],
       notes: editingCharacter.notes || '',
       imageUri: editingCharacter.imageUri,
+      location: editingCharacter.location,
     } : {
       name: '',
       species: 'Human',
@@ -33,6 +34,7 @@ export const CharacterFormScreen: React.FC = () => {
       factions: [],
       notes: '',
       imageUri: undefined,
+      location: Location.Downtown,
     }
   );
 
@@ -129,6 +131,19 @@ export const CharacterFormScreen: React.FC = () => {
           >
             {Object.keys(SPECIES_BASE_STATS).map((species) => (
               <Picker.Item key={species} label={species} value={species} />
+            ))}
+          </Picker>
+        </View>
+
+        <View style={styles.formSection}>
+          <Text style={styles.label}>Location</Text>
+          <Picker
+            selectedValue={form.location}
+            style={[styles.picker, { flex: 1 }]}
+            onValueChange={(value: Location) => handleChange('location', value)}
+          >
+            {Object.values(Location).map((location) => (
+              <Picker.Item key={location} label={location} value={location} />
             ))}
           </Picker>
         </View>
