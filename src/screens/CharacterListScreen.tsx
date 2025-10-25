@@ -3,7 +3,7 @@ import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, clearStorage } from '@utils/characterStorage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 
@@ -11,13 +11,19 @@ export const CharacterListScreen: React.FC = () => {
   const [characters, setCharacters] = React.useState<GameCharacter[]>([]);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  React.useEffect(() => {
-    const loadData = async () => {
-      const data = await loadCharacters();
-      setCharacters(data);
-    };
-    loadData();
+  const loadData = React.useCallback(async () => {
+    const data = await loadCharacters();
+    setCharacters(data);
+  }, []);
 
+  // Reload characters whenever the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
+  React.useEffect(() => {
     // Set up the header buttons
     navigation.setOptions({
       headerRight: () => (
