@@ -1,18 +1,19 @@
-import { Species, Recipe, Distinction, ORGANIC_SPECIES } from './types';
+import { Species, Recipe, Distinction, ORGANIC_SPECIES, ROBOTIC_SPECIES } from './types';
 
-export type PerkTag = 
-  | 'Agility'
-  | 'Charisma'
-  | 'Crafting'
-  | 'Defense'
-  | 'Endurance'
-  | 'Finesse'
-  | 'Grit'
-  | 'Medical'
-  | 'Smarts'
-  | 'Strength'
-  | 'Teamwork'
-  | 'Technical';
+export enum PerkTag {
+  Agility = 'Agility',
+  Charisma = 'Charisma',
+  Crafting = 'Crafting',
+  Defense = 'Defense',
+  Endurance = 'Endurance',
+  Finesse = 'Finesse',
+  Grit = 'Grit',
+  Medical = 'Medical',
+  Smarts = 'Smarts',
+  Strength = 'Strength',
+  Teamwork = 'Teamwork',
+  Technical = 'Technical'
+}
 
 export interface PerkStatModifiers {
   health?: number;
@@ -139,7 +140,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     id: 'p1',
     name: 'Quick Reflexes',
     description: 'Enhanced reaction time in combat situations',
-    tag: 'Agility',
+    tag: PerkTag.Agility,
     statModifiers: {
       limit: 1
     },
@@ -149,7 +150,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     id: 'p2',
     name: 'Natural Leader',
     description: 'Inspires confidence in allies and followers',
-    tag: 'Teamwork',
+    tag: PerkTag.Teamwork,
     statModifiers: {
       limit: 2
     },
@@ -159,7 +160,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     id: 'p3',
     name: 'Tech Savvy',
     description: 'Proficient with all forms of technology',
-    tag: 'Technical',
+    tag: PerkTag.Technical,
     statModifiers: {
       limit: 1
     },
@@ -169,7 +170,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     id: 'p4',
     name: 'Survivalist',
     description: 'Expert at surviving in harsh environments',
-    tag: 'Grit',
+    tag: PerkTag.Grit,
     statModifiers: {
       health: 2
     },
@@ -179,13 +180,13 @@ export const AVAILABLE_PERKS: Perk[] = [
     id: 'p5',
     name: 'Silver Tongue',
     description: 'Skilled at persuasion and negotiation',
-    tag: 'Charisma'
+    tag: PerkTag.Charisma
   },
   {
     id: 'p6',
     name: 'Combat Medic',
     description: 'Can provide medical aid even in dangerous situations',
-    tag: 'Medical',
+    tag: PerkTag.Medical,
     statModifiers: {
       health: 1
     },
@@ -195,20 +196,20 @@ export const AVAILABLE_PERKS: Perk[] = [
     id: 'p7',
     name: 'Master Tactician',
     description: 'Excels at planning and strategic thinking',
-    tag: 'Smarts' as PerkTag
+    tag: PerkTag.Smarts
   },
   {
     id: 'p8',
     name: 'Resourceful',
     description: 'Makes the most of available resources',
-    tag: 'Crafting' as PerkTag,
+    tag: PerkTag.Crafting,
     recipeIds: ['r1', 'r2']
   },
   {
     id: 'p9',
     name: 'Master Craftsman',
     description: 'Expert at creating complex items and machinery',
-    tag: 'Crafting' as PerkTag,
+    tag: PerkTag.Crafting,
     recipeIds: ['r3', 'r4']
   }
 ] as const;
@@ -231,7 +232,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Bite Vulnerability',
     description: 'Your genes are extra compatible with the virus. The number of bite cards required for you to turn is always 3.',
     xpBonus: 100,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd4',
@@ -250,7 +251,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Chem Resistant',
     description: 'Your body is resistant to the effects of chems. All numerical chem benefits are halved, and scene-long effects only last until end of encounter.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd7',
@@ -281,7 +282,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Cybernetic Rejection',
     description: 'Your body rejects cybernetic enhancements. The drain value of any cyberware you have installed is tripled.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd12',
@@ -294,7 +295,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Difficult Patient',
     description: 'You are difficult to operate on. The difficulty of any surgery or maintenance on you is increased by 2.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd14',
@@ -307,7 +308,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Failsafe',
     description: 'You have core programming to prevent AI violence against humanity. You cannot attack human-like characters unless they attack first.',
     xpBonus: 100,
-    allowedSpecies: ['Robotic']
+    allowedSpecies: [...ROBOTIC_SPECIES]
   },
   {
     id: 'd16',
@@ -332,7 +333,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'It Came From Beyond',
     description: 'Off-world creatures are your worst nightmare. Near invader faction members, you cannot use limit flags or count as fresh/spent.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd20',
@@ -345,7 +346,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Lightweight',
     description: 'You have very little chem tolerance. When using chems, you must make a RECOVER(30)(Res) count.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd22',
@@ -358,7 +359,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Loss Prevention.exe',
     description: 'You have lingering programs to stop property damage. You cannot cause damage to bot faction members.',
     xpBonus: 50,
-    allowedSpecies: ['Robotic']
+    allowedSpecies: [...ROBOTIC_SPECIES]
   },
   {
     id: 'd24',
@@ -377,7 +378,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Poison Vulnerable',
     description: 'You are particularly vulnerable to toxins. When hit with poison, you must burn a health flag.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd27',
@@ -390,7 +391,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
     name: 'Rotten Luck',
     description: 'Biters just seem to catch you at the worst times. You gain a bite card every event check-in.',
     xpBonus: 50,
-    allowedSpecies: ['Organic']
+    allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd29',
