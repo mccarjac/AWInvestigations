@@ -3,6 +3,7 @@ import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, clearStorage } from '@utils/characterStorage';
+import { exportCharacterData, importCharacterData, mergeCharacterData, showImportOptions } from '@utils/exportImport';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -31,6 +32,39 @@ export const CharacterListScreen: React.FC = () => {
   const handleClearAll = async () => {
     await clearStorage();
     setCharacters([]);
+  };
+
+  const handleExport = async () => {
+    await exportCharacterData();
+  };
+
+  const handleImport = async () => {
+    console.log('Import button clicked');
+    try {
+      // For debugging, let's try a direct import first
+      const success = await importCharacterData();
+      console.log('Import result:', success);
+      if (success) {
+        console.log('Import successful, reloading data...');
+        await loadData();
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+    }
+  };
+
+  const handleMerge = async () => {
+    console.log('Merge button clicked');
+    try {
+      const success = await mergeCharacterData();
+      console.log('Merge result:', success);
+      if (success) {
+        console.log('Merge successful, reloading data...');
+        await loadData();
+      }
+    } catch (error) {
+      console.error('Merge error:', error);
+    }
   };
 
   const renderItem = ({ item }: { item: GameCharacter }) => (
@@ -83,6 +117,24 @@ export const CharacterListScreen: React.FC = () => {
       />
       <View style={styles.headerButtons}>
         <TouchableOpacity
+          style={[styles.actionButton, styles.exportButton]}
+          onPress={handleExport}
+        >
+          <Text style={styles.buttonText}>Export</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.importButton]}
+          onPress={handleImport}
+        >
+          <Text style={styles.buttonText}>Import</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.mergeButton]}
+          onPress={handleMerge}
+        >
+          <Text style={styles.buttonText}>Merge</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={[styles.actionButton, styles.clearButton]}
           onPress={handleClearAll}
         >
@@ -119,6 +171,15 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     backgroundColor: '#FF5252',
+  },
+  exportButton: {
+    backgroundColor: '#FF9800',
+  },
+  importButton: {
+    backgroundColor: '#9C27B0',
+  },
+  mergeButton: {
+    backgroundColor: '#009688',
   },
   buttonText: {
     color: 'white',
