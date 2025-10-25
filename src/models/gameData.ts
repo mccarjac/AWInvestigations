@@ -440,197 +440,166 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
   {
     id: 'd1',
     name: 'Apathetic',
-    description: 'You are not particularly motivated. When resting, it takes triple the amount of time to recover limit flags.',
-    xpBonus: 50
+    description: 'You are not particularly motivated. When resting, it takes triple the amount of time to recover limit flags.'
   },
   {
     id: 'd2',
     name: 'Bad with Pets',
-    description: 'You just don\'t do well around wild animals. Near wild faction members, you cannot use limit flags or count as fresh/spent.',
-    xpBonus: 50
+    description: 'You just don\'t do well around wild animals. Near wild faction members, you cannot use limit flags or count as fresh/spent.'
   },
   {
     id: 'd3',
     name: 'Bite Vulnerability',
     description: 'Your genes are extra compatible with the virus. The number of bite cards required for you to turn is always 3.',
-    xpBonus: 100,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd4',
     name: 'Brittle',
-    description: 'Maybe you should stay at home. The duration of all injuries or malfunctions you possess are doubled.',
-    xpBonus: 50
+    description: 'Maybe you should stay at home. The duration of all injuries or malfunctions you possess are doubled.'
   },
   {
     id: 'd5',
     name: 'Burnout',
-    description: 'Your candle burns bright, but from both ends. Your maximum XP cap is reduced by 250.',
-    xpBonus: 100
+    description: 'Your candle burns bright, but from both ends. Your maximum XP cap is reduced by 250.'
   },
   {
     id: 'd6',
     name: 'Chem Resistant',
     description: 'Your body is resistant to the effects of chems. All numerical chem benefits are halved, and scene-long effects only last until end of encounter.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd7',
     name: 'Civil to a Fault',
-    description: 'Eating people is not OK. When you hear a "FEAST" count, you must pull a limit flag or health flag.',
-    xpBonus: 75
+    description: 'Eating people is not OK. When you hear a "FEAST" count, you must pull a limit flag or health flag.'
   },
   {
     id: 'd8',
     name: 'Combat Paralysis',
-    description: 'You hesitate when a fight breaks out. When entering any encounter, you are hit with stun.',
-    xpBonus: 100
+    description: 'You hesitate when a fight breaks out. When entering any encounter, you are hit with stun.'
   },
   {
     id: 'd9',
     name: 'Craven',
-    description: 'You are a coward. In combat encounters, you must attempt to leave as quickly as possible or pull a limit flag.',
-    xpBonus: 100
+    description: 'You are a coward. In combat encounters, you must attempt to leave as quickly as possible or pull a limit flag.'
   },
   {
     id: 'd10',
     name: 'Cruel',
-    description: 'You have a sadistic side that takes willpower to restrain. When encountering downed characters, you must burn a limit flag or attempt a killing blow.',
-    xpBonus: 50
+    description: 'You have a sadistic side that takes willpower to restrain. When encountering downed characters, you must burn a limit flag or attempt a killing blow.'
   },
   {
     id: 'd11',
     name: 'Cybernetic Rejection',
     description: 'Your body rejects cybernetic enhancements. The drain value of any cyberware you have installed is tripled.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd12',
     name: 'Delicate',
-    description: 'Your body doesn\'t respond to trauma very quickly. Your dying count starts at 5 instead of 30.',
-    xpBonus: 50
+    description: 'Your body doesn\'t respond to trauma very quickly. Your dying count starts at 5 instead of 30.'
   },
   {
     id: 'd13',
     name: 'Difficult Patient',
     description: 'You are difficult to operate on. The difficulty of any surgery or maintenance on you is increased by 2.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd14',
     name: 'Easy Mark',
-    description: 'Bandits just seem to know they can get something out of you. Near bandit faction members, you cannot use limit flags or count as fresh/spent.',
-    xpBonus: 50
+    description: 'Bandits just seem to know they can get something out of you. Near bandit faction members, you cannot use limit flags or count as fresh/spent.'
   },
   {
     id: 'd15',
     name: 'Failsafe',
     description: 'You have core programming to prevent AI violence against humanity. You cannot attack human-like characters unless they attack first.',
-    xpBonus: 100,
     allowedSpecies: [...ROBOTIC_SPECIES]
   },
   {
     id: 'd16',
     name: 'Fear of the Dark',
-    description: 'The night is cold and full of terror. When the sun is not visible, your max limit is lowered by one.',
-    xpBonus: 50
+    description: 'The night is cold and full of terror. When the sun is not visible, your max limit is lowered by one.'
   },
   {
     id: 'd17',
     name: 'Fumble Fingers',
-    description: 'You have trouble with manual tasks. LOOTING, MEDIC, REPAIR, RECOVER and RELOAD counts are increased by 5.',
-    xpBonus: 50
+    description: 'You have trouble with manual tasks. LOOTING, MEDIC, REPAIR, RECOVER and RELOAD counts are increased by 5.'
   },
   {
     id: 'd18',
     name: 'Insufficient Funds',
-    description: 'You have trouble preparing and saving. You start with no starter kit and lose 20 caps each event check-in.',
-    xpBonus: 100
+    description: 'You have trouble preparing and saving. You start with no starter kit and lose 20 caps each event check-in.'
   },
   {
     id: 'd19',
     name: 'It Came From Beyond',
     description: 'Off-world creatures are your worst nightmare. Near invader faction members, you cannot use limit flags or count as fresh/spent.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd20',
     name: 'Light Sensitive',
-    description: 'You wear your sunglasses at night and during the day. When the sun is visible, your max limit is lowered by one.',
-    xpBonus: 50
+    description: 'You wear your sunglasses at night and during the day. When the sun is visible, your max limit is lowered by one.'
   },
   {
     id: 'd21',
     name: 'Lightweight',
     description: 'You have very little chem tolerance. When using chems, you must make a RECOVER(30)(Res) count.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd22',
     name: 'Lone Wolf',
-    description: 'You don\'t work well with others. You cannot benefit from inspire calls or be part of a party/partner/ward system.',
-    xpBonus: 50
+    description: 'You don\'t work well with others. You cannot benefit from inspire calls or be part of a party/partner/ward system.'
   },
   {
     id: 'd23',
     name: 'Loss Prevention.exe',
     description: 'You have lingering programs to stop property damage. You cannot cause damage to bot faction members.',
-    xpBonus: 50,
     allowedSpecies: [...ROBOTIC_SPECIES]
   },
   {
     id: 'd24',
     name: 'Paced',
-    description: 'You move at your own pace. You cannot run.',
-    xpBonus: 150
+    description: 'You move at your own pace. You cannot run.'
   },
   {
     id: 'd25',
     name: 'Pacifist',
-    description: 'You refuse to hurt people. Your attacks must include NO DAMAGE call.',
-    xpBonus: 150
+    description: 'You refuse to hurt people. Your attacks must include NO DAMAGE call.'
   },
   {
     id: 'd26',
     name: 'Poison Vulnerable',
     description: 'You are particularly vulnerable to toxins. When hit with poison, you must burn a health flag.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd27',
     name: 'Prideful',
-    description: 'You refuse to retreat from battle. To leave combat encounters, you must burn all limit flags.',
-    xpBonus: 50
+    description: 'You refuse to retreat from battle. To leave combat encounters, you must burn all limit flags.'
   },
   {
     id: 'd28',
     name: 'Rotten Luck',
     description: 'Biters just seem to catch you at the worst times. You gain a bite card every event check-in.',
-    xpBonus: 50,
     allowedSpecies: [...ORGANIC_SPECIES]
   },
   {
     id: 'd29',
     name: 'Speechless',
-    description: 'You don\'t speak. You may only speak for counts, calls, damage reactions, or commanded responses.',
-    xpBonus: 100
+    description: 'You don\'t speak. You may only speak for counts, calls, damage reactions, or commanded responses.'
   },
   {
     id: 'd30',
     name: 'The Future is Scary',
-    description: 'You don\'t understand new technology. Near bot faction members, you cannot use limit flags or count as fresh/spent.',
-    xpBonus: 50
+    description: 'You don\'t understand new technology. Near bot faction members, you cannot use limit flags or count as fresh/spent.'
   },
   {
     id: 'd31',
     name: 'Turned Averse',
-    description: 'You are terrified of the zombie virus. Near turned faction members, you cannot use limit flags or count as fresh/spent.',
-    xpBonus: 50
+    description: 'You are terrified of the zombie virus. Near turned faction members, you cannot use limit flags or count as fresh/spent.'
   }
 ] as const;

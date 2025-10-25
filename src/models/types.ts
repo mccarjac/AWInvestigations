@@ -177,7 +177,6 @@ export interface Distinction {
   id: string;
   name: string;
   description: string;
-  xpBonus: number;
   allowedSpecies?: Species[];
 }
 
