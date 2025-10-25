@@ -348,15 +348,5 @@ const styles = StyleSheet.create({
   recipeDescription: {
     fontSize: 14,
     color: '#666',
-  },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  difficultyText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
+  }
 });

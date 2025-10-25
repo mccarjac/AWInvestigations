@@ -35,13 +35,11 @@ export const SPECIES_BASE_STATS: Record<Species, SpeciesStats> = {
   }
 };
 
-// TODO : Remove concept of difficulty from recipes
 export interface Recipe {
   id: string;
   name: string;
   description: string;
   materials: string[];
-  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Expert';
 }
 
 export interface GameCharacter {

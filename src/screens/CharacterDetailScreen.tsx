@@ -84,17 +84,6 @@ export const CharacterDetailScreen: React.FC = () => {
                     <View key={recipe.id} style={styles.recipeItem}>
                       <View style={styles.recipeHeader}>
                         <Text style={styles.recipeName}>{recipe.name}</Text>
-                        <View style={[
-                          styles.difficultyBadge, 
-                          { backgroundColor: 
-                            recipe.difficulty === 'Easy' ? '#4caf50' :
-                            recipe.difficulty === 'Medium' ? '#ff9800' :
-                            recipe.difficulty === 'Hard' ? '#f44336' :
-                            '#9c27b0'
-                          }
-                        ]}>
-                          <Text style={styles.difficultyText}>{recipe.difficulty}</Text>
-                        </View>
                       </View>
                       <Text style={styles.recipeDescription}>{recipe.description}</Text>
                       <Text style={styles.materialsTitle}>Materials Needed:</Text>
@@ -233,16 +222,6 @@ const styles = StyleSheet.create({
   },
   recipeName: {
     fontSize: 15,
-    fontWeight: 'bold',
-  },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  difficultyText: {
-    color: 'white',
-    fontSize: 12,
     fontWeight: 'bold',
   },
   recipeDescription: {

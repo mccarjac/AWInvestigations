@@ -93,29 +93,25 @@ export const AVAILABLE_RECIPES: Recipe[] = [
     id: 'r1',
     name: 'Makeshift Battery',
     description: 'A jury-rigged power cell that can power small devices',
-    materials: ['Scrap Electronics', 'Copper Wire', 'Chemical Solution'],
-    difficulty: 'Easy'
+    materials: ['Scrap Electronics', 'Copper Wire', 'Chemical Solution']
   },
   {
     id: 'r2',
     name: 'Scrap Armor',
     description: 'Basic protection crafted from salvaged materials',
-    materials: ['Metal Scraps', 'Leather', 'Fasteners'],
-    difficulty: 'Medium'
+    materials: ['Metal Scraps', 'Leather', 'Fasteners']
   },
   {
     id: 'r3',
     name: 'Advanced Power Armor',
     description: 'High-tech protective suit with power assistance',
-    materials: ['Rare Alloy', 'Power Core', 'Hydraulic Systems', 'Control Circuit'],
-    difficulty: 'Expert'
+    materials: ['Rare Alloy', 'Power Core', 'Hydraulic Systems', 'Control Circuit']
   },
   {
     id: 'r4',
     name: 'Energy Shield Generator',
     description: 'Personal defense system that projects an energy barrier',
-    materials: ['Crystal Matrix', 'Power Core', 'Shield Emitter', 'Control Circuit'],
-    difficulty: 'Hard'
+    materials: ['Crystal Matrix', 'Power Core', 'Shield Emitter', 'Control Circuit']
   }
 ] as const;
 
