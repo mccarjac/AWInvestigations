@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, clearStorage } from '@utils/characterStorage';
@@ -30,8 +30,38 @@ export const CharacterListScreen: React.FC = () => {
   };
 
   const handleClearAll = async () => {
-    await clearStorage();
-    setCharacters([]);
+    const confirmClear = () => {
+      if (Platform.OS === 'web') {
+        return window.confirm(
+          'Are you sure you want to delete all characters? This action cannot be undone.'
+        );
+      } else {
+        return new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Clear All Characters',
+            'Are you sure you want to delete all characters? This action cannot be undone.',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => resolve(false),
+              },
+              {
+                text: 'Delete All',
+                style: 'destructive',
+                onPress: () => resolve(true),
+              },
+            ]
+          );
+        });
+      }
+    };
+
+    const shouldClear = await confirmClear();
+    if (shouldClear) {
+      await clearStorage();
+      setCharacters([]);
+    }
   };
 
   const handleExport = async () => {
@@ -134,6 +164,8 @@ export const CharacterListScreen: React.FC = () => {
         >
           <Text style={styles.buttonText}>Merge</Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, styles.clearButton]}
           onPress={handleClearAll}
