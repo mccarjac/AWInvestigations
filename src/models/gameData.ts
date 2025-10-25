@@ -32,54 +32,64 @@ export type TagBonusConfig = {
 // TODO : Populate with actual tag score bonuses
 export const TAG_SCORE_BONUSES: TagBonusConfig = {
   Agility: [
-    { requiredScore: 1, limit: 100, health: 1000 },
-    { requiredScore: 7, limit: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, limit: 1 },
+    { requiredScore: 10, limit: 1 }
   ],
   Charisma: [
-    { requiredScore: 5, limit: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, limit: 1 },
+    { requiredScore: 10, limit: 1 }
   ],
   Crafting: [
-    { requiredScore: 3, limit: 1 },
-    { requiredScore: 8, limit: 1 }
+    { requiredScore: 3, health: 1 },
+    { requiredScore: 6, limit: 1 },
+    { requiredScore: 10, health: 1 }
   ],
   Defense: [
-    { requiredScore: 2, health: 1 },
-    { requiredScore: 5, health: 1 },
-    { requiredScore: 8, health: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, limit: 1, health: 1 },
+    { requiredScore: 10, limit: 1, health: 1 }
   ],
   Endurance: [
     { requiredScore: 3, health: 1 },
     { requiredScore: 6, health: 1 },
-    { requiredScore: 9, health: 1 }
+    { requiredScore: 10, health: 2 }
   ],
   Finesse: [
-    { requiredScore: 4, limit: 1 },
-    { requiredScore: 8, limit: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, limit: 1 },
+    { requiredScore: 10, limit: 1 }
   ],
   Grit: [
-    { requiredScore: 3, health: 1 },
-    { requiredScore: 7, health: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, health: 1 },
+    { requiredScore: 10, limit: 1 }
   ],
   Medical: [
-    { requiredScore: 4, health: 1 },
-    { requiredScore: 8, health: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, health: 1 },
+    { requiredScore: 10, limit: 1 }
   ],
   Smarts: [
-    { requiredScore: 5, limit: 1 },
-    { requiredScore: 9, limit: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, limit: 1 },
+    { requiredScore: 10, limit: 1 }
   ],
   Strength: [
     { requiredScore: 3, health: 1 },
     { requiredScore: 6, health: 1 },
-    { requiredScore: 9, health: 1 }
+    { requiredScore: 10, health: 1 }
   ],
   Teamwork: [
-    { requiredScore: 4, limit: 1 },
-    { requiredScore: 8, limit: 1 }
+    { requiredScore: 3, limit: 1 },
+    { requiredScore: 6, limit: 1 },
+    { requiredScore: 10, limit: 1, health: 1 }
   ],
   Technical: [
     { requiredScore: 3, limit: 1 },
-    { requiredScore: 7, limit: 1 }
+    { requiredScore: 6, health: 1 },
+    { requiredScore: 10, limit: 1 }
   ]
 };
 
