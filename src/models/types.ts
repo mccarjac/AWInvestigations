@@ -65,6 +65,17 @@ export const ROBOTIC_SPECIES: Species[] = [
   'Drone'
 ];
 
+export const MUTANT_SPECIES: Species[] = [
+  'Mutant',
+  'Perfect Mutant',
+  'Tech-Mutant'
+];
+
+export const ANDROID_SPECIES: Species[] = [
+  'Android',
+  'Tech-Mutant'
+];
+
 const organicDefaultSpeciesStats: SpeciesStats = {
   baseHealth: 2,
   baseLimit: 1,
