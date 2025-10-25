@@ -23,28 +23,6 @@ export const CharacterListScreen: React.FC = () => {
     }, [loadData])
   );
 
-  React.useEffect(() => {
-    // Set up the header buttons
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', gap: 8, marginRight: 8 }}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('CharacterSearch')}
-            style={styles.headerButton}
-          >
-            <Text style={styles.headerButtonText}>Search</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('CharacterStats')}
-            style={styles.headerButton}
-          >
-            <Text style={styles.headerButtonText}>Stats</Text>
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [navigation]);
-
   const handleDelete = async (id: string) => {
     await deleteCharacter(id);
     setCharacters(characters.filter(c => c.id !== id));
@@ -82,19 +60,19 @@ export const CharacterListScreen: React.FC = () => {
           style={[styles.actionButton, styles.statsButton]}
           onPress={() => navigation.navigate('CharacterStats')}
         >
-          <Text style={styles.buttonText}>View Stats</Text>
+          <Text style={styles.buttonText}>Stats</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, styles.addButton]}
           onPress={() => navigation.navigate('CharacterForm', {})}
         >
-          <Text style={styles.buttonText}>Add New Character</Text>
+          <Text style={styles.buttonText}>Add</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.clearButton]}
-          onPress={handleClearAll}
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.addButton]}
+          onPress={() => navigation.navigate('CharacterSearch')}
         >
-          <Text style={styles.buttonText}>Clear All</Text>
+          <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -103,6 +81,14 @@ export const CharacterListScreen: React.FC = () => {
         keyExtractor={item => item.id}
         style={styles.list}
       />
+      <View style={styles.headerButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.clearButton]}
+          onPress={handleClearAll}
+        >
+          <Text style={styles.buttonText}>Clear All</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
