@@ -54,6 +54,10 @@ export const calculateDerivedStats = (character: GameCharacter): CharacterDerive
     });
   });
 
+  // Apply species caps
+  maxHealth = Math.min(maxHealth, baseStats.healthCap);
+  maxLimit = Math.min(maxLimit, baseStats.limitCap);
+
   return {
     maxHealth,
     maxLimit

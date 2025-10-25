@@ -4,22 +4,22 @@ export type PerkId = typeof AVAILABLE_PERKS[number]['id'];
 export type DistinctionId = typeof AVAILABLE_DISTINCTIONS[number]['id'];
 
 export type BaseSpecies = 
-  | 'Android'    // Synthetic beings with advanced AI
-  | 'Drone'      // Basic robotic servants
-  | 'Human'      // Unmodified humans
-  | 'Mutant'     // Humans changed by radiation or other factors
-  | 'Nomad'      // Desert-dwelling survivors
-  | 'Stray'      // Animal-human hybrids
-  | 'Unturned';  // Humans immune to the zombie virus
+  | 'Android'
+  | 'Drone'
+  | 'Human'
+  | 'Mutant'
+  | 'Nomad'
+  | 'Stray'
+  | 'Unturned';
 
 export type PrestigeSpecies =
-  | 'Cyborg'         // Human-machine hybrid
-  | 'Mook'           // Enhanced combat drone
-  | 'Mutoid'         // Highly evolved mutant
-  | 'Perfect Mutant' // Genetically superior mutant
-  | 'Rad-Titan'      // Radiation-empowered being
-  | 'Roadkill'       // Stray-human hybrid
-  | 'Tech-Mutant';   // Mutant-machine hybrid
+  | 'Cyborg'
+  | 'Mook'
+  | 'Mutoid'
+  | 'Perfect Mutant'
+  | 'Rad-Titan'
+  | 'Roadkill'
+  | 'Tech-Mutant';
 
 export type Species = BaseSpecies | PrestigeSpecies;
 
@@ -32,166 +32,92 @@ export interface SpeciesStats {
   canUseChems: boolean;
   canTakeInjuries: boolean;
   canTakeMalfunctions: boolean;
-  description: string;
 }
+
+const organicDefaultSpeciesStats: SpeciesStats = {
+  baseHealth: 2,
+  baseLimit: 1,
+  healthCap: 5,
+  limitCap: 5,
+  canUseCyberware: true,
+  canUseChems: true,
+  canTakeInjuries: true,
+  canTakeMalfunctions: false
+};
+
+const roboticDefaultSpeciesStats: SpeciesStats = {
+  baseHealth: 2,
+  baseLimit: 1,
+  healthCap: 5,
+  limitCap: 5,
+  canUseCyberware: false,
+  canUseChems: false,
+  canTakeInjuries: false,
+  canTakeMalfunctions: true
+};
 
 export const SPECIES_BASE_STATS: Record<Species, SpeciesStats> = {
   // Base Species
   Android: {
-    baseHealth: 3,
-    baseLimit: 2,
-    healthCap: 6,
-    limitCap: 4,
-    canUseCyberware: true,
-    canUseChems: false,
-    canTakeInjuries: false,
-    canTakeMalfunctions: true,
-    description: 'Advanced artificial beings with sophisticated AI and human-like personalities.'
+    ...roboticDefaultSpeciesStats
   },
   Drone: {
-    baseHealth: 2,
-    baseLimit: 1,
-    healthCap: 5,
-    limitCap: 3,
-    canUseCyberware: true,
-    canUseChems: false,
-    canTakeInjuries: false,
-    canTakeMalfunctions: true,
-    description: 'Basic robotic servants designed for specific tasks with limited autonomy.'
+    ...roboticDefaultSpeciesStats
   },
   Human: {
-    baseHealth: 3,
-    baseLimit: 2,
-    healthCap: 6,
-    limitCap: 4,
-    canUseCyberware: true,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Unmodified humans who have survived the apocalypse through adaptability.'
+    ...organicDefaultSpeciesStats,
+    baseLimit: 2
   },
   Mutant: {
-    baseHealth: 4,
-    baseLimit: 1,
-    healthCap: 7,
-    limitCap: 3,
-    canUseCyberware: false,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Humans transformed by radiation, chemicals, or other wasteland effects.'
+    ...organicDefaultSpeciesStats
   },
   Nomad: {
-    baseHealth: 3,
-    baseLimit: 2,
-    healthCap: 6,
-    limitCap: 4,
-    canUseCyberware: true,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Desert dwellers adapted to harsh survival conditions.'
+    ...organicDefaultSpeciesStats
   },
   Stray: {
-    baseHealth: 4,
-    baseLimit: 1,
-    healthCap: 7,
-    limitCap: 3,
-    canUseCyberware: false,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Animal-human hybrids with enhanced physical capabilities.'
+    ...organicDefaultSpeciesStats
   },
   Unturned: {
-    baseHealth: 3,
-    baseLimit: 2,
-    healthCap: 6,
-    limitCap: 4,
-    canUseCyberware: true,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Humans with natural immunity to the zombie virus.'
+    ...organicDefaultSpeciesStats,
+    baseHealth: 0,
+    baseLimit: 3,
+    healthCap: 0,
+    limitCap: 10
   },
   
   // Prestige Species
   Cyborg: {
-    baseHealth: 4,
-    baseLimit: 2,
-    healthCap: 7,
-    limitCap: 4,
-    canUseCyberware: true,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: true,
-    description: 'Advanced human-machine hybrid with enhanced capabilities and resilience.'
+    ...organicDefaultSpeciesStats
   },
   Mook: {
-    baseHealth: 3,
-    baseLimit: 3,
-    healthCap: 6,
+    ...organicDefaultSpeciesStats
+  },
+  // TODO: Mutoid is weird
+  Mutoid: {
+    baseHealth: 2,
+    baseLimit: 1,
+    healthCap: 5,
     limitCap: 5,
     canUseCyberware: true,
-    canUseChems: false,
-    canTakeInjuries: false,
-    canTakeMalfunctions: true,
-    description: 'Combat-focused drone with advanced tactical programming and enhanced limit capacity.'
-  },
-  Mutoid: {
-    baseHealth: 5,
-    baseLimit: 2,
-    healthCap: 8,
-    limitCap: 4,
-    canUseCyberware: false,
     canUseChems: true,
     canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Highly evolved mutant with superior physical attributes and enhanced healing.'
+    canTakeMalfunctions: false
   },
   'Perfect Mutant': {
-    baseHealth: 4,
-    baseLimit: 3,
-    healthCap: 7,
-    limitCap: 5,
-    canUseCyberware: false,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Genetically superior mutant with balanced physical and mental enhancements.'
+    ...organicDefaultSpeciesStats
   },
   'Rad-Titan': {
-    baseHealth: 6,
-    baseLimit: 1,
-    healthCap: 9,
-    limitCap: 3,
-    canUseCyberware: false,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Massive radiation-empowered being with incredible durability but limited energy.'
+    ...organicDefaultSpeciesStats,
+    baseHealth: 3,
+    baseLimit: 0,
+    healthCap: 10,
+    limitCap: 0
   },
   Roadkill: {
-    baseHealth: 5,
-    baseLimit: 2,
-    healthCap: 8,
-    limitCap: 4,
-    canUseCyberware: false,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: false,
-    description: 'Powerful hybrid combining Stray and human traits with enhanced survivability.'
+    ...organicDefaultSpeciesStats
   },
   'Tech-Mutant': {
-    baseHealth: 4,
-    baseLimit: 2,
-    healthCap: 7,
-    limitCap: 4,
-    canUseCyberware: true,
-    canUseChems: true,
-    canTakeInjuries: true,
-    canTakeMalfunctions: true,
-    description: 'Unique combination of mutant biology and technological enhancement.'
+    ...organicDefaultSpeciesStats
   }
 };
 
