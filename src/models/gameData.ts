@@ -119,7 +119,7 @@ export interface Perk {
   description: string;
   tag: PerkTag;
   statModifiers?: PerkStatModifiers;
-  requiredSpecies?: Species;
+  allowedSpecies?: Species[];
   recipeIds?: RecipeId[];
 }
 
@@ -133,7 +133,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       limit: 1
     },
-    requiredSpecies: 'Android'
+    allowedSpecies: ['Android', 'Cyborg', 'Tech-Mutant']
   },
   {
     id: 'p2',
@@ -143,7 +143,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       limit: 2
     },
-    requiredSpecies: 'Human'
+    allowedSpecies: ['Human', 'Unturned']
   },
   {
     id: 'p3',
@@ -153,7 +153,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       limit: 1
     },
-    requiredSpecies: 'Android'
+    allowedSpecies: ['Android', 'Cyborg', 'Drone', 'Mook']
   },
   {
     id: 'p4',
@@ -163,7 +163,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       health: 2
     },
-    requiredSpecies: 'Nomad'
+    allowedSpecies: ['Nomad', 'Stray', 'Roadkill']
   },
   {
     id: 'p5',
@@ -179,7 +179,7 @@ export const AVAILABLE_PERKS: Perk[] = [
     statModifiers: {
       health: 1
     },
-    requiredSpecies: 'Human'
+    allowedSpecies: ['Human', 'Mutant', 'Unturned']
   },
   {
     id: 'p7',

@@ -150,14 +150,14 @@ export const CharacterFormScreen: React.FC = () => {
           </View>
           {AVAILABLE_PERKS
             .filter(perk => (!selectedPerkTag || perk.tag === selectedPerkTag) &&
-                          (!perk.requiredSpecies || perk.requiredSpecies === form.species))
+                          (!perk.allowedSpecies || perk.allowedSpecies.includes(form.species)))
             .map(perk => (
               <TouchableOpacity
                 key={perk.id}
                 style={[
                   styles.selectionItem,
                   form.perkIds.includes(perk.id) && styles.selectedItem,
-                  perk.requiredSpecies && styles.speciesSpecificItem
+                  perk.allowedSpecies && styles.speciesSpecificItem
                 ]}
                 onPress={() => {
                   const newPerkIds = form.perkIds.includes(perk.id)
@@ -170,8 +170,12 @@ export const CharacterFormScreen: React.FC = () => {
                   <View style={styles.perkHeaderContainer}>
                     <Text style={styles.itemName}>{perk.name}</Text>
                     <View style={styles.perkBadgeContainer}>
-                      {perk.requiredSpecies && (
-                        <Text style={styles.speciesText}>{perk.requiredSpecies}</Text>
+                      {perk.allowedSpecies && perk.allowedSpecies.length > 0 && (
+                        <Text style={styles.speciesText}>
+                          {perk.allowedSpecies.length === 1 
+                            ? perk.allowedSpecies[0]
+                            : `${perk.allowedSpecies.length} Species`}
+                        </Text>
                       )}
                       <Text style={styles.tagText}>{perk.tag}</Text>
                     </View>
