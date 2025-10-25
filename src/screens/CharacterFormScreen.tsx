@@ -79,9 +79,8 @@ export const CharacterFormScreen: React.FC = () => {
 
       if (route.params?.onSubmit) {
         route.params.onSubmit(savedCharacter);
-      } else {
-        navigation.goBack();
       }
+      navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'Failed to save character');
     }

@@ -22,7 +22,8 @@ export const CharacterDetailScreen: React.FC = () => {
           onPress={() => navigation.navigate('CharacterForm', { 
             character,
             onSubmit: (updatedCharacter) => {
-              navigation.navigate('CharacterDetail', { character: updatedCharacter });
+              // Update the current screen's params instead of pushing a new screen
+              navigation.setParams({ character: updatedCharacter });
             }
           })}
         >
