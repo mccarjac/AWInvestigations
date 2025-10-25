@@ -1,5 +1,5 @@
 import { GameCharacter } from '@/models/types';
-import { SPECIES_BASE_STATS } from '@/models/types';
+import { SPECIES_BASE_STATS, MUTANT_SPECIES } from '@/models/types';
 import { AVAILABLE_PERKS, PerkTag, TAG_SCORE_BONUSES } from '@/models/gameData';
 
 export interface CharacterDerivedStats {
@@ -23,6 +23,22 @@ export const calculateDerivedStats = (character: GameCharacter): CharacterDerive
   // Calculate tag scores
   const tagScores = new Map<PerkTag, number>();
   characterPerks.forEach(perk => {
+    // Perfect Mutants don't get tag score bonuses from MUTANT_SPECIES restricted perks
+    console.log(character);
+    console.log(perk);
+
+    console.log("Checking is pm: " + (character.species === 'Perfect Mutant'));
+    console.log("Allowed species: " + perk.allowedSpecies);
+    console.log("Is mutant species restricted: " + (perk.allowedSpecies && MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))));
+    
+    if (character.species === 'Perfect Mutant' && 
+        perk.allowedSpecies && 
+        MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))) {
+          console.log("Skipping perk for tag score calculation");
+      return; // Skip this perk for tag score calculation
+    }
+    
+    console.log("Including perk for tag score calculation");
     const currentScore = tagScores.get(perk.tag) || 0;
     tagScores.set(perk.tag, currentScore + 1);
   });

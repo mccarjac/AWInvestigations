@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
+import { MUTANT_SPECIES } from '@/models/types';
 
 type CharacterDetailRouteProp = RouteProp<RootStackParamList, 'CharacterDetail'>;
 type CharacterDetailNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -38,6 +39,13 @@ export const CharacterDetailScreen: React.FC = () => {
     const characterPerks = AVAILABLE_PERKS.filter(perk => character.perkIds.includes(perk.id));
     
     characterPerks.forEach(perk => {
+       if (character.species === 'Perfect Mutant' && 
+              perk.allowedSpecies && 
+              MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))) {
+                console.log("Skipping perk for tag score calculation");
+            return; // Skip this perk for tag score calculation
+          }
+
       const currentScore = scores.get(perk.tag) || 0;
       scores.set(perk.tag, currentScore + 1);
     });
