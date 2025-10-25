@@ -34,6 +34,26 @@ export interface SpeciesStats {
   canTakeMalfunctions: boolean;
 }
 
+const ORGANIC_SPECIES: Species[] = [
+  'Human',
+  'Mutant',
+  'Nomad',
+  'Stray',
+  'Unturned',
+  'Cyborg',
+  'Mook',
+  'Mutoid',
+  'Perfect Mutant',
+  'Rad-Titan',
+  'Roadkill',
+  'Tech-Mutant'
+];
+
+const ROBOTIC_SPECIES: Species[] = [
+  'Android',
+  'Drone'
+];
+
 const organicDefaultSpeciesStats: SpeciesStats = {
   baseHealth: 2,
   baseLimit: 1,
