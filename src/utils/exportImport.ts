@@ -2,7 +2,46 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Alert, Platform } from 'react-native';
-import { exportDataset, importDataset, mergeDatasets } from './characterStorage';
+import { exportDataset, importDataset, mergeDatasets, mergeDatasetWithConflictResolution, MergeResult, MergeConflict, updateCharacter } from './characterStorage';
+
+/**
+ * Handle conflicts by asking the user for each conflicting property
+ */
+const handleMergeConflicts = async (conflicts: MergeConflict[]): Promise<void> => {
+  for (const conflict of conflicts) {
+    for (const property of conflict.conflicts) {
+      const existingValue = (conflict.existing as any)[property];
+      const importedValue = (conflict.imported as any)[property];
+      
+      await new Promise<void>((resolve) => {
+        Alert.alert(
+          'Merge Conflict',
+          `Character "${conflict.existing.name}" has conflicting ${property}:\n\nExisting: ${existingValue}\nImported: ${importedValue}\n\nWhich value would you like to keep?`,
+          [
+            {
+              text: 'Keep Existing',
+              onPress: () => resolve(), // Do nothing, keep existing
+            },
+            {
+              text: 'Use Imported',
+              onPress: async () => {
+                // Update the character with the imported value
+                const updates = { [property]: importedValue };
+                await updateCharacter(conflict.id, updates);
+                resolve();
+              },
+            },
+            {
+              text: 'Skip This Property',
+              style: 'cancel',
+              onPress: () => resolve(),
+            },
+          ]
+        );
+      });
+    }
+  }
+};
 
 /**
  * Export character data for web platform (downloads file directly)
@@ -263,14 +302,45 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
           reader.onload = async (e) => {
             try {
               const fileContent = e.target?.result as string;
-              const success = await mergeDatasets(fileContent);
+              const result = await mergeDatasetWithConflictResolution(fileContent);
               
-              if (success) {
-                Alert.alert(
-                  'Merge Successful',
-                  'Character data has been merged successfully. New characters have been added while keeping existing ones.',
-                  [{ text: 'OK' }]
-                );
+              if (result.success) {
+                if (result.conflicts.length > 0) {
+                  Alert.alert(
+                    'Conflicts Found',
+                    `Found ${result.conflicts.length} character(s) with conflicts. You'll be asked to resolve each conflict.`,
+                    [
+                      {
+                        text: 'Resolve Conflicts',
+                        onPress: async () => {
+                          await handleMergeConflicts(result.conflicts);
+                          Alert.alert(
+                            'Merge Complete',
+                            `Successfully merged ${result.added.length} new characters and resolved conflicts for ${result.conflicts.length} existing characters.`,
+                            [{ text: 'OK' }]
+                          );
+                        }
+                      },
+                      {
+                        text: 'Skip Conflicts',
+                        style: 'cancel',
+                        onPress: () => {
+                          Alert.alert(
+                            'Merge Complete',
+                            `Successfully merged ${result.added.length} new characters. Conflicts were resolved automatically by merging compatible properties.`,
+                            [{ text: 'OK' }]
+                          );
+                        }
+                      }
+                    ]
+                  );
+                } else {
+                  Alert.alert(
+                    'Merge Successful',
+                    `Successfully merged ${result.added.length} new characters with no conflicts.`,
+                    [{ text: 'OK' }]
+                  );
+                }
                 resolve(true);
               } else {
                 Alert.alert(
@@ -342,15 +412,46 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     // Read the file content
     const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
     
-    // Merge the data (this will keep existing data and add new characters)
-    const success = await mergeDatasets(fileContent);
+    // Merge the data with conflict resolution
+    const result_merge = await mergeDatasetWithConflictResolution(fileContent);
     
-    if (success) {
-      Alert.alert(
-        'Merge Successful',
-        'Character data has been merged successfully. New characters have been added while keeping existing ones.',
-        [{ text: 'OK' }]
-      );
+    if (result_merge.success) {
+      if (result_merge.conflicts.length > 0) {
+        Alert.alert(
+          'Conflicts Found',
+          `Found ${result_merge.conflicts.length} character(s) with conflicts. You'll be asked to resolve each conflict.`,
+          [
+            {
+              text: 'Resolve Conflicts',
+              onPress: async () => {
+                await handleMergeConflicts(result_merge.conflicts);
+                Alert.alert(
+                  'Merge Complete',
+                  `Successfully merged ${result_merge.added.length} new characters and resolved conflicts for ${result_merge.conflicts.length} existing characters.`,
+                  [{ text: 'OK' }]
+                );
+              }
+            },
+            {
+              text: 'Skip Conflicts',
+              style: 'cancel',
+              onPress: () => {
+                Alert.alert(
+                  'Merge Complete',
+                  `Successfully merged ${result_merge.added.length} new characters. Conflicts were resolved automatically by merging compatible properties.`,
+                  [{ text: 'OK' }]
+                );
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Merge Successful',
+          `Successfully merged ${result_merge.added.length} new characters with no conflicts.`,
+          [{ text: 'OK' }]
+        );
+      }
       return true;
     } else {
       Alert.alert(
