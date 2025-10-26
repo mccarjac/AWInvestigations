@@ -13,18 +13,23 @@ export enum Location {
   Unknown = 'Unknown'
 }
 
-export enum RelationshipType {
-  Family = 'Family',
+export enum RelationshipStanding {
+  Ally = 'Ally', 
   Friend = 'Friend',
-  Ally = 'Ally',
-  Enemy = 'Enemy',
-  Rival = 'Rival',
-  Mentor = 'Mentor',
-  Student = 'Student',
-  Romantic = 'Romantic',
-  Business = 'Business',
-  Other = 'Other'
+  Neutral = 'Neutral',
+  Hostile = 'Hostile',
+  Enemy = 'Enemy'
 }
+
+export const POSITIVE_RELATIONSHIP_TYPE: RelationshipStanding[] = [
+  RelationshipStanding.Ally,
+  RelationshipStanding.Friend
+];
+
+export const NEGATIVE_RELATIONSHIP_TYPE: RelationshipStanding[] = [
+  RelationshipStanding.Hostile,
+  RelationshipStanding.Enemy
+];
 
 export type BaseSpecies = 
   | 'Android'
@@ -193,9 +198,15 @@ export interface Distinction {
   allowedSpecies?: Species[];
 }
 
+export interface Faction {
+  name: string;
+  standing: RelationshipStanding;
+  description?: string;
+}
+
 export interface Relationship {
   characterName: string;
-  relationshipType: RelationshipType;
+  relationshipType: RelationshipStanding;
   description?: string;
   customName?: string;
 }
@@ -206,10 +217,7 @@ export interface GameCharacter {
   species: Species;
   perkIds: PerkId[];
   distinctionIds: DistinctionId[];
-  factions: {
-    name: string;
-    standing: 'Allied' | 'Friendly' | 'Neutral' | 'Hostile' | 'Enemy';
-  }[];
+  factions: Faction[];
   relationships: Relationship[];
   imageUri?: string;
   notes?: string;

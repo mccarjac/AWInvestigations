@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@/models/gameData';
-import { GameCharacter, PerkId, DistinctionId } from '@/models/types';
+import { GameCharacter, PerkId, DistinctionId, RelationshipStanding } from '@/models/types';
 import { RootStackParamList } from '@/navigation/types';
 
 // Dark theme color palette
@@ -46,7 +46,7 @@ interface SearchCriteria {
   tag?: PerkTag;
   minTagScore?: number;
   factionName?: string;
-  factionStanding?: 'Allied' | 'Friendly' | 'Neutral' | 'Hostile' | 'Enemy';
+  factionStanding?: FactionStanding;
   recipeSearch?: string;
   presentStatus?: 'present' | 'absent' | 'any';
   retiredStatus?: 'active' | 'retired' | 'any';
@@ -252,11 +252,9 @@ export const CharacterSearchScreen: React.FC = () => {
               }))}
             >
               <Picker.Item label="Any Standing" value="" />
-              <Picker.Item label="Allied" value="Allied" />
-              <Picker.Item label="Friendly" value="Friendly" />
-              <Picker.Item label="Neutral" value="Neutral" />
-              <Picker.Item label="Hostile" value="Hostile" />
-              <Picker.Item label="Enemy" value="Enemy" />
+              {Object.values(RelationshipStanding).map(standing => (
+                <Picker.Item key={standing} label={standing} value={standing} />
+              ))}
             </Picker>
           </View>
         </View>

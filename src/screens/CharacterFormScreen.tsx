@@ -4,7 +4,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '@/navigation/types';
-import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS, Location, Relationship, RelationshipType } from '@models/types';
+import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS, Location, Relationship, RelationshipStanding } from '@models/types';
 import { addCharacter, updateCharacter, loadCharacters, saveCharacters } from '@utils/characterStorage';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '@models/gameData';
 
@@ -94,19 +94,13 @@ export const CharacterFormScreen: React.FC = () => {
 
   // Function to determine the reciprocal relationship type
   // For most relationships, the reciprocal is the same type
-  // Special cases: Mentor <-> Student relationships are asymmetric
-  const getReciprocalRelationshipType = (relationshipType: RelationshipType): RelationshipType => {
-    const reciprocalMap: Record<RelationshipType, RelationshipType> = {
-      [RelationshipType.Family]: RelationshipType.Family,      // Family is mutual
-      [RelationshipType.Friend]: RelationshipType.Friend,      // Friend is mutual
-      [RelationshipType.Ally]: RelationshipType.Ally,         // Ally is mutual
-      [RelationshipType.Enemy]: RelationshipType.Enemy,       // Enemy is mutual
-      [RelationshipType.Rival]: RelationshipType.Rival,       // Rival is mutual
-      [RelationshipType.Mentor]: RelationshipType.Student,    // Mentor -> Student
-      [RelationshipType.Student]: RelationshipType.Mentor,    // Student -> Mentor
-      [RelationshipType.Romantic]: RelationshipType.Romantic, // Romantic is mutual
-      [RelationshipType.Business]: RelationshipType.Business, // Business is mutual
-      [RelationshipType.Other]: RelationshipType.Other,       // Other is mutual
+  const getReciprocalRelationshipType = (relationshipType: RelationshipStanding): RelationshipStanding => {
+    const reciprocalMap: Record<RelationshipStanding, RelationshipStanding> = {
+      [RelationshipStanding.Ally]: RelationshipStanding.Ally,
+      [RelationshipStanding.Friend]: RelationshipStanding.Friend,
+      [RelationshipStanding.Hostile]: RelationshipStanding.Hostile,
+      [RelationshipStanding.Enemy]: RelationshipStanding.Enemy,
+      [RelationshipStanding.Neutral]: RelationshipStanding.Neutral
     };
     return reciprocalMap[relationshipType];
   };
@@ -387,11 +381,9 @@ export const CharacterFormScreen: React.FC = () => {
                   handleChange('factions', newFactions);
                 }}
               >
-                <Picker.Item label="Allied" value="Allied" />
-                <Picker.Item label="Friendly" value="Friendly" />
-                <Picker.Item label="Neutral" value="Neutral" />
-                <Picker.Item label="Hostile" value="Hostile" />
-                <Picker.Item label="Enemy" value="Enemy" />
+                {Object.values(RelationshipStanding).map(standing => (
+                  <Picker.Item key={standing} label={standing} value={standing} />
+                ))}
               </Picker>
               <TouchableOpacity
                 style={styles.removeButton}
@@ -445,7 +437,7 @@ export const CharacterFormScreen: React.FC = () => {
                     handleChange('relationships', newRelationships);
                   }}
                 >
-                  {Object.values(RelationshipType).map((type) => (
+                  {Object.values(RelationshipStanding).map((type) => (
                     <Picker.Item key={type} label={type} value={type} />
                   ))}
                 </Picker>
@@ -493,7 +485,7 @@ export const CharacterFormScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.addButton}
             onPress={() => {
-              handleChange('relationships', [...form.relationships, { characterName: '', relationshipType: RelationshipType.Friend, description: '' }]);
+              handleChange('relationships', [...form.relationships, { characterName: '', relationshipType: RelationshipStanding.Friend, description: '' }]);
             }}
           >
             <Text style={styles.addButtonText}>Add Relationship</Text>
