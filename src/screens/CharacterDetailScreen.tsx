@@ -266,6 +266,11 @@ export const CharacterDetailScreen: React.FC = () => {
           <Text style={styles.subheader}>
             Species: {character.species} / Location: {character.location}
           </Text>
+          {character.retired && (
+            <View style={styles.retiredBadge}>
+              <Text style={styles.retiredText}>RETIRED</Text>
+            </View>
+          )}
           <View style={styles.statsContainer}>
             {(() => {
               const { maxHealth, maxLimit } = calculateDerivedStats(character);
@@ -555,5 +560,21 @@ const styles = StyleSheet.create({
   statValue: {
     fontWeight: '700',
     color: colors.accent.primary,
+  },
+  retiredBadge: {
+    backgroundColor: colors.status.warning,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.status.warning,
+  },
+  retiredText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+    letterSpacing: 1.2,
   },
 });
