@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView, TextInput } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, clearStorage, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
@@ -11,6 +11,7 @@ import { RootStackParamList } from '@/navigation/types';
 export const CharacterListScreen: React.FC = () => {
   const [characters, setCharacters] = React.useState<GameCharacter[]>([]);
   const [showOnlyPresent, setShowOnlyPresent] = React.useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = React.useState<string>('');
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const loadData = React.useCallback(async () => {
@@ -153,12 +154,23 @@ export const CharacterListScreen: React.FC = () => {
 
   const getFilteredCharacters = () => {
     // First filter out retired characters
-    const nonRetired = characters.filter(c => !c.retired);
-    const sorted = [...nonRetired].sort((a, b) => a.name.localeCompare(b.name));
-    if (showOnlyPresent) {
-      return sorted.filter(c => c.present === true);
+    let filtered = characters.filter(c => !c.retired);
+    
+    // Filter by search query if provided
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(c => 
+        c.name.toLowerCase().includes(query)
+      );
     }
-    return sorted;
+    
+    // Filter by present status if enabled
+    if (showOnlyPresent) {
+      filtered = filtered.filter(c => c.present === true);
+    }
+    
+    // Sort alphabetically
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
   };
 
   const renderItem = ({ item }: { item: GameCharacter }) => (
@@ -232,6 +244,27 @@ export const CharacterListScreen: React.FC = () => {
           <Text style={styles.buttonText}>Reset Present</Text>
         </TouchableOpacity>
       </View>
+      
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search characters by name..."
+          placeholderTextColor={colors.text.muted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearSearchButton}
+            onPress={() => setSearchQuery('')}
+          >
+            <Text style={styles.clearSearchText}>✕</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      
       <FlatList
         data={getFilteredCharacters()}
         renderItem={renderItem}
@@ -490,5 +523,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     letterSpacing: 0.3,
+  },
+  searchContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  searchInput: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text.primary,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  clearSearchButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.text.muted,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearSearchText: {
+    color: colors.text.primary,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
