@@ -24,11 +24,12 @@ interface SearchCriteria {
   factionName?: string;
   factionStanding?: 'Allied' | 'Friendly' | 'Neutral' | 'Hostile' | 'Enemy';
   recipeSearch?: string;
+  presentStatus?: 'present' | 'absent' | 'any';
 }
 
 export const CharacterSearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
-  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({});
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({ presentStatus: 'any' });
   const [searchResults, setSearchResults] = useState<GameCharacter[]>([]);
 
   const calculateTagScore = (character: GameCharacter, tag: PerkTag): number => {
@@ -97,6 +98,17 @@ export const CharacterSearchScreen: React.FC = () => {
           return true;
         });
         if (!matchingFaction) {
+          return false;
+        }
+      }
+
+      // Check present status
+      if (searchCriteria.presentStatus && searchCriteria.presentStatus !== 'any') {
+        const isPresent = character.present === true;
+        if (searchCriteria.presentStatus === 'present' && !isPresent) {
+          return false;
+        }
+        if (searchCriteria.presentStatus === 'absent' && isPresent) {
           return false;
         }
       }
@@ -210,6 +222,22 @@ export const CharacterSearchScreen: React.FC = () => {
           </View>
         </View>
 
+        <View style={styles.criteriaItem}>
+          <Text style={styles.label}>Present Status</Text>
+          <Picker
+            selectedValue={searchCriteria.presentStatus || 'any'}
+            style={styles.picker}
+            onValueChange={(value) => setSearchCriteria(prev => ({
+              ...prev,
+              presentStatus: value as 'present' | 'absent' | 'any'
+            }))}
+          >
+            <Picker.Item label="Any Status" value="any" />
+            <Picker.Item label="Present" value="present" />
+            <Picker.Item label="Absent" value="absent" />
+          </Picker>
+        </View>
+
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
           <Text style={styles.searchButtonText}>Search</Text>
         </TouchableOpacity>
@@ -225,7 +253,14 @@ export const CharacterSearchScreen: React.FC = () => {
           >
             <View style={styles.resultHeader}>
               <Text style={styles.characterName}>{character.name}</Text>
-              <Text style={styles.characterSpecies}>{character.species}</Text>
+              <View style={styles.characterInfo}>
+                <Text style={styles.characterSpecies}>{character.species}</Text>
+                <View style={[styles.presentStatusBadge, character.present && styles.presentStatusBadgeActive]}>
+                  <Text style={[styles.presentStatusText, character.present && styles.presentStatusTextActive]}>
+                    {character.present ? 'Present' : 'Absent'}
+                  </Text>
+                </View>
+              </View>
             </View>
           </TouchableOpacity>
         ))}
@@ -322,9 +357,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  characterInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   characterSpecies: {
     fontSize: 14,
     color: '#666',
+  },
+  presentStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: '#E0E0E0',
+    borderWidth: 1,
+    borderColor: '#BDBDBD',
+  },
+  presentStatusBadgeActive: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#388E3C',
+  },
+  presentStatusText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#757575',
+  },
+  presentStatusTextActive: {
+    color: 'white',
   },
   recipesContainer: {
     marginTop: 8,
