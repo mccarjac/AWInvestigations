@@ -18,9 +18,11 @@ export const CharacterStatsScreen = () => {
   useEffect(() => {
     // Recalculate stats when filter changes
     if (allCharacters.length > 0) {
+      // Always filter out retired characters
+      const nonRetired = allCharacters.filter(c => !c.retired);
       const filteredCharacters = showOnlyPresent 
-        ? allCharacters.filter(c => c.present === true)
-        : allCharacters;
+        ? nonRetired.filter(c => c.present === true)
+        : nonRetired;
       
       if (filteredCharacters.length === 0) {
         setStats(null);
@@ -40,9 +42,11 @@ export const CharacterStatsScreen = () => {
       return;
     }
 
+    // Always filter out retired characters
+    const nonRetired = characters.filter(c => !c.retired);
     const filteredCharacters = showOnlyPresent 
-      ? characters.filter(c => c.present === true)
-      : characters;
+      ? nonRetired.filter(c => c.present === true)
+      : nonRetired;
     
     if (filteredCharacters.length === 0) {
       setStats(null);

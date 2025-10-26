@@ -215,6 +215,7 @@ export interface GameCharacter {
   notes?: string;
   location?: Location;
   present?: boolean;
+  retired?: boolean;
   createdAt: string;
   updatedAt: string;
 }

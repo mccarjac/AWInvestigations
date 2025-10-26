@@ -22,6 +22,7 @@ export const loadCharacters = async (): Promise<GameCharacter[]> => {
   return dataset.characters.map(character => ({
     ...character,
     present: character.present ?? false,
+    retired: character.retired ?? false,
     relationships: character.relationships ?? []
   }));
 };
@@ -32,6 +33,7 @@ export const addCharacter = async (character: Omit<GameCharacter, 'id' | 'create
     ...character,
     id: uuidv4(),
     present: false, // Default to not present
+    retired: false, // Default to not retired
     relationships: character.relationships ?? [], // Ensure relationships array exists
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()

@@ -52,6 +52,7 @@ export const CharacterFormScreen: React.FC = () => {
       notes: editingCharacter.notes || '',
       imageUri: editingCharacter.imageUri,
       location: editingCharacter.location,
+      retired: editingCharacter.retired,
     } : {
       name: '',
       species: 'Human',
@@ -62,6 +63,7 @@ export const CharacterFormScreen: React.FC = () => {
       notes: '',
       imageUri: undefined,
       location: Location.Downtown,
+      retired: false,
     }
   );
 
@@ -499,6 +501,18 @@ export const CharacterFormScreen: React.FC = () => {
         </View>
 
         <View style={styles.formSection}>
+          <Text style={styles.label}>Status</Text>
+          <TouchableOpacity
+            style={[styles.statusButton, form.retired && styles.statusButtonRetired]}
+            onPress={() => handleChange('retired', !form.retired)}
+          >
+            <Text style={[styles.statusButtonText, form.retired && styles.statusButtonTextRetired]}>
+              {form.retired ? '🔒 Retired' : '✓ Active'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.formSection}>
           <Text style={styles.label}>Notes</Text>
           <TextInput
             style={[styles.input, styles.notesInput]}
@@ -673,6 +687,27 @@ const styles = StyleSheet.create({
   notesInput: {
     height: 120,
     textAlignVertical: 'top',
+  },
+  statusButton: {
+    backgroundColor: colors.status.success,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.status.success,
+  },
+  statusButtonRetired: {
+    backgroundColor: colors.status.error,
+    borderColor: colors.status.error,
+  },
+  statusButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+    letterSpacing: 0.5,
+  },
+  statusButtonTextRetired: {
+    color: colors.text.primary,
   },
   selectionItem: {
     backgroundColor: colors.elevated,

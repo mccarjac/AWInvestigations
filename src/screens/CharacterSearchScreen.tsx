@@ -49,11 +49,15 @@ interface SearchCriteria {
   factionStanding?: 'Allied' | 'Friendly' | 'Neutral' | 'Hostile' | 'Enemy';
   recipeSearch?: string;
   presentStatus?: 'present' | 'absent' | 'any';
+  retiredStatus?: 'active' | 'retired' | 'any';
 }
 
 export const CharacterSearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
-  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({ presentStatus: 'any' });
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({ 
+    presentStatus: 'any',
+    retiredStatus: 'active' // Default to searching only active (non-retired) characters
+  });
   const [searchResults, setSearchResults] = useState<GameCharacter[]>([]);
 
   const calculateTagScore = (character: GameCharacter, tag: PerkTag): number => {
@@ -133,6 +137,17 @@ export const CharacterSearchScreen: React.FC = () => {
           return false;
         }
         if (searchCriteria.presentStatus === 'absent' && isPresent) {
+          return false;
+        }
+      }
+
+      // Check retired status
+      if (searchCriteria.retiredStatus && searchCriteria.retiredStatus !== 'any') {
+        const isRetired = character.retired === true;
+        if (searchCriteria.retiredStatus === 'retired' && !isRetired) {
+          return false;
+        }
+        if (searchCriteria.retiredStatus === 'active' && isRetired) {
           return false;
         }
       }
@@ -262,6 +277,22 @@ export const CharacterSearchScreen: React.FC = () => {
           </Picker>
         </View>
 
+        <View style={styles.criteriaItem}>
+          <Text style={styles.label}>Retired Status</Text>
+          <Picker
+            selectedValue={searchCriteria.retiredStatus || 'active'}
+            style={styles.picker}
+            onValueChange={(value) => setSearchCriteria(prev => ({
+              ...prev,
+              retiredStatus: value as 'active' | 'retired' | 'any'
+            }))}
+          >
+            <Picker.Item label="Active Only" value="active" />
+            <Picker.Item label="Retired Only" value="retired" />
+            <Picker.Item label="Any Status" value="any" />
+          </Picker>
+        </View>
+
         <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
           <Text style={styles.searchButtonText}>Search</Text>
         </TouchableOpacity>
@@ -279,6 +310,13 @@ export const CharacterSearchScreen: React.FC = () => {
               <Text style={styles.characterName}>{character.name}</Text>
               <View style={styles.characterInfo}>
                 <Text style={styles.characterSpecies}>{character.species}</Text>
+                {character.retired && (
+                  <View style={[styles.presentStatusBadge, styles.retiredStatusBadge]}>
+                    <Text style={[styles.presentStatusText, styles.retiredStatusText]}>
+                      Retired
+                    </Text>
+                  </View>
+                )}
                 <View style={[styles.presentStatusBadge, character.present && styles.presentStatusBadgeActive]}>
                   <Text style={[styles.presentStatusText, character.present && styles.presentStatusTextActive]}>
                     {character.present ? 'Present' : 'Absent'}
@@ -430,6 +468,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   presentStatusTextActive: {
+    color: colors.text.primary,
+  },
+  retiredStatusBadge: {
+    backgroundColor: colors.status.error,
+    borderColor: colors.status.error,
+  },
+  retiredStatusText: {
     color: colors.text.primary,
   },
   recipesContainer: {
