@@ -13,6 +13,19 @@ export enum Location {
   Unknown = 'Unknown'
 }
 
+export enum RelationshipType {
+  Family = 'Family',
+  Friend = 'Friend',
+  Ally = 'Ally',
+  Enemy = 'Enemy',
+  Rival = 'Rival',
+  Mentor = 'Mentor',
+  Student = 'Student',
+  Romantic = 'Romantic',
+  Business = 'Business',
+  Other = 'Other'
+}
+
 export type BaseSpecies = 
   | 'Android'
   | 'Drone'
@@ -180,6 +193,13 @@ export interface Distinction {
   allowedSpecies?: Species[];
 }
 
+export interface Relationship {
+  characterName: string;
+  relationshipType: RelationshipType;
+  description?: string;
+  customName?: string;
+}
+
 export interface GameCharacter {
   id: string;
   name: string;
@@ -190,6 +210,7 @@ export interface GameCharacter {
     name: string;
     standing: 'Allied' | 'Friendly' | 'Neutral' | 'Hostile' | 'Enemy';
   }[];
+  relationships: Relationship[];
   imageUri?: string;
   notes?: string;
   location?: Location;

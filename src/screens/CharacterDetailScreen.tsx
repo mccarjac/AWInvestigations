@@ -1,11 +1,12 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState, useEffect } from 'react';
 import { View, ScrollView, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
-import { MUTANT_SPECIES } from '@/models/types';
+import { MUTANT_SPECIES, Relationship, RelationshipType, GameCharacter } from '@/models/types';
+import { loadCharacters } from '@/utils/characterStorage';
 
 // Dark theme color palette
 const colors = {
@@ -38,6 +39,45 @@ export const CharacterDetailScreen: React.FC = () => {
   const route = useRoute<CharacterDetailRouteProp>();
   const navigation = useNavigation<CharacterDetailNavigationProp>();
   const { character } = route.params;
+  const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
+
+  const loadAllCharacters = async () => {
+    try {
+      const characters = await loadCharacters();
+      setAllCharacters(characters);
+      
+      // Update the current character with the latest data
+      const updatedCurrentChar = characters.find(char => char.id === character.id);
+      if (updatedCurrentChar && JSON.stringify(updatedCurrentChar) !== JSON.stringify(character)) {
+        // Update the route params with the fresh character data
+        navigation.setParams({ character: updatedCurrentChar });
+      }
+    } catch (error) {
+      console.error('Failed to load characters:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadAllCharacters();
+  }, []);
+
+  // Refresh character data when screen comes back into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadAllCharacters();
+    }, [character.id])
+  );
+
+  const findCharacterByName = (name: string): GameCharacter | undefined => {
+    return allCharacters.find(char => char.name === name);
+  };
+
+  const handleRelationshipPress = (characterName: string) => {
+    const targetCharacter = findCharacterByName(characterName);
+    if (targetCharacter) {
+      navigation.push('CharacterDetail', { character: targetCharacter });
+    }
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -161,6 +201,53 @@ export const CharacterDetailScreen: React.FC = () => {
     </View>
   );
 
+  const renderRelationships = () => {
+    if (!character.relationships || character.relationships.length === 0) {
+      return null;
+    }
+    
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Relationships</Text>
+        {character.relationships.map((relationship, index) => {
+          const targetCharacter = findCharacterByName(relationship.characterName);
+          const isClickable = !!targetCharacter;
+          
+          return (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.itemContainer,
+                isClickable && styles.clickableRelationship
+              ]}
+              onPress={() => isClickable && handleRelationshipPress(relationship.characterName)}
+              disabled={!isClickable}
+              activeOpacity={isClickable ? 0.7 : 1}
+            >
+              <View style={styles.headerContainer}>
+                <View style={styles.relationshipNameContainer}>
+                  <Text style={[
+                    styles.titleText,
+                    isClickable && styles.clickableText
+                  ]}>
+                    {relationship.characterName}
+                  </Text>
+                  {!isClickable && (
+                    <Text style={styles.unavailableText}> (Not found)</Text>
+                  )}
+                </View>
+                <Text style={styles.relationshipTypeText}>{relationship.relationshipType}</Text>
+              </View>
+              {relationship.description && (
+                <Text style={styles.descriptionText}>{relationship.description}</Text>
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
   return (
     <View style={{ height: 882, overflow: 'scroll' }}>
                 <ScrollView
@@ -200,6 +287,7 @@ export const CharacterDetailScreen: React.FC = () => {
       {renderPerks()}
       {renderDistinctions()}
       {renderFactions()}
+      {renderRelationships()}
       {character.notes && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notes</Text>
@@ -393,6 +481,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.accent.primary,
     fontWeight: '600',
+  },
+  relationshipTypeText: {
+    fontSize: 14,
+    color: colors.status.info,
+    fontWeight: '600',
+  },
+  clickableRelationship: {
+    borderWidth: 2,
+    borderColor: colors.accent.primary,
+    backgroundColor: colors.accent.secondary,
+  },
+  relationshipNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  clickableText: {
+    color: colors.accent.primary,
+    textDecorationLine: 'underline',
+  },
+  unavailableText: {
+    fontSize: 12,
+    color: colors.status.warning,
+    fontStyle: 'italic',
+  },
+  tapHintText: {
+    fontSize: 12,
+    color: colors.accent.primary,
+    fontStyle: 'italic',
+    marginTop: 8,
+    textAlign: 'right',
   },
   notes: {
     fontSize: 14,

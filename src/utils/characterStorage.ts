@@ -18,10 +18,11 @@ export const loadCharacters = async (): Promise<GameCharacter[]> => {
   if (!data) return [];
   
   const dataset: CharacterDataset = JSON.parse(data);
-  // Handle backward compatibility - set present to false for existing characters
+  // Handle backward compatibility - set defaults for missing properties
   return dataset.characters.map(character => ({
     ...character,
-    present: character.present ?? false
+    present: character.present ?? false,
+    relationships: character.relationships ?? []
   }));
 };
 
@@ -31,6 +32,7 @@ export const addCharacter = async (character: Omit<GameCharacter, 'id' | 'create
     ...character,
     id: uuidv4(),
     present: false, // Default to not present
+    relationships: character.relationships ?? [], // Ensure relationships array exists
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -130,6 +132,31 @@ const mergeCharacterProperties = (existing: GameCharacter, imported: GameCharact
     if (newFactions.length > 0) {
       merged.factions = [...(existing.factions || []), ...newFactions];
     }
+  }
+
+  // Merge relationships (keep all unique relationships by character name)
+  if (imported.relationships && imported.relationships.length > 0) {
+    const existingRelationshipNames = new Set((existing.relationships || []).map(r => r.characterName));
+    const newRelationships = imported.relationships.filter(r => !existingRelationshipNames.has(r.characterName));
+    
+    // Update existing relationships if they exist with different types or descriptions
+    const updatedRelationships = (existing.relationships || []).map(existingRel => {
+      const importedRel = imported.relationships.find(r => r.characterName === existingRel.characterName);
+      if (importedRel) {
+        // If relationship exists in both, prefer the one with more recent timestamp or better description
+        return {
+          ...existingRel,
+          relationshipType: importedRel.relationshipType || existingRel.relationshipType,
+          description: importedRel.description || existingRel.description
+        };
+      }
+      return existingRel;
+    });
+    
+    merged.relationships = [...updatedRelationships, ...newRelationships];
+  } else if (!existing.relationships) {
+    // Ensure relationships array exists even if empty
+    merged.relationships = [];
   }
 
   // Handle conflicting simple properties

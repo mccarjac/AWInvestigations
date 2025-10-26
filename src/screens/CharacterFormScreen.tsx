@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Button, Alert, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '@/navigation/types';
-import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS, Location } from '@models/types';
-import { addCharacter, updateCharacter } from '@utils/characterStorage';
+import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS, Location, Relationship, RelationshipType } from '@models/types';
+import { addCharacter, updateCharacter, loadCharacters, saveCharacters } from '@utils/characterStorage';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '@models/gameData';
 
 // Dark theme color palette
@@ -39,6 +39,7 @@ export const CharacterFormScreen: React.FC = () => {
   const route = useRoute<CharacterFormRouteProp>();
   const editingCharacter = route.params?.character;
   const [selectedPerkTag, setSelectedPerkTag] = useState<string>('');
+  const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
 
   const [form, setForm] = useState<CharacterFormData>(
     editingCharacter ? {
@@ -47,6 +48,7 @@ export const CharacterFormScreen: React.FC = () => {
       perkIds: [...editingCharacter.perkIds],
       distinctionIds: [...editingCharacter.distinctionIds],
       factions: [...editingCharacter.factions],
+      relationships: [...(editingCharacter.relationships || [])],
       notes: editingCharacter.notes || '',
       imageUri: editingCharacter.imageUri,
       location: editingCharacter.location,
@@ -56,14 +58,110 @@ export const CharacterFormScreen: React.FC = () => {
       perkIds: [],
       distinctionIds: [],
       factions: [],
+      relationships: [],
       notes: '',
       imageUri: undefined,
       location: Location.Downtown,
     }
   );
 
+  useEffect(() => {
+    const loadAllCharacters = async () => {
+      try {
+        const characters = await loadCharacters();
+        setAllCharacters(characters);
+      } catch (error) {
+        console.error('Failed to load characters:', error);
+      }
+    };
+    
+    loadAllCharacters();
+  }, []);
+
+  // Get available character names for relationship picker
+  const getAvailableCharacterNames = () => {
+    return allCharacters
+      .filter(char => char.id !== editingCharacter?.id) // Exclude the current character
+      .map(char => char.name)
+      .sort();
+  };
+
   const handleChange = (field: keyof CharacterFormData, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Function to determine the reciprocal relationship type
+  // For most relationships, the reciprocal is the same type
+  // Special cases: Mentor <-> Student relationships are asymmetric
+  const getReciprocalRelationshipType = (relationshipType: RelationshipType): RelationshipType => {
+    const reciprocalMap: Record<RelationshipType, RelationshipType> = {
+      [RelationshipType.Family]: RelationshipType.Family,      // Family is mutual
+      [RelationshipType.Friend]: RelationshipType.Friend,      // Friend is mutual
+      [RelationshipType.Ally]: RelationshipType.Ally,         // Ally is mutual
+      [RelationshipType.Enemy]: RelationshipType.Enemy,       // Enemy is mutual
+      [RelationshipType.Rival]: RelationshipType.Rival,       // Rival is mutual
+      [RelationshipType.Mentor]: RelationshipType.Student,    // Mentor -> Student
+      [RelationshipType.Student]: RelationshipType.Mentor,    // Student -> Mentor
+      [RelationshipType.Romantic]: RelationshipType.Romantic, // Romantic is mutual
+      [RelationshipType.Business]: RelationshipType.Business, // Business is mutual
+      [RelationshipType.Other]: RelationshipType.Other,       // Other is mutual
+    };
+    return reciprocalMap[relationshipType];
+  };
+
+  // Function to update bidirectional relationships
+  const updateBidirectionalRelationships = async (
+    currentCharacter: GameCharacter,
+    previousRelationships: Relationship[] = []
+  ): Promise<void> => {
+    try {
+      const allChars = await loadCharacters();
+      const updatedCharacters = [...allChars];
+
+      // Find the current character in the list and update it
+      const currentCharIndex = updatedCharacters.findIndex(char => char.id === currentCharacter.id);
+      if (currentCharIndex !== -1) {
+        updatedCharacters[currentCharIndex] = currentCharacter;
+      }
+
+      // Remove old relationships that no longer exist
+      for (const oldRel of previousRelationships) {
+        const targetChar = updatedCharacters.find(char => char.name === oldRel.characterName);
+        if (targetChar) {
+          targetChar.relationships = (targetChar.relationships || []).filter(
+            rel => rel.characterName !== currentCharacter.name
+          );
+        }
+      }
+
+      // Add new bidirectional relationships
+      for (const relationship of currentCharacter.relationships) {
+        const targetChar = updatedCharacters.find(char => char.name === relationship.characterName);
+        if (targetChar && targetChar.id !== currentCharacter.id) {
+          // Remove any existing relationship to avoid duplicates
+          targetChar.relationships = (targetChar.relationships || []).filter(
+            rel => rel.characterName !== currentCharacter.name
+          );
+
+          // Add the reciprocal relationship
+          const reciprocalType = getReciprocalRelationshipType(relationship.relationshipType);
+          const reciprocalRelationship: Relationship = {
+            characterName: currentCharacter.name,
+            relationshipType: reciprocalType,
+            description: relationship.description 
+              ? `Reciprocal: ${relationship.description}`
+              : `${currentCharacter.name}'s ${relationship.relationshipType.toLowerCase()}`,
+          };
+
+          targetChar.relationships.push(reciprocalRelationship);
+          targetChar.updatedAt = new Date().toISOString();
+        }
+      }
+
+      await saveCharacters(updatedCharacters);
+    } catch (error) {
+      console.error('Failed to update bidirectional relationships:', error);
+    }
   };
 
   const pickImage = async () => {
@@ -91,15 +189,34 @@ export const CharacterFormScreen: React.FC = () => {
       return;
     }
 
+    // Process relationships to use custom names when applicable
+    const processedRelationships = form.relationships.map(rel => ({
+      ...rel,
+      characterName: rel.characterName === '__CUSTOM__' 
+        ? (rel.customName || '') 
+        : rel.characterName,
+      customName: undefined // Remove the customName field before saving
+    }));
+
+    const formToSubmit = {
+      ...form,
+      relationships: processedRelationships
+    };
+
     try {
       let savedCharacter: GameCharacter;
+      const previousRelationships = editingCharacter?.relationships || [];
+
       if (editingCharacter) {
-        const result = await updateCharacter(editingCharacter.id, form);
+        const result = await updateCharacter(editingCharacter.id, formToSubmit);
         if (!result) throw new Error('Failed to update character');
         savedCharacter = result;
       } else {
-        savedCharacter = await addCharacter(form);
+        savedCharacter = await addCharacter(formToSubmit);
       }
+
+      // Update bidirectional relationships
+      await updateBidirectionalRelationships(savedCharacter, previousRelationships);
 
       if (route.params?.onSubmit) {
         route.params.onSubmit(savedCharacter);
@@ -292,6 +409,92 @@ export const CharacterFormScreen: React.FC = () => {
             }}
           >
             <Text style={styles.addButtonText}>Add Faction</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.formSection}>
+          <Text style={styles.label}>Relationships</Text>
+          {form.relationships.map((relationship, index) => (
+            <View key={index}>
+              <View style={styles.relationshipContainer}>
+                <View style={styles.relationshipPickerContainer}>
+                  <Picker
+                    selectedValue={relationship.characterName}
+                    style={styles.relationshipNamePicker}
+                    onValueChange={(value) => {
+                      const newRelationships = [...form.relationships];
+                      newRelationships[index] = { ...relationship, characterName: value };
+                      handleChange('relationships', newRelationships);
+                    }}
+                  >
+                    <Picker.Item label="Select Character..." value="" />
+                    {getAvailableCharacterNames().map((name) => (
+                      <Picker.Item key={name} label={name} value={name} />
+                    ))}
+                    <Picker.Item label="Other (Custom Name)" value="__CUSTOM__" />
+                  </Picker>
+                </View>
+                <Picker
+                  selectedValue={relationship.relationshipType}
+                  style={styles.relationshipType}
+                  onValueChange={(value) => {
+                    const newRelationships = [...form.relationships];
+                    newRelationships[index] = { ...relationship, relationshipType: value };
+                    handleChange('relationships', newRelationships);
+                  }}
+                >
+                  {Object.values(RelationshipType).map((type) => (
+                    <Picker.Item key={type} label={type} value={type} />
+                  ))}
+                </Picker>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => {
+                    const newRelationships = form.relationships.filter((_, i) => i !== index);
+                    handleChange('relationships', newRelationships);
+                  }}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+              {relationship.characterName === '__CUSTOM__' && (
+                <View style={styles.customNameContainer}>
+                  <TextInput
+                    style={styles.customNameInput}
+                    value={relationship.customName || ''}
+                    onChangeText={(value) => {
+                      const newRelationships = [...form.relationships];
+                      newRelationships[index] = { ...relationship, customName: value };
+                      handleChange('relationships', newRelationships);
+                    }}
+                    placeholder="Enter custom character name"
+                  />
+                </View>
+              )}
+            </View>
+          ))}
+          {form.relationships.map((relationship, index) => (
+            <View key={`desc-${index}`} style={styles.relationshipDescContainer}>
+              <TextInput
+                style={styles.relationshipDescInput}
+                value={relationship.description || ''}
+                onChangeText={(value) => {
+                  const newRelationships = [...form.relationships];
+                  newRelationships[index] = { ...relationship, description: value };
+                  handleChange('relationships', newRelationships);
+                }}
+                placeholder={`Description of relationship with ${relationship.characterName || 'character'}`}
+                multiline
+              />
+            </View>
+          ))}
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              handleChange('relationships', [...form.relationships, { characterName: '', relationshipType: RelationshipType.Friend, description: '' }]);
+            }}
+          >
+            <Text style={styles.addButtonText}>Add Relationship</Text>
           </TouchableOpacity>
         </View>
 
@@ -508,6 +711,62 @@ const styles = StyleSheet.create({
   },
   factionStanding: {
     width: '35%',
+  },
+  relationshipContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  relationshipPickerContainer: {
+    flex: 1,
+  },
+  relationshipNamePicker: {
+    backgroundColor: colors.elevated,
+    borderRadius: 8,
+    color: colors.text.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  relationshipInput: {
+    backgroundColor: colors.elevated,
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    flex: 1,
+    color: colors.text.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  relationshipType: {
+    width: '35%',
+  },
+  customNameContainer: {
+    marginBottom: 12,
+    marginTop: -8,
+  },
+  customNameInput: {
+    backgroundColor: colors.elevated,
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    color: colors.text.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  relationshipDescContainer: {
+    marginBottom: 12,
+  },
+  relationshipDescInput: {
+    backgroundColor: colors.elevated,
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 16,
+    color: colors.text.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   removeButton: {
     padding: 8,
