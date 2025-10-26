@@ -18,9 +18,10 @@ export const CharacterStatsScreen = () => {
   useEffect(() => {
     // Recalculate stats when filter changes
     if (allCharacters.length > 0) {
-      const filteredCharacters = showOnlyPresent 
-        ? allCharacters.filter(c => c.present === true)
-        : allCharacters;
+      // Filter out retired characters and optionally filter to only present
+      const filteredCharacters = allCharacters.filter(c => 
+        !c.retired && (!showOnlyPresent || c.present === true)
+      );
       
       if (filteredCharacters.length === 0) {
         setStats(null);
@@ -40,9 +41,10 @@ export const CharacterStatsScreen = () => {
       return;
     }
 
-    const filteredCharacters = showOnlyPresent 
-      ? characters.filter(c => c.present === true)
-      : characters;
+    // Filter out retired characters and optionally filter to only present
+    const filteredCharacters = characters.filter(c => 
+      !c.retired && (!showOnlyPresent || c.present === true)
+    );
     
     if (filteredCharacters.length === 0) {
       setStats(null);

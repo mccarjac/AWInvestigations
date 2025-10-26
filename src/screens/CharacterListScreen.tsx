@@ -152,7 +152,9 @@ export const CharacterListScreen: React.FC = () => {
   };
 
   const getFilteredCharacters = () => {
-    const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
+    // First filter out retired characters
+    const nonRetired = characters.filter(c => !c.retired);
+    const sorted = [...nonRetired].sort((a, b) => a.name.localeCompare(b.name));
     if (showOnlyPresent) {
       return sorted.filter(c => c.present === true);
     }
