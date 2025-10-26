@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
-import { MUTANT_SPECIES, Relationship, RelationshipType, GameCharacter } from '@/models/types';
+import { MUTANT_SPECIES, GameCharacter } from '@/models/types';
 import { loadCharacters } from '@/utils/characterStorage';
 
 // Dark theme color palette

@@ -46,7 +46,7 @@ interface SearchCriteria {
   tag?: PerkTag;
   minTagScore?: number;
   factionName?: string;
-  factionStanding?: FactionStanding;
+  factionStanding?: RelationshipStanding;
   recipeSearch?: string;
   presentStatus?: 'present' | 'absent' | 'any';
   retiredStatus?: 'active' | 'retired' | 'any';

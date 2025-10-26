@@ -92,19 +92,6 @@ export const CharacterFormScreen: React.FC = () => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  // Function to determine the reciprocal relationship type
-  // For most relationships, the reciprocal is the same type
-  const getReciprocalRelationshipType = (relationshipType: RelationshipStanding): RelationshipStanding => {
-    const reciprocalMap: Record<RelationshipStanding, RelationshipStanding> = {
-      [RelationshipStanding.Ally]: RelationshipStanding.Ally,
-      [RelationshipStanding.Friend]: RelationshipStanding.Friend,
-      [RelationshipStanding.Hostile]: RelationshipStanding.Hostile,
-      [RelationshipStanding.Enemy]: RelationshipStanding.Enemy,
-      [RelationshipStanding.Neutral]: RelationshipStanding.Neutral
-    };
-    return reciprocalMap[relationshipType];
-  };
-
   // Function to update bidirectional relationships
   const updateBidirectionalRelationships = async (
     currentCharacter: GameCharacter,
@@ -140,10 +127,9 @@ export const CharacterFormScreen: React.FC = () => {
           );
 
           // Add the reciprocal relationship
-          const reciprocalType = getReciprocalRelationshipType(relationship.relationshipType);
           const reciprocalRelationship: Relationship = {
             characterName: currentCharacter.name,
-            relationshipType: reciprocalType,
+            relationshipType: relationship.relationshipType,
             description: relationship.description 
               ? `Reciprocal: ${relationship.description}`
               : `${currentCharacter.name}'s ${relationship.relationshipType.toLowerCase()}`,
