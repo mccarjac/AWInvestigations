@@ -18,11 +18,10 @@ export const CharacterStatsScreen = () => {
   useEffect(() => {
     // Recalculate stats when filter changes
     if (allCharacters.length > 0) {
-      // Always filter out retired characters
-      const nonRetired = allCharacters.filter(c => !c.retired);
-      const filteredCharacters = showOnlyPresent 
-        ? nonRetired.filter(c => c.present === true)
-        : nonRetired;
+      // Filter out retired characters and optionally filter to only present
+      const filteredCharacters = allCharacters.filter(c => 
+        !c.retired && (!showOnlyPresent || c.present === true)
+      );
       
       if (filteredCharacters.length === 0) {
         setStats(null);
@@ -42,11 +41,10 @@ export const CharacterStatsScreen = () => {
       return;
     }
 
-    // Always filter out retired characters
-    const nonRetired = characters.filter(c => !c.retired);
-    const filteredCharacters = showOnlyPresent 
-      ? nonRetired.filter(c => c.present === true)
-      : nonRetired;
+    // Filter out retired characters and optionally filter to only present
+    const filteredCharacters = characters.filter(c => 
+      !c.retired && (!showOnlyPresent || c.present === true)
+    );
     
     if (filteredCharacters.length === 0) {
       setStats(null);
