@@ -214,6 +214,22 @@ export const CharacterListScreen: React.FC = () => {
           <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>
       </View>
+      <View style={styles.headerButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
+          onPress={() => setShowOnlyPresent(!showOnlyPresent)}
+        >
+          <Text style={styles.buttonText}>
+            {showOnlyPresent ? 'Show All' : 'Present Only'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.resetButton]}
+          onPress={handleResetAllPresent}
+        >
+          <Text style={styles.buttonText}>Reset Present</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={getFilteredCharacters()}
         renderItem={renderItem}
@@ -246,22 +262,6 @@ export const CharacterListScreen: React.FC = () => {
           onPress={handleCSVImport}
         >
           <Text style={styles.buttonText}>CSV Import</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.headerButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
-          onPress={() => setShowOnlyPresent(!showOnlyPresent)}
-        >
-          <Text style={styles.buttonText}>
-            {showOnlyPresent ? 'Show All' : 'Present Only'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.resetButton]}
-          onPress={handleResetAllPresent}
-        >
-          <Text style={styles.buttonText}>Reset Present</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.headerButtons}>
