@@ -159,7 +159,7 @@ export const CharacterListScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
       <FlatList
-        data={characters}
+        data={[...characters].sort((a, b) => a.name.localeCompare(b.name))}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         style={styles.list}
