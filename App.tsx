@@ -7,6 +7,7 @@ import { CharacterDetailScreen } from './src/screens/CharacterDetailScreen';
 import { CharacterFormScreen } from './src/screens/CharacterFormScreen';
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
 import { CharacterSearchScreen } from './src/screens/CharacterSearchScreen';
+import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation
@@ -76,6 +77,11 @@ export default function App() {
             name="CharacterSearch" 
             component={CharacterSearchScreen} 
             options={{ title: 'Search Characters' }}
+          />
+          <Stack.Screen 
+            name="DataManagement" 
+            component={DataManagementScreen} 
+            options={{ title: 'Data Management' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

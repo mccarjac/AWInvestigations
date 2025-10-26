@@ -2,8 +2,7 @@ import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView, TextInput } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
-import { loadCharacters, deleteCharacter, clearStorage, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
-import { exportCharacterData, importCharacterData, mergeCharacterData, showImportOptions, importCSVCharacters } from '@utils/exportImport';
+import { loadCharacters, deleteCharacter, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -31,87 +30,7 @@ export const CharacterListScreen: React.FC = () => {
     setCharacters(characters.filter(c => c.id !== id));
   };
 
-  const handleClearAll = async () => {
-    const confirmClear = () => {
-      if (Platform.OS === 'web') {
-        return window.confirm(
-          'Are you sure you want to delete all characters? This action cannot be undone.'
-        );
-      } else {
-        return new Promise<boolean>((resolve) => {
-          Alert.alert(
-            'Clear All Characters',
-            'Are you sure you want to delete all characters? This action cannot be undone.',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-                onPress: () => resolve(false),
-              },
-              {
-                text: 'Delete All',
-                style: 'destructive',
-                onPress: () => resolve(true),
-              },
-            ]
-          );
-        });
-      }
-    };
 
-    const shouldClear = await confirmClear();
-    if (shouldClear) {
-      await clearStorage();
-      setCharacters([]);
-    }
-  };
-
-  const handleExport = async () => {
-    await exportCharacterData();
-  };
-
-  const handleImport = async () => {
-    console.log('Import button clicked');
-    try {
-      // For debugging, let's try a direct import first
-      const success = await importCharacterData();
-      console.log('Import result:', success);
-      if (success) {
-        console.log('Import successful, reloading data...');
-        await loadData();
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-    }
-  };
-
-  const handleMerge = async () => {
-    console.log('Merge button clicked');
-    try {
-      const success = await mergeCharacterData();
-      console.log('Merge result:', success);
-      if (success) {
-        console.log('Merge successful, reloading data...');
-        await loadData();
-      }
-    } catch (error) {
-      console.error('Merge error:', error);
-    }
-  };
-
-  const handleCSVImport = async () => {
-    console.log('CSV Import button clicked');
-    try {
-      const success = await importCSVCharacters();
-      console.log('CSV Import result:', success);
-      if (success) {
-        console.log('CSV Import successful, reloading data...');
-        await loadData();
-      }
-    } catch (error) {
-      console.error('CSV Import error:', error);
-    }
-  };
 
   const handleTogglePresent = async (id: string) => {
     await toggleCharacterPresent(id);
@@ -271,40 +190,13 @@ export const CharacterListScreen: React.FC = () => {
         keyExtractor={item => item.id}
         style={styles.list}
       />
+      
       <View style={styles.headerButtons}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.exportButton]}
-          onPress={handleExport}
+          style={[styles.actionButton, styles.dataManagementButton]}
+          onPress={() => navigation.navigate('DataManagement')}
         >
-          <Text style={styles.buttonText}>Export</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.importButton]}
-          onPress={handleImport}
-        >
-          <Text style={styles.buttonText}>Import</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.mergeButton]}
-          onPress={handleMerge}
-        >
-          <Text style={styles.buttonText}>Merge</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.headerButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.csvImportButton]}
-          onPress={handleCSVImport}
-        >
-          <Text style={styles.buttonText}>CSV Import</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.headerButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.clearButton]}
-          onPress={handleClearAll}
-        >
-          <Text style={styles.buttonText}>Clear All</Text>
+          <Text style={styles.buttonText}>Data Management</Text>
         </TouchableOpacity>
       </View>
       </ScrollView>
@@ -382,29 +274,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent.success,
     borderColor: colors.accent.success,
   },
-  statsButton: {
+  dataManagementButton: {
     backgroundColor: colors.accent.info,
     borderColor: colors.accent.info,
-  },
-  clearButton: {
-    backgroundColor: colors.accent.danger,
-    borderColor: colors.accent.danger,
-  },
-  exportButton: {
-    backgroundColor: colors.accent.warning,
-    borderColor: colors.accent.warning,
-  },
-  importButton: {
-    backgroundColor: colors.accent.secondary,
-    borderColor: colors.accent.secondary,
-  },
-  mergeButton: {
-    backgroundColor: colors.accent.primary,
-    borderColor: colors.accent.primary,
-  },
-  csvImportButton: {
-    backgroundColor: colors.elevated,
-    borderColor: colors.accent.primary,
   },
   filterButton: {
     backgroundColor: colors.surface,
