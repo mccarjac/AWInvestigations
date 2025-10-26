@@ -18,7 +18,11 @@ export const loadCharacters = async (): Promise<GameCharacter[]> => {
   if (!data) return [];
   
   const dataset: CharacterDataset = JSON.parse(data);
-  return dataset.characters;
+  // Handle backward compatibility - set present to false for existing characters
+  return dataset.characters.map(character => ({
+    ...character,
+    present: character.present ?? false
+  }));
 };
 
 export const addCharacter = async (character: Omit<GameCharacter, 'id' | 'createdAt' | 'updatedAt'>): Promise<GameCharacter> => {
@@ -26,6 +30,7 @@ export const addCharacter = async (character: Omit<GameCharacter, 'id' | 'create
   const newCharacter: GameCharacter = {
     ...character,
     id: uuidv4(),
+    present: false, // Default to not present
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -240,6 +245,34 @@ export const mergeDatasetWithConflictResolution = async (jsonData: string): Prom
       added: []
     };
   }
+};
+
+export const toggleCharacterPresent = async (id: string): Promise<GameCharacter | null> => {
+  const characters = await loadCharacters();
+  const index = characters.findIndex(c => c.id === id);
+  
+  if (index === -1) return null;
+  
+  const updatedCharacter: GameCharacter = {
+    ...characters[index],
+    present: !characters[index].present,
+    updatedAt: new Date().toISOString()
+  };
+  
+  characters[index] = updatedCharacter;
+  await saveCharacters(characters);
+  return updatedCharacter;
+};
+
+export const resetAllPresentStatus = async (): Promise<void> => {
+  const characters = await loadCharacters();
+  const updatedCharacters = characters.map(character => ({
+    ...character,
+    present: false,
+    updatedAt: new Date().toISOString()
+  }));
+  
+  await saveCharacters(updatedCharacters);
 };
 
 export const clearStorage = async (): Promise<void> => {

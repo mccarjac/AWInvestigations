@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import { loadCharacters } from '../utils/characterStorage';
 import { calculateCharacterStats, CharacterStats } from '../utils/characterStats';
@@ -8,20 +8,48 @@ import { GameCharacter } from '@/models/types';
 export const CharacterStatsScreen = () => {
   const [stats, setStats] = useState<CharacterStats | null>(null);
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
+  const [showOnlyPresent, setShowOnlyPresent] = useState<boolean>(false);
+  const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
 
   useEffect(() => {
     loadStats();
   }, []);
 
+  useEffect(() => {
+    // Recalculate stats when filter changes
+    if (allCharacters.length > 0) {
+      const filteredCharacters = showOnlyPresent 
+        ? allCharacters.filter(c => c.present === true)
+        : allCharacters;
+      
+      if (filteredCharacters.length === 0) {
+        setStats(null);
+      } else {
+        const stats = calculateStats(filteredCharacters);
+        setStats(stats);
+      }
+    }
+  }, [showOnlyPresent, allCharacters]);
+
   const loadStats = async () => {
     const characters = await loadCharacters();
+    setAllCharacters(characters);
+    
     if (!characters.length) {
       setStats(null);
       return;
     }
 
-    const stats = calculateStats(characters);
-    setStats(stats);
+    const filteredCharacters = showOnlyPresent 
+      ? characters.filter(c => c.present === true)
+      : characters;
+    
+    if (filteredCharacters.length === 0) {
+      setStats(null);
+    } else {
+      const stats = calculateStats(filteredCharacters);
+      setStats(stats);
+    }
   };
 
   const calculateStats = (characters: GameCharacter[]): CharacterStats => {
@@ -104,6 +132,22 @@ export const CharacterStatsScreen = () => {
             showsVerticalScrollIndicator={true}
           >
       <Text style={styles.header}>Character Statistics</Text>
+      
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          style={[styles.filterButton, showOnlyPresent && styles.filterButtonActive]}
+          onPress={() => setShowOnlyPresent(!showOnlyPresent)}
+        >
+          <Text style={[styles.filterButtonText, showOnlyPresent && styles.filterButtonTextActive]}>
+            {showOnlyPresent ? 'Present Only ✓' : 'Show Present Only'}
+          </Text>
+        </TouchableOpacity>
+        <Text style={styles.filterInfo}>
+          {showOnlyPresent 
+            ? `Showing ${stats?.totalCharacters || 0} present characters` 
+            : `Showing all ${stats?.totalCharacters || 0} characters`}
+        </Text>
+      </View>
       
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>General Stats</Text>
@@ -252,6 +296,36 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  filterContainer: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  filterButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#E0E0E0',
+    borderWidth: 1,
+    borderColor: '#BDBDBD',
+    marginBottom: 8,
+  },
+  filterButtonActive: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#388E3C',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+  },
+  filterButtonTextActive: {
+    color: 'white',
+  },
+  filterInfo: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
   },
   section: {
     marginBottom: 24,

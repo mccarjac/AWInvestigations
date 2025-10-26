@@ -2,7 +2,7 @@ import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
-import { loadCharacters, deleteCharacter, clearStorage } from '@utils/characterStorage';
+import { loadCharacters, deleteCharacter, clearStorage, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
 import { exportCharacterData, importCharacterData, mergeCharacterData, showImportOptions, importCSVCharacters } from '@utils/exportImport';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,6 +10,7 @@ import { RootStackParamList } from '@/navigation/types';
 
 export const CharacterListScreen: React.FC = () => {
   const [characters, setCharacters] = React.useState<GameCharacter[]>([]);
+  const [showOnlyPresent, setShowOnlyPresent] = React.useState<boolean>(false);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const loadData = React.useCallback(async () => {
@@ -111,13 +112,68 @@ export const CharacterListScreen: React.FC = () => {
     }
   };
 
+  const handleTogglePresent = async (id: string) => {
+    await toggleCharacterPresent(id);
+    await loadData(); // Refresh the list
+  };
+
+  const handleResetAllPresent = async () => {
+    const confirmReset = () => {
+      if (Platform.OS === 'web') {
+        return window.confirm(
+          'Are you sure you want to reset present status for all characters?'
+        );
+      } else {
+        return new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'Reset Present Status',
+            'Are you sure you want to reset present status for all characters?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => resolve(false),
+              },
+              {
+                text: 'Reset All',
+                onPress: () => resolve(true),
+              },
+            ]
+          );
+        });
+      }
+    };
+
+    const shouldReset = await confirmReset();
+    if (shouldReset) {
+      await resetAllPresentStatus();
+      await loadData();
+    }
+  };
+
+  const getFilteredCharacters = () => {
+    const sorted = [...characters].sort((a, b) => a.name.localeCompare(b.name));
+    if (showOnlyPresent) {
+      return sorted.filter(c => c.present === true);
+    }
+    return sorted;
+  };
+
   const renderItem = ({ item }: { item: GameCharacter }) => (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, item.present && styles.cardPresent]}
       onPress={() => navigation.navigate('CharacterDetail', { character: item })}
     >
       <View style={styles.cardHeader}>
         <Text style={styles.name}>{item.name}</Text>
+        <TouchableOpacity
+          style={[styles.presentButton, item.present && styles.presentButtonActive]}
+          onPress={() => handleTogglePresent(item.id)}
+        >
+          <Text style={[styles.presentText, item.present && styles.presentTextActive]}>
+            {item.present ? 'Present' : 'Absent'}
+          </Text>
+        </TouchableOpacity>
       </View>
       <Text style={styles.factions}>
         {(item.factions || []).map(f => f.name).join(', ') || 'No factions'}
@@ -159,7 +215,7 @@ export const CharacterListScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
       <FlatList
-        data={[...characters].sort((a, b) => a.name.localeCompare(b.name))}
+        data={getFilteredCharacters()}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         style={styles.list}
@@ -190,6 +246,22 @@ export const CharacterListScreen: React.FC = () => {
           onPress={handleCSVImport}
         >
           <Text style={styles.buttonText}>CSV Import</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.headerButtons}>
+        <TouchableOpacity
+          style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
+          onPress={() => setShowOnlyPresent(!showOnlyPresent)}
+        >
+          <Text style={styles.buttonText}>
+            {showOnlyPresent ? 'Show All' : 'Present Only'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.resetButton]}
+          onPress={handleResetAllPresent}
+        >
+          <Text style={styles.buttonText}>Reset Present</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.headerButtons}>
@@ -251,6 +323,15 @@ const styles = StyleSheet.create({
   csvImportButton: {
     backgroundColor: '#673AB7',
   },
+  filterButton: {
+    backgroundColor: '#607D8B',
+  },
+  filterButtonActive: {
+    backgroundColor: '#4CAF50',
+  },
+  resetButton: {
+    backgroundColor: '#FF7043',
+  },
   buttonText: {
     color: 'white',
     fontSize: 16,
@@ -269,6 +350,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+  },
+  cardPresent: {
+    backgroundColor: '#E8F5E8',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -298,6 +384,26 @@ const styles = StyleSheet.create({
   deleteText: {
     color: 'white',
     fontSize: 14,
+  },
+  presentButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#E0E0E0',
+    borderWidth: 1,
+    borderColor: '#BDBDBD',
+  },
+  presentButtonActive: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#388E3C',
+  },
+  presentText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#757575',
+  },
+  presentTextActive: {
+    color: 'white',
   },
   headerButton: {
     backgroundColor: '#2196F3',

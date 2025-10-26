@@ -193,6 +193,7 @@ export interface GameCharacter {
   imageUri?: string;
   notes?: string;
   location?: Location;
+  present?: boolean;
   createdAt: string;
   updatedAt: string;
 }

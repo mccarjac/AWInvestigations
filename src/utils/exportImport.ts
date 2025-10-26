@@ -572,6 +572,7 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
     perkIds: [],
     distinctionIds: [],
     factions: [],
+    present: false, // Default to not present
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }));
