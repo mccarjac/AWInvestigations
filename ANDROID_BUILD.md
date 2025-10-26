@@ -35,12 +35,12 @@ eas build --platform android --profile preview
 
 This creates an APK file that can be directly installed on Android devices.
 
-#### For Production (AAB - Google Play Store)
+#### For Production (APK - Distribution)
 ```bash
 eas build --platform android --profile production
 ```
 
-This creates an Android App Bundle for Play Store submission.
+This creates a production-ready APK for distribution.
 
 ### 5. Monitor the Build
 - The build process runs on Expo's cloud servers
