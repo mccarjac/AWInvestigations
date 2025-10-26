@@ -151,7 +151,7 @@ export const CharacterStatsScreen = () => {
       
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>General Stats</Text>
-        <Text>Total Characters: {stats.totalCharacters}</Text>
+        <Text style={styles.listItemText}>Total Characters: {stats.totalCharacters}</Text>
       </View>
 
       <View style={styles.section}>
@@ -167,8 +167,8 @@ export const CharacterStatsScreen = () => {
               fontWeight="bold"
               radius={100}
               innerRadius={40}
-              innerCircleColor={'#f8f9fa'}
-              strokeColor="white"
+              innerCircleColor={colors.surface}
+              strokeColor={colors.border}
               strokeWidth={2}
               sectionAutoFocus
               focusOnPress
@@ -247,7 +247,7 @@ export const CharacterStatsScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Faction Membership</Text>
         {Object.entries(stats.factionDistribution).map(([factionName, count]) => (
-          <Text key={factionName}>{factionName}: {count} characters</Text>
+          <Text key={factionName} style={styles.factionMembershipText}>{factionName}: {count} characters</Text>
         ))}
       </View>
 
@@ -268,14 +268,14 @@ export const CharacterStatsScreen = () => {
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Most Common Perks</Text>
         {stats.commonPerks.map(({ name, count }) => (
-          <Text key={name}>{name}: {count} characters</Text>
+          <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
         ))}
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionHeader}>Most Common Distinctions</Text>
         {stats.commonDistinctions.map(({ name, count }) => (
-          <Text key={name}>{name}: {count} characters</Text>
+          <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
         ))}
       </View>
     </ScrollView>
@@ -283,73 +283,137 @@ export const CharacterStatsScreen = () => {
   );
 };
 
+// Modern Dark Color Palette
+const colors = {
+  // Background colors
+  primary: '#0F0F23',      // Deep dark blue-purple
+  secondary: '#1B1B3A',    // Slightly lighter dark
+  surface: '#262647',      // Card/surface color
+  elevated: '#2D2D54',     // Elevated surfaces
+  
+  // Text colors
+  text: {
+    primary: '#FFFFFF',    // Primary white text
+    secondary: '#B8B8CC',  // Secondary lighter text
+    muted: '#8E8EA0',      // Muted text
+  },
+  
+  // Accent colors
+  accent: {
+    primary: '#6366F1',    // Indigo primary
+    secondary: '#8B5CF6',  // Purple secondary
+    success: '#10B981',    // Green
+    warning: '#F59E0B',    // Amber
+    danger: '#EF4444',     // Red
+    info: '#3B82F6',       // Blue
+  },
+  
+  // Status colors
+  present: '#059669',      // Green for present
+  absent: '#6B7280',       // Gray for absent
+  
+  // Border and shadow
+  border: '#3F3F65',
+  shadow: '#000000',
+};
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
     paddingBottom: 100,
-    backgroundColor: '#fff',
+    backgroundColor: colors.primary,
   },
   scrollView: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.primary,
   },
   header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 24,
+    color: colors.text.primary,
+    letterSpacing: 0.5,
   },
   filterContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
     alignItems: 'center',
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   filterButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#E0E0E0',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    backgroundColor: colors.elevated,
     borderWidth: 1,
-    borderColor: '#BDBDBD',
+    borderColor: colors.border,
     marginBottom: 8,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   filterButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#388E3C',
+    backgroundColor: colors.accent.success,
+    borderColor: colors.accent.success,
   },
   filterButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#757575',
+    color: colors.text.muted,
+    letterSpacing: 0.3,
   },
   filterButtonTextActive: {
-    color: 'white',
+    color: colors.text.primary,
   },
   filterInfo: {
     fontSize: 12,
-    color: '#666',
+    color: colors.text.secondary,
     fontStyle: 'italic',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 16,
+    color: colors.text.primary,
+    letterSpacing: 0.3,
   },
   factionItem: {
-    marginVertical: 8,
-    paddingLeft: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#2196F3',
+    marginVertical: 12,
+    paddingLeft: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent.primary,
+    backgroundColor: colors.elevated,
+    padding: 12,
+    borderRadius: 8,
   },
   factionName: {
     fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: colors.text.primary,
   },
   standingText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.text.secondary,
     marginLeft: 8,
+    marginVertical: 2,
   },
   chartContainer: {
     alignItems: 'center',
@@ -361,34 +425,43 @@ const styles = StyleSheet.create({
   },
   centerLabelNumber: {
     fontSize: 24,
-    color: '#2C3E50',
-    fontWeight: 'bold',
+    color: colors.text.primary,
+    fontWeight: '700',
   },
   centerLabelText: {
     fontSize: 12,
-    color: '#7F8C8D',
+    color: colors.text.secondary,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   centerLabelSpecies: {
     fontSize: 16,
-    color: '#2C3E50',
-    fontWeight: 'bold',
+    color: colors.text.primary,
+    fontWeight: '600',
     textAlign: 'center',
     marginBottom: 4,
   },
   tooltip: {
     position: 'absolute',
     bottom: -30,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: colors.elevated,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 8,
     alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
   },
   tooltipText: {
-    color: 'white',
+    color: colors.text.primary,
     fontSize: 12,
     textAlign: 'center',
+    fontWeight: '500',
   },
   speciesLegend: {
     marginTop: 20,
@@ -397,38 +470,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: colors.elevated,
   },
   legendColorBox: {
     width: 16,
     height: 16,
-    borderRadius: 3,
+    borderRadius: 4,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colors.border,
   },
   legendText: {
     fontSize: 15,
-    color: '#2C3E50',
+    color: colors.text.primary,
     fontWeight: '500',
     flex: 1,
   },
   legendItemSelected: {
-    backgroundColor: '#E8F4FD',
-    borderRadius: 6,
-    paddingVertical: 2,
+    backgroundColor: colors.accent.secondary,
+    borderWidth: 1,
+    borderColor: colors.accent.primary,
   },
   legendColorBoxSelected: {
     borderWidth: 2,
-    borderColor: '#2C3E50',
+    borderColor: colors.accent.primary,
     transform: [{ scale: 1.1 }],
   },
   legendTextSelected: {
-    fontWeight: 'bold',
-    color: '#1A252F',
+    fontWeight: '600',
+    color: colors.text.primary,
   },
   speciesText: {
     fontSize: 14,
     marginVertical: 2,
+    color: colors.text.secondary,
+  },
+  factionMembershipText: {
+    fontSize: 15,
+    color: colors.text.primary,
+    marginVertical: 4,
+    fontWeight: '500',
+  },
+  listItemText: {
+    fontSize: 15,
+    color: colors.text.primary,
+    marginVertical: 4,
+    fontWeight: '500',
   },
 });

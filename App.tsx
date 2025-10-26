@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './src/navigation/types';
 import { CharacterListScreen } from './src/screens/CharacterListScreen';
@@ -8,6 +8,20 @@ import { CharacterFormScreen } from './src/screens/CharacterFormScreen';
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
 import { CharacterSearchScreen } from './src/screens/CharacterSearchScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// Dark theme for navigation
+const DarkTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#6C5CE7',
+    background: '#0F0F23',
+    card: '#262647',
+    text: '#FFFFFF',
+    border: '#404066',
+    notification: '#6C5CE7',
+  },
+};
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -18,8 +32,26 @@ export default function App() {
   }, []);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="CharacterList">
+      <NavigationContainer theme={DarkTheme}>
+        <Stack.Navigator 
+          initialRouteName="CharacterList"
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#262647',
+              borderBottomWidth: 1,
+              borderBottomColor: '#404066',
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '600',
+              fontSize: 18,
+              letterSpacing: 0.3,
+            },
+            cardStyle: {
+              backgroundColor: '#0F0F23',
+            },
+          }}
+        >
           <Stack.Screen 
             name="CharacterList" 
             component={CharacterListScreen} 

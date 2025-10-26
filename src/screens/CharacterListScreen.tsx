@@ -196,7 +196,7 @@ export const CharacterListScreen: React.FC = () => {
             >
       <View style={styles.headerButtons}>
         <TouchableOpacity
-          style={[styles.actionButton, styles.statsButton]}
+          style={[styles.actionButton, styles.addButton]}
           onPress={() => navigation.navigate('CharacterStats')}
         >
           <Text style={styles.buttonText}>Stats</Text>
@@ -277,14 +277,48 @@ export const CharacterListScreen: React.FC = () => {
   );
 };
 
+// Modern Dark Color Palette
+const colors = {
+  // Background colors
+  primary: '#0F0F23',      // Deep dark blue-purple
+  secondary: '#1B1B3A',    // Slightly lighter dark
+  surface: '#262647',      // Card/surface color
+  elevated: '#2D2D54',     // Elevated surfaces
+  
+  // Text colors
+  text: {
+    primary: '#FFFFFF',    // Primary white text
+    secondary: '#B8B8CC',  // Secondary lighter text
+    muted: '#8E8EA0',      // Muted text
+  },
+  
+  // Accent colors
+  accent: {
+    primary: '#6366F1',    // Indigo primary
+    secondary: '#8B5CF6',  // Purple secondary
+    success: '#10B981',    // Green
+    warning: '#F59E0B',    // Amber
+    danger: '#EF4444',     // Red
+    info: '#3B82F6',       // Blue
+  },
+  
+  // Status colors
+  present: '#059669',      // Green for present
+  absent: '#6B7280',       // Gray for absent
+  
+  // Border and shadow
+  border: '#3F3F65',
+  shadow: '#000000',
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.primary,
   },
   scrollView: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.primary,
   },
   contentContainer: {
     padding: 16,
@@ -298,63 +332,85 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   addButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.accent.success,
+    borderColor: colors.accent.success,
   },
   statsButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: colors.accent.info,
+    borderColor: colors.accent.info,
   },
   clearButton: {
-    backgroundColor: '#FF5252',
+    backgroundColor: colors.accent.danger,
+    borderColor: colors.accent.danger,
   },
   exportButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: colors.accent.warning,
+    borderColor: colors.accent.warning,
   },
   importButton: {
-    backgroundColor: '#9C27B0',
+    backgroundColor: colors.accent.secondary,
+    borderColor: colors.accent.secondary,
   },
   mergeButton: {
-    backgroundColor: '#009688',
+    backgroundColor: colors.accent.primary,
+    borderColor: colors.accent.primary,
   },
   csvImportButton: {
-    backgroundColor: '#673AB7',
+    backgroundColor: colors.elevated,
+    borderColor: colors.accent.primary,
   },
   filterButton: {
-    backgroundColor: '#607D8B',
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   filterButtonActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.accent.success,
+    borderColor: colors.accent.success,
   },
   resetButton: {
-    backgroundColor: '#FF7043',
+    backgroundColor: colors.accent.warning,
+    borderColor: colors.accent.warning,
   },
   buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: colors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   list: {
     flex: 1,
   },
   card: {
-    backgroundColor: 'white',
-    padding: 16,
+    backgroundColor: colors.surface,
+    padding: 20,
     marginVertical: 8,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 4,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   cardPresent: {
-    backgroundColor: '#E8F5E8',
+    backgroundColor: colors.surface,
     borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
+    borderLeftColor: colors.present,
+    borderColor: colors.present,
+    shadowColor: colors.present,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -363,57 +419,74 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: colors.text.primary,
+    letterSpacing: 0.3,
   },
   xp: {
     fontSize: 16,
-    color: '#666',
+    color: colors.text.secondary,
   },
   factions: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+    color: colors.text.muted,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   deleteButton: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: '#ff5252',
-    borderRadius: 4,
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.accent.danger,
+    borderRadius: 8,
     alignSelf: 'flex-end',
+    borderWidth: 1,
+    borderColor: colors.accent.danger,
+    shadowColor: colors.accent.danger,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   deleteText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  presentButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#E0E0E0',
-    borderWidth: 1,
-    borderColor: '#BDBDBD',
-  },
-  presentButtonActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#388E3C',
-  },
-  presentText: {
+    color: colors.text.primary,
     fontSize: 12,
     fontWeight: '600',
-    color: '#757575',
+    letterSpacing: 0.5,
   },
-  presentTextActive: {
-    color: 'white',
-  },
-  headerButton: {
-    backgroundColor: '#2196F3',
+  presentButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 4,
+    borderRadius: 16,
+    backgroundColor: colors.elevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  presentButtonActive: {
+    backgroundColor: colors.present,
+    borderColor: colors.present,
+  },
+  presentText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.text.muted,
+    letterSpacing: 0.3,
+  },
+  presentTextActive: {
+    color: colors.text.primary,
+  },
+  headerButton: {
+    backgroundColor: colors.accent.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent.primary,
   },
   headerButtonText: {
-    color: 'white',
+    color: colors.text.primary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
 });
