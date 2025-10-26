@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, clearStorage } from '@utils/characterStorage';
-import { exportCharacterData, importCharacterData, mergeCharacterData, showImportOptions } from '@utils/exportImport';
+import { exportCharacterData, importCharacterData, mergeCharacterData, showImportOptions, importCSVCharacters } from '@utils/exportImport';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -97,6 +97,20 @@ export const CharacterListScreen: React.FC = () => {
     }
   };
 
+  const handleCSVImport = async () => {
+    console.log('CSV Import button clicked');
+    try {
+      const success = await importCSVCharacters();
+      console.log('CSV Import result:', success);
+      if (success) {
+        console.log('CSV Import successful, reloading data...');
+        await loadData();
+      }
+    } catch (error) {
+      console.error('CSV Import error:', error);
+    }
+  };
+
   const renderItem = ({ item }: { item: GameCharacter }) => (
     <TouchableOpacity
       style={styles.card}
@@ -118,7 +132,12 @@ export const CharacterListScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={{ height: 882, overflow: 'scroll' }}>
+      <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.contentContainer}
+              showsVerticalScrollIndicator={true}
+            >
       <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, styles.statsButton]}
@@ -167,12 +186,21 @@ export const CharacterListScreen: React.FC = () => {
       </View>
       <View style={styles.headerButtons}>
         <TouchableOpacity
+          style={[styles.actionButton, styles.csvImportButton]}
+          onPress={handleCSVImport}
+        >
+          <Text style={styles.buttonText}>CSV Import</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.headerButtons}>
+        <TouchableOpacity
           style={[styles.actionButton, styles.clearButton]}
           onPress={handleClearAll}
         >
           <Text style={styles.buttonText}>Clear All</Text>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     </View>
   );
 };
@@ -182,6 +210,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#f5f5f5',
+  },
+  scrollView: {
+    backgroundColor: '#f5f5f5',
+  },
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 100,
   },
   headerButtons: {
     flexDirection: 'row',
@@ -212,6 +247,9 @@ const styles = StyleSheet.create({
   },
   mergeButton: {
     backgroundColor: '#009688',
+  },
+  csvImportButton: {
+    backgroundColor: '#673AB7',
   },
   buttonText: {
     color: 'white',
