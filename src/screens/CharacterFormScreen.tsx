@@ -40,6 +40,8 @@ export const CharacterFormScreen: React.FC = () => {
   const editingCharacter = route.params?.character;
   const [selectedPerkTag, setSelectedPerkTag] = useState<string>('');
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
+  const [availableFactions, setAvailableFactions] = useState<string[]>([]);
+  const [showCustomFactionInput, setShowCustomFactionInput] = useState<{[key: number]: boolean}>({});
 
   const [form, setForm] = useState<CharacterFormData>(
     editingCharacter ? {
@@ -74,6 +76,15 @@ export const CharacterFormScreen: React.FC = () => {
       try {
         const characters = await loadCharacters();
         setAllCharacters(characters);
+        
+        // Extract unique faction names from all characters
+        const factionNames = new Set<string>();
+        characters.forEach(character => {
+          character.factions.forEach(faction => {
+            factionNames.add(faction.name);
+          });
+        });
+        setAvailableFactions(Array.from(factionNames).sort());
       } catch (error) {
         console.error('Failed to load characters:', error);
       }
@@ -350,16 +361,63 @@ export const CharacterFormScreen: React.FC = () => {
           <Text style={styles.label}>Factions</Text>
           {form.factions.map((faction, index) => (
             <View key={index} style={styles.factionContainer}>
-              <TextInput
-                style={styles.factionInput}
-                value={faction.name}
-                onChangeText={(value) => {
-                  const newFactions = [...form.factions];
-                  newFactions[index] = { ...faction, name: value };
-                  handleChange('factions', newFactions);
-                }}
-                placeholder="Faction Name"
-              />
+              {showCustomFactionInput[index] ? (
+                <View style={styles.customFactionContainer}>
+                  <TextInput
+                    style={styles.factionInput}
+                    value={faction.name}
+                    onChangeText={(value) => {
+                      const newFactions = [...form.factions];
+                      newFactions[index] = { ...faction, name: value };
+                      handleChange('factions', newFactions);
+                      
+                      // Add new faction to available list if it doesn't exist
+                      if (value.trim() && !availableFactions.includes(value.trim())) {
+                        setAvailableFactions(prev => [...prev, value.trim()].sort());
+                      }
+                    }}
+                    placeholder="Enter new faction name"
+                    autoFocus={true}
+                    onBlur={() => {
+                      // Switch back to dropdown if input is empty
+                      if (!faction.name.trim()) {
+                        setShowCustomFactionInput(prev => ({ ...prev, [index]: false }));
+                      }
+                    }}
+                  />
+                  <TouchableOpacity
+                    style={styles.backToDropdownButton}
+                    onPress={() => {
+                      setShowCustomFactionInput(prev => ({ ...prev, [index]: false }));
+                    }}
+                  >
+                    <Text style={styles.backToDropdownText}>↩</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Picker
+                  selectedValue={faction.name || ""}
+                  style={styles.factionInput}
+                  onValueChange={(value) => {
+                    if (value === "__ADD_NEW__") {
+                      setShowCustomFactionInput(prev => ({ ...prev, [index]: true }));
+                      const newFactions = [...form.factions];
+                      newFactions[index] = { ...faction, name: "" };
+                      handleChange('factions', newFactions);
+                    } else if (value && value !== faction.name) {
+                      const newFactions = [...form.factions];
+                      newFactions[index] = { ...faction, name: value };
+                      handleChange('factions', newFactions);
+                    }
+                  }}
+                >
+                  <Picker.Item label="Select a faction..." value="" />
+                  {availableFactions.map(factionName => (
+                    <Picker.Item key={factionName} label={factionName} value={factionName} />
+                  ))}
+                  <Picker.Item label="Add New Faction..." value="__ADD_NEW__" />
+                </Picker>
+              )}
               <Picker
                 selectedValue={faction.standing}
                 style={styles.factionStanding}
@@ -733,6 +791,25 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  customFactionContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  backToDropdownButton: {
+    backgroundColor: colors.accent.secondary,
+    padding: 8,
+    borderRadius: 6,
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backToDropdownText: {
+    color: colors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
   },
   factionStanding: {
     width: '35%',
