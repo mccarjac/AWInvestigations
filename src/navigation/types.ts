@@ -5,6 +5,8 @@ export type RootStackParamList = {
   CharacterStats: undefined;
   CharacterSearch: undefined;
   DataManagement: undefined;
+  Factions: undefined;
+  FactionDetails: { factionName: string };
   CharacterForm: { 
     character?: GameCharacter;
     onSubmit?: (character: GameCharacter) => void;

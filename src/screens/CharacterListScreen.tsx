@@ -147,6 +147,15 @@ export const CharacterListScreen: React.FC = () => {
           <Text style={styles.buttonText}>Search</Text>
         </TouchableOpacity>
       </View>
+      
+      <View style={styles.headerButtons}>
+        <TouchableOpacity 
+          style={[styles.actionButton, styles.factionButton]}
+          onPress={() => navigation.navigate('Factions')}
+        >
+          <Text style={styles.buttonText}>Factions</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
@@ -277,6 +286,10 @@ const styles = StyleSheet.create({
   dataManagementButton: {
     backgroundColor: colors.accent.info,
     borderColor: colors.accent.info,
+  },
+  factionButton: {
+    backgroundColor: colors.accent.secondary,
+    borderColor: colors.accent.secondary,
   },
   filterButton: {
     backgroundColor: colors.surface,

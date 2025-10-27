@@ -8,6 +8,8 @@ import { CharacterFormScreen } from './src/screens/CharacterFormScreen';
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
 import { CharacterSearchScreen } from './src/screens/CharacterSearchScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
+import { FactionScreen } from './src/screens/FactionScreen';
+import { FactionDetailsScreen } from './src/screens/FactionDetailsScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation
@@ -82,6 +84,16 @@ export default function App() {
             name="DataManagement" 
             component={DataManagementScreen} 
             options={{ title: 'Data Management' }}
+          />
+          <Stack.Screen 
+            name="Factions" 
+            component={FactionScreen} 
+            options={{ title: 'Factions' }}
+          />
+          <Stack.Screen 
+            name="FactionDetails" 
+            component={FactionDetailsScreen} 
+            options={({ route }) => ({ title: route.params.factionName })}
           />
         </Stack.Navigator>
       </NavigationContainer>

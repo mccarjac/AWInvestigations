@@ -1,8 +1,22 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CharacterDataset, GameCharacter } from '@models/types';
+import { CharacterDataset, GameCharacter, Faction } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 
+interface StoredFaction {
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FactionDataset {
+  factions: StoredFaction[];
+  version: string;
+  lastUpdated: string;
+}
+
 const STORAGE_KEY = 'gameCharacterManager';
+const FACTION_STORAGE_KEY = 'gameCharacterManager_factions';
 
 export const saveCharacters = async (characters: GameCharacter[]): Promise<void> => {
   const dataset: CharacterDataset = {
@@ -306,4 +320,121 @@ export const resetAllPresentStatus = async (): Promise<void> => {
 
 export const clearStorage = async (): Promise<void> => {
   await AsyncStorage.removeItem(STORAGE_KEY);
+  await AsyncStorage.removeItem(FACTION_STORAGE_KEY);
+};
+
+// Faction management functions
+export const saveFactions = async (factions: StoredFaction[]): Promise<void> => {
+  const dataset: FactionDataset = {
+    factions,
+    version: '1.0',
+    lastUpdated: new Date().toISOString()
+  };
+  await AsyncStorage.setItem(FACTION_STORAGE_KEY, JSON.stringify(dataset));
+};
+
+export const loadFactions = async (): Promise<StoredFaction[]> => {
+  const data = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
+  if (!data) return [];
+  
+  const dataset: FactionDataset = JSON.parse(data);
+  return dataset.factions || [];
+};
+
+export const getFactionDescription = async (factionName: string): Promise<string> => {
+  const factions = await loadFactions();
+  const faction = factions.find(f => f.name === factionName);
+  return faction?.description || '';
+};
+
+export const saveFactionDescription = async (factionName: string, description: string): Promise<void> => {
+  const factions = await loadFactions();
+  const existingIndex = factions.findIndex(f => f.name === factionName);
+  
+  const now = new Date().toISOString();
+  
+  if (existingIndex >= 0) {
+    // Update existing faction
+    factions[existingIndex] = {
+      ...factions[existingIndex],
+      description,
+      updatedAt: now
+    };
+  } else {
+    // Create new faction
+    factions.push({
+      name: factionName,
+      description,
+      createdAt: now,
+      updatedAt: now
+    });
+  }
+  
+  await saveFactions(factions);
+};
+
+export const getAllStoredFactions = async (): Promise<StoredFaction[]> => {
+  return await loadFactions();
+};
+
+export const deleteFaction = async (factionName: string): Promise<boolean> => {
+  const factions = await loadFactions();
+  const filtered = factions.filter(f => f.name !== factionName);
+  
+  if (filtered.length === factions.length) return false;
+  
+  await saveFactions(filtered);
+  return true;
+};
+
+// Migration function to move faction descriptions from character data to centralized storage
+export const migrateFactionDescriptions = async (): Promise<void> => {
+  try {
+    const characters = await loadCharacters();
+    const existingFactions = await loadFactions();
+    const factionDescriptions = new Map<string, string>();
+
+    // Collect all faction descriptions from characters
+    characters.forEach(character => {
+      character.factions.forEach(faction => {
+        if (faction.description && faction.description.trim() !== '') {
+          // Use the first non-empty description found for each faction
+          if (!factionDescriptions.has(faction.name)) {
+            factionDescriptions.set(faction.name, faction.description);
+          }
+        }
+      });
+    });
+
+    // Create or update centralized faction storage
+    const updatedFactions = [...existingFactions];
+    
+    factionDescriptions.forEach((description, factionName) => {
+      const existingIndex = updatedFactions.findIndex(f => f.name === factionName);
+      const now = new Date().toISOString();
+      
+      if (existingIndex >= 0) {
+        // Update existing faction if it has no description
+        if (!updatedFactions[existingIndex].description) {
+          updatedFactions[existingIndex] = {
+            ...updatedFactions[existingIndex],
+            description,
+            updatedAt: now
+          };
+        }
+      } else {
+        // Create new faction entry
+        updatedFactions.push({
+          name: factionName,
+          description,
+          createdAt: now,
+          updatedAt: now
+        });
+      }
+    });
+
+    await saveFactions(updatedFactions);
+  } catch (error) {
+    console.error('Error migrating faction descriptions:', error);
+  }
 };
