@@ -4,14 +4,21 @@ import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '@/navigation/types';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
+
+type NavigationProp = CompositeNavigationProp<
+  DrawerNavigationProp<RootDrawerParamList, 'CharacterList'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 export const CharacterListScreen: React.FC = () => {
   const [characters, setCharacters] = React.useState<GameCharacter[]>([]);
   const [showOnlyPresent, setShowOnlyPresent] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>('');
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp>();
 
   const loadData = React.useCallback(async () => {
     const data = await loadCharacters();
@@ -125,34 +132,10 @@ export const CharacterListScreen: React.FC = () => {
       <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, styles.addButton]}
-          onPress={() => navigation.navigate('CharacterStats')}
-        >
-          <Text style={styles.buttonText}>Stats</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.addButton]}
           onPress={() => navigation.navigate('CharacterForm', {})}
         >
-          <Text style={styles.buttonText}>Add</Text>
+          <Text style={styles.buttonText}>Add Character</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.addButton]}
-          onPress={() => navigation.navigate('CharacterSearch')}
-        >
-          <Text style={styles.buttonText}>Search</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.headerButtons}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.factionButton]}
-          onPress={() => navigation.navigate('Factions')}
-        >
-          <Text style={styles.buttonText}>Factions</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
           onPress={() => setShowOnlyPresent(!showOnlyPresent)}
@@ -161,6 +144,9 @@ export const CharacterListScreen: React.FC = () => {
             {showOnlyPresent ? 'Show All' : 'Present Only'}
           </Text>
         </TouchableOpacity>
+      </View>
+      
+      <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, styles.resetButton]}
           onPress={handleResetAllPresent}
@@ -192,14 +178,7 @@ export const CharacterListScreen: React.FC = () => {
   );
 
   const renderFooter = () => (
-    <View style={styles.headerButtons}>
-      <TouchableOpacity
-        style={[styles.actionButton, styles.dataManagementButton]}
-        onPress={() => navigation.navigate('DataManagement')}
-      >
-        <Text style={styles.buttonText}>Data Management</Text>
-      </TouchableOpacity>
-    </View>
+    <View style={styles.footerPadding} />
   );
 
   return (
@@ -447,5 +426,8 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     fontSize: 12,
     fontWeight: '600',
+  },
+  footerPadding: {
+    height: 50,
   },
 });

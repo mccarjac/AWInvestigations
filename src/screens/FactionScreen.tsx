@@ -4,10 +4,15 @@ import { Text } from 'react-native';
 import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
 import { loadCharacters, getFactionDescription, migrateFactionDescriptions } from '@utils/characterStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '@/navigation/types';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 
-type FactionNavigationProp = StackNavigationProp<RootStackParamList>;
+type FactionNavigationProp = CompositeNavigationProp<
+  DrawerNavigationProp<RootDrawerParamList, 'Factions'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 interface FactionInfo {
   faction: Faction;
