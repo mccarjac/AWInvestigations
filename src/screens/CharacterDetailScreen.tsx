@@ -266,6 +266,11 @@ export const CharacterDetailScreen: React.FC = () => {
           <Text style={styles.subheader}>
             Species: {character.species} / Location: {character.location}
           </Text>
+          {character.occupation && (
+            <Text style={styles.subheader}>
+              Occupation: {character.occupation}
+            </Text>
+          )}
           {character.retired && (
             <View style={styles.retiredBadge}>
               <Text style={styles.retiredText}>RETIRED</Text>

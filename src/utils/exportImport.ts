@@ -647,6 +647,14 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
           characters[j - 1].notes = notesValue;
         }
       }
+    } else if (propertyName.toLowerCase() === 'occupation') {
+      // Set occupation for each character
+      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
+        const occupationValue = values[j];
+        if (occupationValue && occupationValue !== '') {
+          characters[j - 1].occupation = occupationValue;
+        }
+      }
     } else if (propertyName.toLowerCase() === 'factions' || propertyName.toLowerCase() === 'faction') {
       // Set factions for each character with Ally standing (supports comma-separated list)
       console.log(`Processing factions row with values:`, values);

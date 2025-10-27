@@ -50,6 +50,7 @@ export const CharacterFormScreen: React.FC = () => {
       factions: [...editingCharacter.factions],
       relationships: [...(editingCharacter.relationships || [])],
       notes: editingCharacter.notes || '',
+      occupation: editingCharacter.occupation || '',
       imageUri: editingCharacter.imageUri,
       location: editingCharacter.location,
       retired: editingCharacter.retired,
@@ -61,6 +62,7 @@ export const CharacterFormScreen: React.FC = () => {
       factions: [],
       relationships: [],
       notes: '',
+      occupation: '',
       imageUri: undefined,
       location: Location.Downtown,
       retired: false,
@@ -488,6 +490,16 @@ export const CharacterFormScreen: React.FC = () => {
               {form.retired ? '🔒 Retired' : '✓ Active'}
             </Text>
           </TouchableOpacity>
+        </View>
+
+        <View style={styles.formSection}>
+          <Text style={styles.label}>Occupation</Text>
+          <TextInput
+            style={styles.input}
+            value={form.occupation}
+            onChangeText={(value) => handleChange('occupation', value)}
+            placeholder="Character Occupation"
+          />
         </View>
 
         <View style={styles.formSection}>

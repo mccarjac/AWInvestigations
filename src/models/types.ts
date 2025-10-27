@@ -222,6 +222,7 @@ export interface GameCharacter {
   imageUri?: string;
   notes?: string;
   location?: Location;
+  occupation?: string;
   present?: boolean;
   retired?: boolean;
   createdAt: string;

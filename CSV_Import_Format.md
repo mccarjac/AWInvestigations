@@ -18,6 +18,7 @@ The CSV should follow this structure:
 Name,Character1,Character2,Character3
 Frequently Located,Hospital,Garage,Sanguine Springs
 Faction,"Steel Guard, City Council","Mechanics Union","Wasteland Traders, Nomad Clans"
+Occupation,Security Officer,Repair Specialist,Wasteland Trader
 Notes,Security android,Repair specialist,Mutant trader
 Species,Human,Android,Mutant
 Agile Strikes,TRUE,FALSE,TRUE
@@ -37,6 +38,7 @@ Bad With Pets,TRUE,FALSE,FALSE
   - Partial matches work (e.g., "Repair Hall" → Garage, "Sprawl" → Downtown)
   - Unknown locations default to "Unknown"
 - **Faction**: Comma-separated or semicolon-separated list of faction names. Characters will automatically have "Ally" relationship standing with all specified factions
+- **Occupation**: Free-text field for character occupation/job (e.g., "Security Officer", "Mechanic", "Trader")
 - **Notes**: Free-text notes about the character
 - **Species**: Must match valid species names exactly:
   - Base Species: Android, Drone, Human, Mutant, Nomad, Stray, Unturned, Unknown
@@ -76,6 +78,7 @@ Use the exact distinction names as they appear in the game. Set to `TRUE` or `1`
 Name,Alice,Bob,Charlie
 Frequently Located,Hospital,Repair Hall,Sanguine Springs
 Faction,"Steel Guard, City Council",Mechanics Union,"Wasteland Traders, Nomad Clans"
+Occupation,Security Officer,Maintenance Tech,Wasteland Trader
 Notes,Security officer,Maintenance android,Trader from the wastes
 Species,Human,Android,Mutant
 Agile Strikes,TRUE,FALSE,TRUE
@@ -86,6 +89,6 @@ Bite Vulnerability,TRUE,FALSE,FALSE
 ```
 
 This would create:
-- Alice: Human at Hospital with ally factions "Steel Guard" and "City Council", notes "Security officer", has Agile Strikes, Duck And Cover, and Bite Vulnerability
-- Bob: Android at Garage with ally faction "Mechanics Union", notes "Maintenance android", has Danger Sense, Duck And Cover, and Apathetic distinction  
-- Charlie: Mutant at Sanguine Springs with ally factions "Wasteland Traders" and "Nomad Clans", notes "Trader from the wastes", has Agile Strikes
+- Alice: Human at Hospital with ally factions "Steel Guard" and "City Council", occupation "Security Officer", notes "Security officer", has Agile Strikes, Duck And Cover, and Bite Vulnerability
+- Bob: Android at Garage with ally faction "Mechanics Union", occupation "Maintenance Tech", notes "Maintenance android", has Danger Sense, Duck And Cover, and Apathetic distinction  
+- Charlie: Mutant at Sanguine Springs with ally factions "Wasteland Traders" and "Nomad Clans", occupation "Wasteland Trader", notes "Trader from the wastes", has Agile Strikes
