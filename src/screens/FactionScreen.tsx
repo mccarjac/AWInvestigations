@@ -174,22 +174,21 @@ export const FactionScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Factions ({factionInfos.length})</Text>
-          <Text style={styles.sectionDescription}>
-            Tap any faction to view detailed information, manage members, and modify standings.
-          </Text>
-          
-          <FlatList
-            data={factionInfos}
-            renderItem={renderFactionItem}
-            keyExtractor={(item) => item.faction.name}
-            style={styles.factionList}
-            scrollEnabled={true}
-          />
-        </View>
-      </ScrollView>
+      <FlatList
+        data={factionInfos}
+        renderItem={renderFactionItem}
+        keyExtractor={(item) => item.faction.name}
+        style={styles.factionList}
+        contentContainerStyle={styles.contentContainer}
+        ListHeaderComponent={() => (
+          <View style={styles.headerSection}>
+            <Text style={styles.sectionTitle}>Factions ({factionInfos.length})</Text>
+            <Text style={styles.sectionDescription}>
+              Tap any faction to view detailed information, manage members, and modify standings.
+            </Text>
+          </View>
+        )}
+      />
     </View>
   );
 };
@@ -266,7 +265,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   factionList: {
-    maxHeight: 400,
+    flex: 1,
+  },
+  headerSection: {
+    marginBottom: 20,
   },
   factionCard: {
     backgroundColor: colors.surface,
