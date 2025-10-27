@@ -29,10 +29,6 @@ const DarkTheme = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
-    React.useEffect(() => {
-    console.log('Window height:', window.innerHeight);
-    console.log('Document height:', document.documentElement.clientHeight);
-  }, []);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer theme={DarkTheme}>

@@ -4,13 +4,13 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
+    "android": "expo start --go --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native-picker/picker": "^2.11.4",
+    "@react-native-picker/picker": "2.11.1",
     "@react-navigation/native": "^7.1.18",
     "@react-navigation/native-stack": "^7.3.28",
     "@react-navigation/stack": "^7.4.10",
@@ -27,12 +27,12 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-chart-kit": "^6.12.0",
-    "react-native-gesture-handler": "^2.28.0",
+    "react-native-gesture-handler": "~2.28.0",
     "react-native-gifted-charts": "^1.4.64",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-svg": "^15.14.0",
+    "react-native-svg": "15.12.1",
     "react-native-svg-web": "^1.0.9",
     "react-native-web": "^0.21.0",
     "uuid": "^13.0.0"
