@@ -181,7 +181,7 @@ export const FactionScreen: React.FC = () => {
             renderItem={renderFactionItem}
             keyExtractor={(item) => item.faction.name}
             style={styles.factionList}
-            scrollEnabled={false}
+            scrollEnabled={true}
           />
         </View>
       </ScrollView>
