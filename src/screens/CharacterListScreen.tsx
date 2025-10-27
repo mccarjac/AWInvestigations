@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, TextInput } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
@@ -31,6 +31,20 @@ export const CharacterListScreen: React.FC = () => {
       loadData();
     }, [loadData])
   );
+
+  // Set up the header with a plus button
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.headerAddButton}
+          onPress={() => navigation.navigate('CharacterForm', {})}
+        >
+          <Text style={styles.headerAddButtonText}>+</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const handleDelete = async (id: string) => {
     await deleteCharacter(id);
@@ -78,7 +92,7 @@ export const CharacterListScreen: React.FC = () => {
     }
   };
 
-  const getFilteredCharacters = () => {
+  const getFilteredCharacters = React.useCallback(() => {
     // First filter out retired characters
     let filtered = characters.filter(c => !c.retired);
     
@@ -97,9 +111,11 @@ export const CharacterListScreen: React.FC = () => {
     
     // Sort alphabetically
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  };
+  }, [characters, searchQuery, showOnlyPresent]);
 
-  const renderItem = ({ item }: { item: GameCharacter }) => (
+  const filteredCharacters = React.useMemo(() => getFilteredCharacters(), [getFilteredCharacters]);
+
+  const renderItem = React.useCallback(({ item }: { item: GameCharacter }) => (
     <TouchableOpacity
       style={[styles.card, item.present && styles.cardPresent]}
       onPress={() => navigation.navigate('CharacterDetail', { character: item })}
@@ -131,17 +147,11 @@ export const CharacterListScreen: React.FC = () => {
         <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
     </TouchableOpacity>
-  );
+  ), [navigation, handleTogglePresent, handleDelete]);
 
-  const renderHeader = () => (
+  const renderHeader = React.useCallback(() => (
     <View>
       <View style={styles.headerButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.addButton]}
-          onPress={() => navigation.navigate('CharacterForm', {})}
-        >
-          <Text style={styles.buttonText}>Add Character</Text>
-        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
           onPress={() => setShowOnlyPresent(!showOnlyPresent)}
@@ -150,9 +160,6 @@ export const CharacterListScreen: React.FC = () => {
             {showOnlyPresent ? 'Show All' : 'Present Only'}
           </Text>
         </TouchableOpacity>
-      </View>
-      
-      <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, styles.resetButton]}
           onPress={handleResetAllPresent}
@@ -160,9 +167,18 @@ export const CharacterListScreen: React.FC = () => {
           <Text style={styles.buttonText}>Reset Present</Text>
         </TouchableOpacity>
       </View>
-      
+    </View>
+  ), [showOnlyPresent, handleResetAllPresent]);
+
+  const renderFooter = React.useCallback(() => (
+    <View style={styles.footerPadding} />
+  ), []);
+
+  return (
+    <View style={styles.container}>
       <View style={styles.searchContainer}>
         <TextInput
+          key="search-input"
           style={styles.searchInput}
           placeholder="Search characters by name..."
           placeholderTextColor={colors.text.muted}
@@ -170,6 +186,8 @@ export const CharacterListScreen: React.FC = () => {
           onChangeText={setSearchQuery}
           autoCapitalize="none"
           autoCorrect={false}
+          blurOnSubmit={false}
+          autoFocus={false}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity
@@ -180,17 +198,8 @@ export const CharacterListScreen: React.FC = () => {
           </TouchableOpacity>
         )}
       </View>
-    </View>
-  );
-
-  const renderFooter = () => (
-    <View style={styles.footerPadding} />
-  );
-
-  return (
-    <View style={styles.container}>
       <FlatList
-        data={getFilteredCharacters()}
+        data={filteredCharacters}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         ListHeaderComponent={renderHeader}
@@ -240,7 +249,6 @@ const colors = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: colors.primary,
   },
 
@@ -267,9 +275,25 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  addButton: {
+  headerAddButton: {
+    marginRight: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.accent.success,
-    borderColor: colors.accent.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerAddButtonText: {
+    color: colors.text.primary,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 24,
   },
   dataManagementButton: {
     backgroundColor: colors.accent.info,
@@ -403,7 +427,8 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     position: 'relative',
-    marginBottom: 16,
+    margin: 16,
+    marginBottom: 8,
   },
   searchInput: {
     backgroundColor: colors.surface,
