@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView, TextInput } from 'react-native';
+import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, TextInput } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter } from '@models/types';
 import { loadCharacters, deleteCharacter, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
@@ -120,13 +120,8 @@ export const CharacterListScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
-  return (
-    <View style={{ height: 882, overflow: 'scroll' }}>
-      <ScrollView
-              style={styles.scrollView}
-              contentContainerStyle={styles.contentContainer}
-              showsVerticalScrollIndicator={true}
-            >
+  const renderHeader = () => (
+    <View>
       <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, styles.addButton]}
@@ -156,6 +151,7 @@ export const CharacterListScreen: React.FC = () => {
           <Text style={styles.buttonText}>Factions</Text>
         </TouchableOpacity>
       </View>
+      
       <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
@@ -192,23 +188,32 @@ export const CharacterListScreen: React.FC = () => {
           </TouchableOpacity>
         )}
       </View>
-      
+    </View>
+  );
+
+  const renderFooter = () => (
+    <View style={styles.headerButtons}>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.dataManagementButton]}
+        onPress={() => navigation.navigate('DataManagement')}
+      >
+        <Text style={styles.buttonText}>Data Management</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
       <FlatList
         data={getFilteredCharacters()}
         renderItem={renderItem}
         keyExtractor={item => item.id}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
         style={styles.list}
+        showsVerticalScrollIndicator={true}
+        contentContainerStyle={styles.contentContainer}
       />
-      
-      <View style={styles.headerButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.dataManagementButton]}
-          onPress={() => navigation.navigate('DataManagement')}
-        >
-          <Text style={styles.buttonText}>Data Management</Text>
-        </TouchableOpacity>
-      </View>
-      </ScrollView>
     </View>
   );
 };
@@ -253,9 +258,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: colors.primary,
   },
-  scrollView: {
-    backgroundColor: colors.primary,
-  },
+
   contentContainer: {
     padding: 16,
     paddingBottom: 100,
