@@ -17,6 +17,7 @@ The CSV should follow this structure:
 ```csv
 Name,Character1,Character2,Character3
 Frequently Located,Hospital,Garage,Sanguine Springs
+Faction,"Steel Guard, City Council","Mechanics Union","Wasteland Traders, Nomad Clans"
 Notes,Security android,Repair specialist,Mutant trader
 Species,Human,Android,Mutant
 Agile Strikes,TRUE,FALSE,TRUE
@@ -35,6 +36,7 @@ Bad With Pets,TRUE,FALSE,FALSE
   - Hospital, Garage, Crafting Hall, Downtown, Sanguine Springs, Grimerust Heights
   - Partial matches work (e.g., "Repair Hall" → Garage, "Sprawl" → Downtown)
   - Unknown locations default to "Unknown"
+- **Faction**: Comma-separated or semicolon-separated list of faction names. Characters will automatically have "Ally" relationship standing with all specified factions
 - **Notes**: Free-text notes about the character
 - **Species**: Must match valid species names exactly:
   - Base Species: Android, Drone, Human, Mutant, Nomad, Stray, Unturned, Unknown
@@ -53,15 +55,19 @@ Use the exact distinction names as they appear in the game. Set to `TRUE` or `1`
 3. The system will:
    - Parse character names from the header row
    - Create new characters for each name
-   - Apply species, perks, and distinctions based on TRUE/1 values
+   - Apply location, faction, species, perks, and distinctions based on the specified values
+   - Set faction relationship standing to "Ally" automatically
    - Generate unique IDs and timestamps for each character
 
 ## Notes
 
-- Characters imported via CSV will have default values for fields not specified (empty factions, no notes, etc.)
+- Characters imported via CSV will have default values for fields not specified
+- Factions specified in the CSV will automatically have "Ally" relationship standing
+- Multiple factions can be specified by separating them with commas or semicolons (use quotes if using commas: "Faction A, Faction B" or use semicolons: "Faction A; Faction B")
+- Duplicate faction names for the same character are automatically avoided
 - The import replaces all existing characters - use with caution
 - Make sure perk and distinction names match exactly (case-sensitive)
-- Unknown properties (not matching perks/distinctions/species) are ignored
+- Unknown properties (not matching perks/distinctions/species/location/faction/notes) are ignored
 - Invalid species names default to "Unknown"
 
 ## Example CSV Content
@@ -69,6 +75,7 @@ Use the exact distinction names as they appear in the game. Set to `TRUE` or `1`
 ```csv
 Name,Alice,Bob,Charlie
 Frequently Located,Hospital,Repair Hall,Sanguine Springs
+Faction,"Steel Guard, City Council",Mechanics Union,"Wasteland Traders, Nomad Clans"
 Notes,Security officer,Maintenance android,Trader from the wastes
 Species,Human,Android,Mutant
 Agile Strikes,TRUE,FALSE,TRUE
@@ -79,6 +86,6 @@ Bite Vulnerability,TRUE,FALSE,FALSE
 ```
 
 This would create:
-- Alice: Human at Hospital with notes "Security officer", has Agile Strikes, Duck And Cover, and Bite Vulnerability
-- Bob: Android at Garage with notes "Maintenance android", has Danger Sense, Duck And Cover, and Apathetic distinction  
-- Charlie: Mutant at Sanguine Springs with notes "Trader from the wastes", has Agile Strikes
+- Alice: Human at Hospital with ally factions "Steel Guard" and "City Council", notes "Security officer", has Agile Strikes, Duck And Cover, and Bite Vulnerability
+- Bob: Android at Garage with ally faction "Mechanics Union", notes "Maintenance android", has Danger Sense, Duck And Cover, and Apathetic distinction  
+- Charlie: Mutant at Sanguine Springs with ally factions "Wasteland Traders" and "Nomad Clans", notes "Trader from the wastes", has Agile Strikes

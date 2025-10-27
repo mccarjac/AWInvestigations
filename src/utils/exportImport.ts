@@ -3,7 +3,7 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Alert, Platform } from 'react-native';
 import { exportDataset, importDataset, mergeDatasets, mergeDatasetWithConflictResolution, MergeResult, MergeConflict, updateCharacter, saveCharacters } from './characterStorage';
-import { GameCharacter, Species, Location } from '../models/types';
+import { GameCharacter, Species, Location, RelationshipStanding } from '../models/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '../models/gameData';
 
 /**
@@ -548,6 +548,42 @@ const mapLocationString = (locationStr: string): Location => {
 };
 
 /**
+ * Parse a CSV line properly handling quoted fields with commas
+ */
+const parseCSVLine = (line: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+    
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // Escaped quote
+        current += '"';
+        i++; // Skip next quote
+      } else {
+        // Start or end quote
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // Field separator
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  
+  // Add the last field
+  result.push(current.trim());
+  
+  return result;
+};
+
+/**
  * Parse CSV content and convert to character data
  */
 const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
@@ -557,7 +593,7 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
   }
 
   // Parse headers - first column is the property name, rest are character names
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, ''));
   const characterNames = headers.slice(1).filter(name => name.length > 0);
   
   if (characterNames.length === 0) {
@@ -581,7 +617,7 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
   // Process each data line
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+    const values = parseCSVLine(line).map(v => v.replace(/"/g, ''));
     const propertyName = values[0];
     
     if (!propertyName) continue;
@@ -611,6 +647,45 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
           characters[j - 1].notes = notesValue;
         }
       }
+    } else if (propertyName.toLowerCase() === 'factions' || propertyName.toLowerCase() === 'faction') {
+      // Set factions for each character with Ally standing (supports comma-separated list)
+      console.log(`Processing factions row with values:`, values);
+      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
+        const factionValue = values[j];
+        console.log(`Character ${characters[j - 1].name} faction value: "${factionValue}"`);
+        if (factionValue && factionValue !== '' && factionValue !== 'Unknown') {
+          // Initialize factions array if it doesn't exist
+          if (!characters[j - 1].factions) {
+            characters[j - 1].factions = [];
+          }
+          
+          // Split by comma or semicolon and process each faction
+          const separator = factionValue.includes(';') ? ';' : ',';
+          const factionNames = factionValue.split(separator).map(name => name.trim()).filter(name => name.length > 0);
+          console.log(`Raw faction value for ${characters[j - 1].name}: "${factionValue}"`);
+          console.log(`Using separator: "${separator}"`);
+          console.log(`Split result: [${factionNames.map(f => `"${f}"`).join(', ')}]`);
+          console.log(`Number of factions found: ${factionNames.length}`);
+          
+          for (const factionName of factionNames) {
+            // Check if faction already exists to avoid duplicates
+            const existingFaction = characters[j - 1].factions!.find(f => f.name === factionName);
+            if (!existingFaction) {
+              // Add faction with Ally standing
+              characters[j - 1].factions!.push({
+                name: factionName,
+                standing: RelationshipStanding.Ally,
+                description: `Imported from CSV as ally`
+              });
+              console.log(`Added faction "${factionName}" to ${characters[j - 1].name}`);
+            } else {
+              console.log(`Faction "${factionName}" already exists for ${characters[j - 1].name}`);
+            }
+          }
+        }
+        console.log(`${characters[j - 1].name} now has ${characters[j - 1].factions?.length || 0} factions:`, 
+          characters[j - 1].factions?.map(f => f.name) || []);
+      }
     } else {
       // Check if it's a perk or distinction
       const perk = AVAILABLE_PERKS.find(p => p.name === propertyName);
@@ -636,6 +711,14 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
       // Skip other properties for now (like notes, locations, etc.)
     }
   }
+
+  // Debug log final character data
+  console.log('Final parsed characters:', characters.map(c => ({
+    name: c.name,
+    factions: c.factions,
+    species: c.species,
+    location: c.location
+  })));
 
   return characters as GameCharacter[];
 };
