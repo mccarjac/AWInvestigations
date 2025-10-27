@@ -105,7 +105,13 @@ export const CharacterListScreen: React.FC = () => {
       onPress={() => navigation.navigate('CharacterDetail', { character: item })}
     >
       <View style={styles.cardHeader}>
-        <Text style={styles.name}>{item.name}</Text>
+        <Text 
+          style={styles.name}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {item.name}
+        </Text>
         <TouchableOpacity
           style={[styles.presentButton, item.present && styles.presentButtonActive]}
           onPress={() => handleTogglePresent(item.id)}
@@ -318,12 +324,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 12, // Add space between name and button
   },
   name: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text.primary,
     letterSpacing: 0.3,
+    flex: 1, // Allow name to take available space but not overflow
   },
   xp: {
     fontSize: 16,
@@ -363,6 +371,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.elevated,
     borderWidth: 1,
     borderColor: colors.border,
+    minWidth: 70, // Ensure consistent button width
+    alignItems: 'center', // Center the text in the button
   },
   presentButtonActive: {
     backgroundColor: colors.present,
