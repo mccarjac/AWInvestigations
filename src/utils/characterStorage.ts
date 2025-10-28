@@ -387,6 +387,31 @@ export const deleteFaction = async (factionName: string): Promise<boolean> => {
   return true;
 };
 
+export const createFaction = async (factionData: {
+  name: string;
+  description: string;
+  defaultStanding: string;
+}): Promise<boolean> => {
+  const existingFactions = await loadFactions();
+  
+  // Check if faction with this name already exists
+  const existingFaction = existingFactions.find(f => f.name.toLowerCase() === factionData.name.toLowerCase());
+  if (existingFaction) {
+    return false; // Faction already exists
+  }
+  
+  const now = new Date().toISOString();
+  const newFaction: StoredFaction = {
+    name: factionData.name,
+    description: factionData.description,
+    createdAt: now,
+    updatedAt: now
+  };
+  
+  await saveFactions([...existingFactions, newFaction]);
+  return true;
+};
+
 // Migration function to move faction descriptions from character data to centralized storage
 export const migrateFactionDescriptions = async (): Promise<void> => {
   try {

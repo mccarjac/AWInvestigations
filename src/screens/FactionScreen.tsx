@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
-import { loadCharacters, getFactionDescription, migrateFactionDescriptions } from '@utils/characterStorage';
+import { loadCharacters, getFactionDescription, migrateFactionDescriptions, loadFactions } from '@utils/characterStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -41,6 +41,22 @@ export const FactionScreen: React.FC = () => {
       characters: GameCharacter[]; 
       standings: Record<string, number>;
     }>();
+
+    // First, load centralized factions to ensure all created factions appear
+    const storedFactions = await loadFactions();
+    storedFactions.forEach(storedFaction => {
+      if (!factionMap.has(storedFaction.name)) {
+        factionMap.set(storedFaction.name, {
+          faction: {
+            name: storedFaction.name,
+            standing: RelationshipStanding.Neutral,
+            description: storedFaction.description
+          },
+          characters: [],
+          standings: {}
+        });
+      }
+    });
 
     // Collect all factions from all characters
     data.forEach(character => {
@@ -101,6 +117,10 @@ export const FactionScreen: React.FC = () => {
 
   const handleFactionSelect = (factionInfo: FactionInfo) => {
     navigation.navigate('FactionDetails', { factionName: factionInfo.faction.name });
+  };
+
+  const handleCreateFaction = () => {
+    navigation.navigate('FactionForm');
   };
 
   const renderFactionItem = ({ item }: { item: FactionInfo }) => (
@@ -189,6 +209,15 @@ export const FactionScreen: React.FC = () => {
           </View>
         )}
       />
+      
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleCreateFaction}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -459,5 +488,27 @@ const styles = StyleSheet.create({
   },
   presentBadgeTextActive: {
     color: colors.text.primary,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 60,
+    height: 60,
+    backgroundColor: colors.accent.primary,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  fabIcon: {
+    fontSize: 28,
+    fontWeight: '300',
+    color: colors.text.primary,
+    lineHeight: 28,
   },
 });

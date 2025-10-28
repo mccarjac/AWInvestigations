@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Button, Alert, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '@/navigation/types';
 import { CharacterFormData, GameCharacter, Species, SPECIES_BASE_STATS, Location, Relationship, RelationshipStanding } from '@models/types';
-import { addCharacter, updateCharacter, loadCharacters, saveCharacters } from '@utils/characterStorage';
+import { addCharacter, updateCharacter, loadCharacters, saveCharacters, loadFactions } from '@utils/characterStorage';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '@models/gameData';
 
 // Dark theme color palette
@@ -71,27 +71,36 @@ export const CharacterFormScreen: React.FC = () => {
     }
   );
 
-  useEffect(() => {
-    const loadAllCharacters = async () => {
-      try {
-        const characters = await loadCharacters();
-        setAllCharacters(characters);
-        
-        // Extract unique faction names from all characters
-        const factionNames = new Set<string>();
-        characters.forEach(character => {
-          character.factions.forEach(faction => {
-            factionNames.add(faction.name);
-          });
+  const loadAllCharacters = useCallback(async () => {
+    try {
+      const characters = await loadCharacters();
+      setAllCharacters(characters);
+      
+      // Extract unique faction names from all characters
+      const factionNames = new Set<string>();
+      characters.forEach(character => {
+        character.factions.forEach(faction => {
+          factionNames.add(faction.name);
         });
-        setAvailableFactions(Array.from(factionNames).sort());
-      } catch (error) {
-        console.error('Failed to load characters:', error);
-      }
-    };
-    
-    loadAllCharacters();
+      });
+      
+      // Also load factions from centralized storage
+      const storedFactions = await loadFactions();
+      storedFactions.forEach(faction => {
+        factionNames.add(faction.name);
+      });
+      
+      setAvailableFactions(Array.from(factionNames).sort());
+    } catch (error) {
+      console.error('Failed to load characters:', error);
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAllCharacters();
+    }, [loadAllCharacters])
+  );
 
   // Get available character names for relationship picker
   const getAvailableCharacterNames = () => {

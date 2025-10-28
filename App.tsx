@@ -11,6 +11,7 @@ import { CharacterSearchScreen } from './src/screens/CharacterSearchScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { FactionScreen } from './src/screens/FactionScreen';
 import { FactionDetailsScreen } from './src/screens/FactionDetailsScreen';
+import { FactionFormScreen } from './src/screens/FactionFormScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation
@@ -148,6 +149,11 @@ export default function App() {
             name="FactionDetails" 
             component={FactionDetailsScreen} 
             options={({ route }) => ({ title: route.params.factionName })}
+          />
+          <Stack.Screen 
+            name="FactionForm" 
+            component={FactionFormScreen} 
+            options={{ title: 'Create Faction' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
