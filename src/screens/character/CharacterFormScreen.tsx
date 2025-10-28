@@ -442,7 +442,7 @@ export const CharacterFormScreen: React.FC = () => {
         <View style={styles.formSection}>
           <Text style={styles.label}>Relationships</Text>
           {form.relationships.map((relationship, index) => (
-            <View key={index}>
+            <View key={index} style={styles.relationshipGroup}>
               <View style={styles.relationshipContainer}>
                 <View style={styles.relationshipPickerContainer}>
                   <Picker
@@ -498,21 +498,19 @@ export const CharacterFormScreen: React.FC = () => {
                   />
                 </View>
               )}
-            </View>
-          ))}
-          {form.relationships.map((relationship, index) => (
-            <View key={`desc-${index}`} style={styles.relationshipDescContainer}>
-              <TextInput
-                style={styles.relationshipDescInput}
-                value={relationship.description || ''}
-                onChangeText={(value) => {
-                  const newRelationships = [...form.relationships];
-                  newRelationships[index] = { ...relationship, description: value };
-                  handleChange('relationships', newRelationships);
-                }}
-                placeholder={`Description of relationship with ${relationship.characterName || 'character'}`}
-                multiline
-              />
+              <View style={styles.relationshipDescContainer}>
+                <TextInput
+                  style={styles.relationshipDescInput}
+                  value={relationship.description || ''}
+                  onChangeText={(value) => {
+                    const newRelationships = [...form.relationships];
+                    newRelationships[index] = { ...relationship, description: value };
+                    handleChange('relationships', newRelationships);
+                  }}
+                  placeholder={`Description of relationship with ${relationship.characterName || 'character'}`}
+                  multiline
+                />
+              </View>
             </View>
           ))}
           <TouchableOpacity
@@ -698,6 +696,14 @@ const styles = StyleSheet.create({
   },
   factionStanding: {
     width: '35%',
+  },
+  relationshipGroup: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: themeColors.elevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
   },
   relationshipContainer: {
     flexDirection: 'row',
