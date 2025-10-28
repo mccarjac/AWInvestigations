@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Alert, TextInput } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
 import { loadCharacters, getFactionDescription, migrateFactionDescriptions, loadFactions, deleteFactionCompletely } from '@utils/characterStorage';
@@ -24,8 +24,8 @@ interface FactionInfo {
 
 export const FactionScreen: React.FC = () => {
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
-
   const [factionInfos, setFactionInfos] = useState<FactionInfo[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const navigation = useNavigation<FactionNavigationProp>();
 
   const loadData = useCallback(async () => {
@@ -114,6 +114,29 @@ export const FactionScreen: React.FC = () => {
       loadData();
     }, [loadData])
   );
+
+  const getFilteredFactions = useCallback(() => {
+    let filtered = factionInfos;
+    
+    // Filter by search query if provided
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(factionInfo => 
+        factionInfo.faction.name.toLowerCase().includes(query) ||
+        (factionInfo.faction.description && factionInfo.faction.description.toLowerCase().includes(query))
+      );
+    }
+    
+    // Sort by total member count (descending), then alphabetically
+    return filtered.sort((a, b) => {
+      if (b.totalCount !== a.totalCount) {
+        return b.totalCount - a.totalCount;
+      }
+      return a.faction.name.localeCompare(b.faction.name);
+    });
+  }, [factionInfos, searchQuery]);
+
+  const filteredFactions = React.useMemo(() => getFilteredFactions(), [getFilteredFactions]);
 
   // Set up the header with a plus button
   useLayoutEffect(() => {
@@ -255,20 +278,37 @@ export const FactionScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Fixed search bar outside of FlatList to prevent focus loss */}
+      {/* <View style={styles.fixedHeader}> */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search factions by name..."
+            placeholderTextColor={colors.text.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCapitalize="none"
+            autoCorrect={false}
+            blurOnSubmit={false}
+            autoFocus={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearSearchButton}
+              onPress={() => setSearchQuery('')}
+            >
+              <Text style={styles.clearSearchText}>✕</Text>
+            </TouchableOpacity>
+          )}
+      </View>
+
       <FlatList
-        data={factionInfos}
+        data={filteredFactions}
         renderItem={renderFactionItem}
         keyExtractor={(item) => item.faction.name}
         style={styles.factionList}
         contentContainerStyle={styles.contentContainer}
-        ListHeaderComponent={() => (
-          <View style={styles.headerSection}>
-            <Text style={styles.sectionTitle}>Factions ({factionInfos.length})</Text>
-            <Text style={styles.sectionDescription}>
-              Tap any faction to view detailed information, manage members, and modify standings.
-            </Text>
-          </View>
-        )}
+        keyboardShouldPersistTaps="handled"
       />
     </View>
   );
@@ -322,11 +362,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.primary,
   },
+  fixedHeader: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   scrollView: {
     backgroundColor: colors.primary,
   },
   contentContainer: {
     padding: 16,
+    paddingTop: 8,
     paddingBottom: 100,
   },
   section: {
@@ -584,5 +633,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  searchContainer: {
+    position: 'relative',
+    margin: 16,
+    marginBottom: 8,
+  },
+  searchInput: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text.primary,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  clearSearchButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: [{ translateY: -12 }],
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.text.muted,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearSearchText: {
+    color: colors.text.primary,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
