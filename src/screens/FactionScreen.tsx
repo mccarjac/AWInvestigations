@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useLayoutEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
@@ -27,6 +27,20 @@ export const FactionScreen: React.FC = () => {
 
   const [factionInfos, setFactionInfos] = useState<FactionInfo[]>([]);
   const navigation = useNavigation<FactionNavigationProp>();
+
+  // Set up the header with a plus button
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.headerAddButton}
+          onPress={handleCreateFaction}
+        >
+          <Text style={styles.headerAddButtonText}>+</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)
@@ -209,15 +223,6 @@ export const FactionScreen: React.FC = () => {
           </View>
         )}
       />
-      
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleCreateFaction}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -489,26 +494,24 @@ const styles = StyleSheet.create({
   presentBadgeTextActive: {
     color: colors.text.primary,
   },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 60,
-    height: 60,
-    backgroundColor: colors.accent.primary,
-    borderRadius: 30,
-    justifyContent: 'center',
+  headerAddButton: {
+    marginRight: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accent.success,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  fabIcon: {
-    fontSize: 28,
-    fontWeight: '300',
+  headerAddButtonText: {
     color: colors.text.primary,
-    lineHeight: 28,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 20,
   },
 });
