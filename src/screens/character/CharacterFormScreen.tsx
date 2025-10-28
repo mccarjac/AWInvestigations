@@ -20,6 +20,8 @@ export const CharacterFormScreen: React.FC = () => {
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
   const [availableFactions, setAvailableFactions] = useState<string[]>([]);
   const [showCustomFactionInput, setShowCustomFactionInput] = useState<{[key: number]: boolean}>({});
+  const [perksExpanded, setPerksExpanded] = useState<boolean>(false);
+  const [distinctionsExpanded, setDistinctionsExpanded] = useState<boolean>(false);
 
   const [form, setForm] = useState<CharacterFormData>(
     editingCharacter ? {
@@ -271,77 +273,97 @@ export const CharacterFormScreen: React.FC = () => {
         </View>
 
         <View style={styles.formSection}>
-          <Text style={styles.label}>Perks</Text>
-          <View style={styles.filterContainer}>
-            <Text style={styles.filterLabel}>Filter by Tag:</Text>
-            <Picker
-              selectedValue={selectedPerkTag}
-              style={[styles.picker, { flex: 1 }]}
-              onValueChange={setSelectedPerkTag}
-            >
-              <Picker.Item label="All Tags" value="" />
-              {Array.from(new Set(AVAILABLE_PERKS.map(perk => perk.tag))).sort().map(tag => (
-                <Picker.Item key={tag} label={tag} value={tag} />
-              ))}
-            </Picker>
-          </View>
-          {AVAILABLE_PERKS
-            .filter(perk => (!selectedPerkTag || perk.tag === selectedPerkTag) &&
-                          (!perk.allowedSpecies || perk.allowedSpecies.includes(form.species)))
-            .map(perk => (
-              <TouchableOpacity
-                key={perk.id}
-                style={[
-                  styles.selectionItem,
-                  form.perkIds.includes(perk.id) && styles.selectedItem,
-                  perk.allowedSpecies && styles.speciesSpecificItem
-                ]}
-                onPress={() => {
-                  const newPerkIds = form.perkIds.includes(perk.id)
-                    ? form.perkIds.filter(id => id !== perk.id)
-                    : [...form.perkIds, perk.id];
-                  handleChange('perkIds', newPerkIds);
-                }}
-              >
-                <View style={styles.perkContainer}>
-                  <View style={styles.perkHeaderContainer}>
-                    <Text style={styles.itemName}>{perk.name}</Text>
-                    <View style={styles.perkBadgeContainer}>
-                      {perk.allowedSpecies && perk.allowedSpecies.length > 0 && (
-                        <Text style={styles.speciesText}>
-                          {perk.allowedSpecies.length === 1 
-                            ? perk.allowedSpecies[0]
-                            : `${perk.allowedSpecies.length} Species`}
-                        </Text>
-                      )}
-                      <Text style={styles.tagText}>{perk.tag}</Text>
+          <TouchableOpacity 
+            style={styles.sectionHeader}
+            onPress={() => setPerksExpanded(!perksExpanded)}
+          >
+            <Text style={styles.label}>Perks</Text>
+            <Text style={styles.expandIcon}>{perksExpanded ? '▼' : '▶'}</Text>
+          </TouchableOpacity>
+          {perksExpanded && (
+            <>
+              <View style={styles.filterContainer}>
+                <Text style={styles.filterLabel}>Filter by Tag:</Text>
+                <Picker
+                  selectedValue={selectedPerkTag}
+                  style={[styles.picker, { flex: 1 }]}
+                  onValueChange={setSelectedPerkTag}
+                >
+                  <Picker.Item label="All Tags" value="" />
+                  {Array.from(new Set(AVAILABLE_PERKS.map(perk => perk.tag))).sort().map(tag => (
+                    <Picker.Item key={tag} label={tag} value={tag} />
+                  ))}
+                </Picker>
+              </View>
+              {AVAILABLE_PERKS
+                .filter(perk => (!selectedPerkTag || perk.tag === selectedPerkTag) &&
+                              (!perk.allowedSpecies || perk.allowedSpecies.includes(form.species)))
+                .map(perk => (
+                  <TouchableOpacity
+                    key={perk.id}
+                    style={[
+                      styles.selectionItem,
+                      form.perkIds.includes(perk.id) && styles.selectedItem,
+                      perk.allowedSpecies && styles.speciesSpecificItem
+                    ]}
+                    onPress={() => {
+                      const newPerkIds = form.perkIds.includes(perk.id)
+                        ? form.perkIds.filter(id => id !== perk.id)
+                        : [...form.perkIds, perk.id];
+                      handleChange('perkIds', newPerkIds);
+                    }}
+                  >
+                    <View style={styles.perkContainer}>
+                      <View style={styles.perkHeaderContainer}>
+                        <Text style={styles.itemName}>{perk.name}</Text>
+                        <View style={styles.perkBadgeContainer}>
+                          {perk.allowedSpecies && perk.allowedSpecies.length > 0 && (
+                            <Text style={styles.speciesText}>
+                              {perk.allowedSpecies.length === 1 
+                                ? perk.allowedSpecies[0]
+                                : `${perk.allowedSpecies.length} Species`}
+                            </Text>
+                          )}
+                          <Text style={styles.tagText}>{perk.tag}</Text>
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                </View>
-                <Text style={styles.descriptionText}>{perk.description}</Text>
-              </TouchableOpacity>
-            ))}
+                    <Text style={styles.descriptionText}>{perk.description}</Text>
+                  </TouchableOpacity>
+                ))}
+            </>
+          )}
         </View>
 
         <View style={styles.formSection}>
-          <Text style={styles.label}>Distinctions</Text>
-          {AVAILABLE_DISTINCTIONS.map(distinction => (
-            <TouchableOpacity
-              key={distinction.id}
-              style={[
-                styles.selectionItem,
-                form.distinctionIds.includes(distinction.id) && styles.selectedItem
-              ]}
-              onPress={() => {
-                const newDistinctionIds = form.distinctionIds.includes(distinction.id)
-                  ? form.distinctionIds.filter(id => id !== distinction.id)
-                  : [...form.distinctionIds, distinction.id];
-                handleChange('distinctionIds', newDistinctionIds);
-              }}
-            >
-              <Text style={styles.itemName}>{distinction.name}</Text>
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity 
+            style={styles.sectionHeader}
+            onPress={() => setDistinctionsExpanded(!distinctionsExpanded)}
+          >
+            <Text style={styles.label}>Distinctions</Text>
+            <Text style={styles.expandIcon}>{distinctionsExpanded ? '▼' : '▶'}</Text>
+          </TouchableOpacity>
+          {distinctionsExpanded && (
+            <>
+              {AVAILABLE_DISTINCTIONS.map(distinction => (
+                <TouchableOpacity
+                  key={distinction.id}
+                  style={[
+                    styles.selectionItem,
+                    form.distinctionIds.includes(distinction.id) && styles.selectedItem
+                  ]}
+                  onPress={() => {
+                    const newDistinctionIds = form.distinctionIds.includes(distinction.id)
+                      ? form.distinctionIds.filter(id => id !== distinction.id)
+                      : [...form.distinctionIds, distinction.id];
+                    handleChange('distinctionIds', newDistinctionIds);
+                  }}
+                >
+                  <Text style={styles.itemName}>{distinction.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
         </View>
 
         <View style={styles.formSection}>
@@ -767,5 +789,16 @@ const styles = StyleSheet.create({
   placeholderText: {
     ...commonStyles.text.body,
     fontWeight: '500',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  expandIcon: {
+    color: themeColors.text.secondary,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
