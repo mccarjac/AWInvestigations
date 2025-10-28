@@ -103,8 +103,8 @@ export const FactionScreen: React.FC = () => {
       })
     );
 
-    // Sort by total member count (descending)
-    factionInfosArray.sort((a, b) => b.totalCount - a.totalCount);
+    // Sort alphabetically by faction name
+    factionInfosArray.sort((a, b) => a.faction.name.localeCompare(b.faction.name));
     
     setFactionInfos(factionInfosArray);
   }, []);
@@ -127,13 +127,10 @@ export const FactionScreen: React.FC = () => {
       );
     }
     
-    // Sort by total member count (descending), then alphabetically
-    return filtered.sort((a, b) => {
-      if (b.totalCount !== a.totalCount) {
-        return b.totalCount - a.totalCount;
-      }
-      return a.faction.name.localeCompare(b.faction.name);
-    });
+    // Sort alphabetically by faction name
+    return filtered.sort((a, b) => 
+      a.faction.name.localeCompare(b.faction.name)
+    );
   }, [factionInfos, searchQuery]);
 
   const filteredFactions = React.useMemo(() => getFilteredFactions(), [getFilteredFactions]);
