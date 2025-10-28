@@ -66,10 +66,18 @@ export const FactionDetailsScreen: React.FC = () => {
   );
 
   const handleRemoveMember = async (character: GameCharacter) => {
-    // Use window.confirm for web compatibility instead of Alert
-    const shouldRemove = window.confirm(`Remove ${character.name} from ${factionName}?`);
-    
-    if (shouldRemove) {
+    Alert.alert(
+      'Remove Member',
+      `Remove ${character.name} from ${factionName}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
       try {
         const updatedFactions = character.factions.filter(f => f.name !== factionName);
         const result = await updateCharacter(character.id, { factions: updatedFactions });
@@ -86,11 +94,14 @@ export const FactionDetailsScreen: React.FC = () => {
         } else {
           throw new Error('Failed to update character');
         }
-      } catch (error) {
-        console.error('Error removing member from faction:', error);
-        window.alert('Failed to remove member from faction. Please try again.');
-      }
-    }
+            } catch (error) {
+              console.error('Error removing member from faction:', error);
+              Alert.alert('Error', 'Failed to remove member from faction. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleAddMember = async (character: GameCharacter, standing: RelationshipStanding) => {
