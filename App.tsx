@@ -3,15 +3,15 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from './src/navigation/types';
-import { CharacterListScreen } from './src/screens/CharacterListScreen';
-import { CharacterDetailScreen } from './src/screens/CharacterDetailScreen';
-import { CharacterFormScreen } from './src/screens/CharacterFormScreen';
+import { CharacterListScreen } from './src/screens/character/CharacterListScreen';
+import { CharacterDetailScreen } from './src/screens/character/CharacterDetailScreen';
+import { CharacterFormScreen } from './src/screens/character/CharacterFormScreen';
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
-import { CharacterSearchScreen } from './src/screens/CharacterSearchScreen';
+import { CharacterSearchScreen } from './src/screens/character/CharacterSearchScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
-import { FactionScreen } from './src/screens/FactionScreen';
-import { FactionDetailsScreen } from './src/screens/FactionDetailsScreen';
-import { FactionFormScreen } from './src/screens/FactionFormScreen';
+import { FactionScreen } from './src/screens/faction/FactionScreen';
+import { FactionDetailsScreen } from './src/screens/faction/FactionDetailsScreen';
+import { FactionFormScreen } from './src/screens/faction/FactionFormScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation

@@ -330,12 +330,12 @@ export const FactionDetailsScreen: React.FC = () => {
   const stats = getStats();
 
   return (
-    <View style={{ height: 882, overflow: 'scroll' }}>
+    <View style={styles.container}>
       <ScrollView
-                    style={styles.scrollView}
-                    contentContainerStyle={styles.contentContainer}
-                    showsVerticalScrollIndicator={true}
-                  >
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={true}
+      >
         {/* Faction Header */}
         <View style={styles.factionHeader}>
           <Text style={styles.factionName}>{factionName}</Text>
@@ -428,13 +428,13 @@ export const FactionDetailsScreen: React.FC = () => {
             </Text>
           </View>
           
-          <FlatList
-            data={members}
-            renderItem={renderMember}
-            keyExtractor={(item) => item.character.id}
-            style={styles.membersList}
-            scrollEnabled={true}
-          />
+          <View style={styles.membersList}>
+            {members.map((item) => (
+              <View key={item.character.id}>
+                {renderMember({ item })}
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Add Members Section */}
@@ -456,13 +456,13 @@ export const FactionDetailsScreen: React.FC = () => {
               <Text style={styles.sectionDescription}>
                 Add characters to {factionName} by selecting their standing:
               </Text>
-              <FlatList
-                data={nonMembers}
-                renderItem={renderNonMember}
-                keyExtractor={(item) => item.id}
-                style={styles.nonMembersList}
-                scrollEnabled={true}
-              />
+              <View style={styles.nonMembersList}>
+                {nonMembers.map((item) => (
+                  <View key={item.id}>
+                    {renderNonMember({ item })}
+                  </View>
+                ))}
+              </View>
             </>
           )}
         </View>
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   membersList: {
-    maxHeight: 600,
+    // Remove maxHeight constraint since we're using ScrollView now
   },
   memberCard: {
     ...commonStyles.card.base,
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   nonMembersList: {
-    maxHeight: 400,
+    // Remove maxHeight constraint since we're using ScrollView now
   },
   nonMemberCard: {
     ...commonStyles.card.base,

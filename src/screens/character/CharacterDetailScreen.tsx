@@ -63,11 +63,7 @@ export const CharacterDetailScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.editButton}
           onPress={() => navigation.navigate('CharacterForm', { 
-            character,
-            onSubmit: (updatedCharacter) => {
-              // Update the current screen's params instead of pushing a new screen
-              navigation.setParams({ character: updatedCharacter });
-            }
+            character
           })}
         >
           <Text style={styles.editButtonText}>Edit</Text>
