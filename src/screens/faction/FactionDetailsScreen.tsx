@@ -125,7 +125,8 @@ export const FactionDetailsScreen: React.FC = () => {
       );
     }
     
-    setShowAddMember(false);
+    // Keep the add members section open for adding multiple members
+    // setShowAddMember(false); // Removed to allow adding multiple members easily
   };
 
   const handleUpdateStanding = async (character: GameCharacter, newStanding: RelationshipStanding) => {
