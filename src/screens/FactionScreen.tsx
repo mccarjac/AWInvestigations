@@ -8,6 +8,8 @@ import { CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
+import { colors as themeColors } from '@/styles/theme';
+import { commonStyles } from '@/styles/commonStyles';
 
 type FactionNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Factions'>,
@@ -281,7 +283,7 @@ export const FactionScreen: React.FC = () => {
           <TextInput
             style={styles.searchInput}
             placeholder="Search factions by name..."
-            placeholderTextColor={colors.text.muted}
+            placeholderTextColor={themeColors.text.muted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -311,83 +313,29 @@ export const FactionScreen: React.FC = () => {
   );
 };
 
-// Modern Dark Color Palette
-const colors = {
-  // Background colors
-  primary: '#0F0F23',      // Deep dark blue-purple
-  secondary: '#1B1B3A',    // Slightly lighter dark
-  surface: '#262647',      // Card/surface color
-  elevated: '#2D2D54',     // Elevated surfaces
-  
-  // Text colors
-  text: {
-    primary: '#FFFFFF',    // Primary white text
-    secondary: '#B8B8CC',  // Secondary lighter text
-    muted: '#8E8EA0',      // Muted text
-  },
-  
-  // Accent colors
-  accent: {
-    primary: '#6366F1',    // Indigo primary
-    secondary: '#8B5CF6',  // Purple secondary
-    success: '#10B981',    // Green
-    warning: '#F59E0B',    // Amber
-    danger: '#EF4444',     // Red
-    info: '#3B82F6',       // Blue
-  },
-  
-  // Status colors
-  present: '#059669',      // Green for present
-  absent: '#6B7280',       // Gray for absent
-  
-  // Standing colors
-  standing: {
-    allied: '#10B981',     // Green
-    friendly: '#3B82F6',   // Blue
-    neutral: '#6B7280',    // Gray
-    hostile: '#F59E0B',    // Amber
-    enemy: '#EF4444',      // Red
-  },
-  
-  // Border and shadow
-  border: '#3F3F65',
-  shadow: '#000000',
-};
+
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
+  container: commonStyles.layout.container,
   fixedHeader: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
   },
-  scrollView: {
-    backgroundColor: colors.primary,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 100,
-  },
+  scrollView: commonStyles.layout.scrollView,
+  contentContainer: commonStyles.layout.contentContainer,
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
+    ...commonStyles.text.h1,
     fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
-    color: colors.text.primary,
-    letterSpacing: 0.3,
   },
   sectionDescription: {
-    fontSize: 16,
-    color: colors.text.secondary,
+    ...commonStyles.text.bodyLarge,
     marginBottom: 20,
     lineHeight: 24,
   },
@@ -397,19 +345,7 @@ const styles = StyleSheet.create({
   headerSection: {
     marginBottom: 20,
   },
-  factionCard: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
+  factionCard: commonStyles.card.base,
   factionContent: {
     flex: 1,
   },
@@ -421,125 +357,77 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   factionName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text.primary,
-    letterSpacing: 0.2,
+    ...commonStyles.text.h3,
     flex: 1,
   },
   factionCounts: {
     alignItems: 'flex-end',
   },
   countText: {
-    fontSize: 14,
-    color: colors.text.secondary,
+    ...commonStyles.text.body,
     fontWeight: '500',
   },
-  presentText: {
-    fontSize: 12,
-    color: colors.text.muted,
-  },
+  presentText: commonStyles.text.caption,
   standingsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   standingBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    ...commonStyles.badge.base,
     minWidth: 60,
-    alignItems: 'center',
   },
-  standingAllied: {
-    backgroundColor: colors.standing.allied,
-  },
-  standingFriendly: {
-    backgroundColor: colors.standing.friendly,
-  },
-  standingNeutral: {
-    backgroundColor: colors.standing.neutral,
-  },
-  standingHostile: {
-    backgroundColor: colors.standing.hostile,
-  },
-  standingEnemy: {
-    backgroundColor: colors.standing.enemy,
-  },
-  standingText: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  standingTextLight: {
-    color: colors.text.primary,
-  },
-  standingTextDark: {
-    color: colors.text.primary,
-  },
+  standingAllied: commonStyles.badge.allied,
+  standingFriendly: commonStyles.badge.friendly,
+  standingNeutral: commonStyles.badge.neutral,
+  standingHostile: commonStyles.badge.hostile,
+  standingEnemy: commonStyles.badge.enemy,
+  standingText: commonStyles.badge.text,
+  standingTextLight: commonStyles.badge.text,
+  standingTextDark: commonStyles.badge.text,
   factionStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   statItem: {
     alignItems: 'center',
   },
   statLabel: {
-    fontSize: 12,
-    color: colors.text.muted,
+    ...commonStyles.text.caption,
     marginBottom: 4,
     textAlign: 'center',
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text.primary,
+    ...commonStyles.text.h2,
   },
   descriptionContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   descriptionLabel: {
-    fontSize: 14,
+    ...commonStyles.text.body,
     fontWeight: '600',
-    color: colors.text.secondary,
     marginBottom: 8,
   },
   descriptionText: {
-    fontSize: 14,
-    color: colors.text.primary,
+    ...commonStyles.text.body,
     lineHeight: 20,
   },
   characterList: {
     maxHeight: 600,
   },
-  characterCard: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  characterCardPresent: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.present,
-  },
+  characterCard: commonStyles.card.base,
+  characterCardPresent: commonStyles.card.present,
   characterHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -547,10 +435,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   characterName: {
-    fontSize: 16,
+    ...commonStyles.text.body,
     fontWeight: '600',
-    color: colors.text.primary,
-    letterSpacing: 0.2,
     flex: 1,
   },
   characterInfo: {
@@ -559,113 +445,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   characterSpecies: {
-    fontSize: 14,
-    color: colors.text.secondary,
+    ...commonStyles.text.body,
     marginTop: 4,
   },
   characterDescription: {
-    fontSize: 13,
-    color: colors.text.muted,
+    ...commonStyles.text.caption,
     marginTop: 4,
     fontStyle: 'italic',
   },
   presentBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    backgroundColor: colors.elevated,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...commonStyles.badge.base,
+    ...commonStyles.badge.absent,
   },
-  presentBadgeActive: {
-    backgroundColor: colors.present,
-    borderColor: colors.present,
-  },
-  presentBadgeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.text.muted,
-    letterSpacing: 0.3,
-  },
-  presentBadgeTextActive: {
-    color: colors.text.primary,
-  },
-  headerAddButton: {
-    marginRight: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.accent.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  headerAddButtonText: {
-    color: colors.text.primary,
-    fontSize: 20,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
+  presentBadgeActive: commonStyles.badge.present,
+  presentBadgeText: commonStyles.badge.textMuted,
+  presentBadgeTextActive: commonStyles.badge.text,
+  headerAddButton: commonStyles.headerButton.add,
+  headerAddButtonText: commonStyles.headerButton.addText,
   deleteButton: {
+    ...commonStyles.button.small,
+    ...commonStyles.button.danger,
     marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.accent.danger,
-    borderRadius: 8,
     alignSelf: 'flex-end',
-    borderWidth: 1,
-    borderColor: colors.accent.danger,
-    shadowColor: colors.accent.danger,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  deleteText: {
-    color: colors.text.primary,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  searchContainer: {
-    position: 'relative',
-    margin: 16,
-    marginBottom: 8,
-  },
-  searchInput: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.text.primary,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  clearSearchButton: {
-    position: 'absolute',
-    right: 12,
-    top: '50%',
-    transform: [{ translateY: -12 }],
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.text.muted,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  clearSearchText: {
-    color: colors.text.primary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  deleteText: commonStyles.button.textSmall,
+  searchContainer: commonStyles.search.container,
+  searchInput: commonStyles.search.input,
+  clearSearchButton: commonStyles.search.clearButton,
+  clearSearchText: commonStyles.search.clearText,
 });

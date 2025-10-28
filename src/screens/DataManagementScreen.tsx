@@ -6,6 +6,8 @@ import { exportCharacterData, importCharacterData, mergeCharacterData, importCSV
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
+import { colors as themeColors } from '@/styles/theme';
+import { commonStyles } from '@/styles/commonStyles';
 
 type DataManagementNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -195,129 +197,36 @@ export const DataManagementScreen: React.FC = () => {
   );
 };
 
-// Modern Dark Color Palette
-const colors = {
-  // Background colors
-  primary: '#0F0F23',      // Deep dark blue-purple
-  secondary: '#1B1B3A',    // Slightly lighter dark
-  surface: '#262647',      // Card/surface color
-  elevated: '#2D2D54',     // Elevated surfaces
-  
-  // Text colors
-  text: {
-    primary: '#FFFFFF',    // Primary white text
-    secondary: '#B8B8CC',  // Secondary lighter text
-    muted: '#8E8EA0',      // Muted text
-  },
-  
-  // Accent colors
-  accent: {
-    primary: '#6366F1',    // Indigo primary
-    secondary: '#8B5CF6',  // Purple secondary
-    success: '#10B981',    // Green
-    warning: '#F59E0B',    // Amber
-    danger: '#EF4444',     // Red
-    info: '#3B82F6',       // Blue
-  },
-  
-  // Border and shadow
-  border: '#3F3F65',
-  shadow: '#000000',
-};
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  scrollView: {
-    backgroundColor: colors.primary,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  header: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 12,
-    color: colors.text.primary,
-    letterSpacing: 0.5,
-  },
+  container: commonStyles.layout.container,
+  scrollView: commonStyles.layout.scrollView,
+  contentContainer: commonStyles.layout.contentContainer,
+  header: commonStyles.text.h1,
   description: {
-    fontSize: 16,
-    color: colors.text.secondary,
+    ...commonStyles.text.bodyLarge,
     marginBottom: 32,
     lineHeight: 24,
   },
-  section: {
-    backgroundColor: colors.surface,
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  dangerSection: {
-    borderColor: colors.accent.danger,
-    borderWidth: 2,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: colors.text.primary,
-    letterSpacing: 0.3,
-  },
+  section: commonStyles.layout.section,
+  dangerSection: commonStyles.layout.sectionDanger,
+  sectionTitle: commonStyles.text.h2,
   dangerTitle: {
-    color: colors.accent.danger,
+    ...commonStyles.text.h2,
+    color: themeColors.accent.danger,
   },
   sectionDescription: {
-    fontSize: 14,
-    color: colors.text.secondary,
+    ...commonStyles.text.description,
     marginBottom: 16,
     lineHeight: 20,
   },
-  actionButton: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  exportButton: {
-    backgroundColor: colors.accent.warning,
-    borderColor: colors.accent.warning,
-  },
-  importButton: {
-    backgroundColor: colors.accent.secondary,
-    borderColor: colors.accent.secondary,
-  },
-  mergeButton: {
-    backgroundColor: colors.accent.primary,
-    borderColor: colors.accent.primary,
-  },
+  actionButton: commonStyles.button.base,
+  exportButton: commonStyles.button.warning,
+  importButton: commonStyles.button.secondary,
+  mergeButton: commonStyles.button.primary,
   csvImportButton: {
-    backgroundColor: colors.elevated,
-    borderColor: colors.accent.primary,
+    backgroundColor: themeColors.elevated,
+    borderColor: themeColors.accent.primary,
   },
-  clearButton: {
-    backgroundColor: colors.accent.danger,
-    borderColor: colors.accent.danger,
-  },
-  buttonText: {
-    color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
+  clearButton: commonStyles.button.danger,
+  buttonText: commonStyles.button.text,
 });

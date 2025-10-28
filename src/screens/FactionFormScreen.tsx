@@ -15,6 +15,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { RelationshipStanding } from '@models/types';
 import { createFaction } from '@utils/characterStorage';
+import { colors as themeColors } from '@/styles/theme';
+import { commonStyles } from '@/styles/commonStyles';
 
 type FactionFormNavigationProp = StackNavigationProp<RootStackParamList, 'FactionForm'>;
 
@@ -171,7 +173,7 @@ export const FactionFormScreen: React.FC = () => {
                 }
               }}
               placeholder="Enter faction name"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={themeColors.text.muted}
               maxLength={50}
             />
             {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
@@ -184,7 +186,7 @@ export const FactionFormScreen: React.FC = () => {
               value={formData.description}
               onChangeText={(text) => setFormData({ ...formData, description: text })}
               placeholder="Enter faction description, goals, or background"
-              placeholderTextColor={colors.text.muted}
+              placeholderTextColor={themeColors.text.muted}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -234,48 +236,12 @@ export const FactionFormScreen: React.FC = () => {
   );
 };
 
-// Modern Dark Color Palette
-const colors = {
-  // Background colors
-  primary: '#0F0F23',
-  secondary: '#1B1B3A',
-  surface: '#262647',
-  elevated: '#2D2D54',
 
-  // Text colors
-  text: {
-    primary: '#FFFFFF',
-    secondary: '#B8B8CC',
-    muted: '#8E8EA0',
-  },
-
-  // Accent colors
-  accent: {
-    primary: '#6366F1',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
-  },
-
-  // Standing colors
-  standing: {
-    allied: '#10B981',
-    friendly: '#3B82F6',
-    neutral: '#6B7280',
-    hostile: '#F59E0B',
-    enemy: '#EF4444',
-  },
-
-  // Border and shadow
-  border: '#3F3F65',
-  borderError: '#EF4444',
-  shadow: '#000000',
-};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
   },
   scrollView: {
     flex: 1,
@@ -288,62 +254,43 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text.primary,
+    ...commonStyles.text.h1,
     marginBottom: 20,
-    letterSpacing: 0.3,
   },
   inputGroup: {
     marginBottom: 24,
   },
   inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
+    ...commonStyles.text.label,
     marginBottom: 8,
-    letterSpacing: 0.2,
   },
   inputDescription: {
     fontSize: 14,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     marginBottom: 12,
     lineHeight: 20,
   },
   required: {
-    color: colors.accent.danger,
+    color: themeColors.accent.danger,
   },
   textInput: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: colors.text.primary,
+    ...commonStyles.input.base,
     minHeight: 52,
   },
   textArea: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: colors.text.primary,
+    ...commonStyles.input.base,
     minHeight: 120,
   },
   inputError: {
-    borderColor: colors.borderError,
+    borderColor: themeColors.accent.danger,
   },
   errorText: {
-    fontSize: 14,
-    color: colors.accent.danger,
+    ...commonStyles.text.danger,
     marginTop: 6,
   },
   characterCount: {
     fontSize: 12,
-    color: colors.text.muted,
+    color: themeColors.text.muted,
     textAlign: 'right',
     marginTop: 6,
   },
@@ -353,15 +300,15 @@ const styles = StyleSheet.create({
   standingOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     borderRadius: 12,
     padding: 16,
   },
   standingOptionSelected: {
-    borderColor: colors.accent.primary,
-    backgroundColor: colors.elevated,
+    borderColor: themeColors.accent.primary,
+    backgroundColor: themeColors.elevated,
   },
   standingIndicator: {
     width: 16,
@@ -371,35 +318,35 @@ const styles = StyleSheet.create({
   },
   standingOptionText: {
     fontSize: 16,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     fontWeight: '500',
   },
   standingOptionTextSelected: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontWeight: '600',
   },
   standingAllied: {
-    backgroundColor: colors.standing.allied,
+    backgroundColor: themeColors.standing.allied,
   },
   standingFriendly: {
-    backgroundColor: colors.standing.friendly,
+    backgroundColor: themeColors.standing.friendly,
   },
   standingNeutral: {
-    backgroundColor: colors.standing.neutral,
+    backgroundColor: themeColors.standing.neutral,
   },
   standingHostile: {
-    backgroundColor: colors.standing.hostile,
+    backgroundColor: themeColors.standing.hostile,
   },
   standingEnemy: {
-    backgroundColor: colors.standing.enemy,
+    backgroundColor: themeColors.standing.enemy,
   },
   buttonContainer: {
     flexDirection: 'row',
     padding: 20,
     gap: 12,
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: themeColors.border,
   },
   button: {
     flex: 1,
@@ -411,12 +358,10 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   cancelButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...commonStyles.button.secondary,
   },
   submitButton: {
-    backgroundColor: colors.accent.primary,
+    ...commonStyles.button.primary,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -424,13 +369,13 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     letterSpacing: 0.2,
   },
   submitButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     letterSpacing: 0.2,
   },
 });

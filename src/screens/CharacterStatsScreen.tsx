@@ -5,6 +5,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { loadCharacters } from '../utils/characterStorage';
 import { calculateCharacterStats, CharacterStats } from '../utils/characterStats';
 import { GameCharacter } from '@/models/types';
+import { colors as themeColors } from '@/styles/theme';
+import { commonStyles } from '@/styles/commonStyles';
 
 export const CharacterStatsScreen = () => {
   const [stats, setStats] = useState<CharacterStats | null>(null);
@@ -122,10 +124,10 @@ export const CharacterStatsScreen = () => {
   };
 
   return (
-    <View style={{ height: 882, overflow: 'scroll' }}>
+    <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={true}
       >
         <Text style={styles.header}>Character Statistics</Text>
@@ -175,8 +177,8 @@ export const CharacterStatsScreen = () => {
               fontWeight="bold"
               radius={100}
               innerRadius={40}
-              innerCircleColor={colors.surface}
-              strokeColor={colors.border}
+              innerCircleColor={themeColors.surface}
+              strokeColor={themeColors.border}
               strokeWidth={2}
               sectionAutoFocus
               focusOnPress
@@ -293,123 +295,79 @@ export const CharacterStatsScreen = () => {
   );
 };
 
-// Modern Dark Color Palette
-const colors = {
-  // Background colors
-  primary: '#0F0F23',      // Deep dark blue-purple
-  secondary: '#1B1B3A',    // Slightly lighter dark
-  surface: '#262647',      // Card/surface color
-  elevated: '#2D2D54',     // Elevated surfaces
-  
-  // Text colors
-  text: {
-    primary: '#FFFFFF',    // Primary white text
-    secondary: '#B8B8CC',  // Secondary lighter text
-    muted: '#8E8EA0',      // Muted text
-  },
-  
-  // Accent colors
-  accent: {
-    primary: '#6366F1',    // Indigo primary
-    secondary: '#8B5CF6',  // Purple secondary
-    success: '#10B981',    // Green
-    warning: '#F59E0B',    // Amber
-    danger: '#EF4444',     // Red
-    info: '#3B82F6',       // Blue
-  },
-  
-  // Status colors
-  present: '#059669',      // Green for present
-  absent: '#6B7280',       // Gray for absent
-  
-  // Border and shadow
-  border: '#3F3F65',
-  shadow: '#000000',
-};
+
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    paddingBottom: 100,
-    backgroundColor: colors.primary,
+    flex: 1,
+    backgroundColor: themeColors.primary,
   },
   scrollView: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
+  },
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 100,
   },
   header: {
-    fontSize: 28,
-    fontWeight: '700',
+    ...commonStyles.text.h1,
     marginBottom: 24,
-    color: colors.text.primary,
-    letterSpacing: 0.5,
   },
   filterContainer: {
     marginBottom: 24,
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   filterButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
-    backgroundColor: colors.elevated,
+    backgroundColor: themeColors.elevated,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     marginBottom: 8,
-    shadowColor: colors.shadow,
+    shadowColor: themeColors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
   },
   filterButtonActive: {
-    backgroundColor: colors.accent.success,
-    borderColor: colors.accent.success,
+    backgroundColor: themeColors.accent.success,
+    borderColor: themeColors.accent.success,
   },
   filterButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text.muted,
+    color: themeColors.text.muted,
     letterSpacing: 0.3,
   },
   filterButtonTextActive: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
   },
   filterInfo: {
     fontSize: 12,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     fontStyle: 'italic',
   },
   section: {
+    ...commonStyles.card.elevated,
     marginBottom: 32,
-    backgroundColor: colors.surface,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   sectionHeader: {
-    fontSize: 20,
-    fontWeight: '700',
+    ...commonStyles.text.h2,
     marginBottom: 16,
-    color: colors.text.primary,
-    letterSpacing: 0.3,
   },
   factionItem: {
     marginVertical: 12,
     paddingLeft: 16,
     borderLeftWidth: 4,
-    borderLeftColor: colors.accent.primary,
-    backgroundColor: colors.elevated,
+    borderLeftColor: themeColors.accent.primary,
+    backgroundColor: themeColors.elevated,
     padding: 12,
     borderRadius: 8,
   },
@@ -417,11 +375,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
   },
   standingText: {
     fontSize: 14,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     marginLeft: 8,
     marginVertical: 2,
   },
@@ -435,18 +393,18 @@ const styles = StyleSheet.create({
   },
   centerLabelNumber: {
     fontSize: 24,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontWeight: '700',
   },
   centerLabelText: {
     fontSize: 12,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   centerLabelSpecies: {
     fontSize: 16,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 4,
@@ -454,21 +412,21 @@ const styles = StyleSheet.create({
   tooltip: {
     position: 'absolute',
     bottom: -30,
-    backgroundColor: colors.elevated,
+    backgroundColor: themeColors.elevated,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     alignSelf: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
+    borderColor: themeColors.border,
+    shadowColor: themeColors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 3,
   },
   tooltipText: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontSize: 12,
     textAlign: 'center',
     fontWeight: '500',
@@ -483,7 +441,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: colors.elevated,
+    backgroundColor: themeColors.elevated,
   },
   legendColorBox: {
     width: 16,
@@ -491,57 +449,57 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   legendText: {
     fontSize: 15,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontWeight: '500',
     flex: 1,
   },
   legendItemSelected: {
-    backgroundColor: colors.accent.secondary,
+    backgroundColor: themeColors.accent.secondary,
     borderWidth: 1,
-    borderColor: colors.accent.primary,
+    borderColor: themeColors.accent.primary,
   },
   legendColorBoxSelected: {
     borderWidth: 2,
-    borderColor: colors.accent.primary,
+    borderColor: themeColors.accent.primary,
     transform: [{ scale: 1.1 }],
   },
   legendTextSelected: {
     fontWeight: '600',
-    color: colors.text.primary,
+    color: themeColors.text.primary,
   },
   speciesText: {
     fontSize: 14,
     marginVertical: 2,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
   },
   factionMembershipText: {
     fontSize: 15,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     marginVertical: 4,
     fontWeight: '500',
   },
   listItemText: {
     fontSize: 15,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     marginVertical: 4,
     fontWeight: '500',
   },
   noDataContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: themeColors.surface,
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     alignItems: 'center',
     marginVertical: 20,
   },
   noDataText: {
     fontSize: 16,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     textAlign: 'center',
     lineHeight: 24,
   },

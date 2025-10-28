@@ -6,30 +6,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@/models/gameData';
 import { GameCharacter, PerkId, DistinctionId, RelationshipStanding } from '@/models/types';
 import { RootStackParamList } from '@/navigation/types';
-
-// Dark theme color palette
-const colors = {
-  primary: '#0F0F23',
-  surface: '#262647',
-  elevated: '#2D2D52',
-  text: {
-    primary: '#FFFFFF',
-    secondary: '#B0B0B0',
-    accent: '#8A8A8A',
-  },
-  accent: {
-    primary: '#6C5CE7',
-    secondary: 'rgba(108, 92, 231, 0.15)',
-  },
-  border: '#404066',
-  shadow: '#000000',
-  status: {
-    success: '#00B894',
-    warning: '#FDCB6E',
-    error: '#E17055',
-    info: '#74B9FF',
-  },
-};
+import { colors as themeColors } from '@/styles/theme';
+import { commonStyles } from '@/styles/commonStyles';
 
 type SearchScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -330,60 +308,21 @@ export const CharacterSearchScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  searchSection: {
-    backgroundColor: colors.surface,
-    margin: 16,
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+  container: commonStyles.layout.container,
+  searchSection: commonStyles.layout.section,
   resultsSection: {
     margin: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 16,
-    color: colors.text.primary,
-    letterSpacing: 0.3,
-  },
+  sectionTitle: commonStyles.text.h2,
   criteriaItem: {
     marginBottom: 16,
   },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: colors.text.primary,
-    letterSpacing: 0.2,
-  },
+  label: commonStyles.text.label,
   picker: {
-    backgroundColor: colors.elevated,
-    borderRadius: 12,
+    ...commonStyles.input.picker,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.text.primary,
   },
-  input: {
-    backgroundColor: colors.elevated,
-    padding: 16,
-    borderRadius: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    color: colors.text.primary,
-  },
+  input: commonStyles.input.base,
   tagScoreContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -395,36 +334,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchButton: {
-    backgroundColor: colors.accent.primary,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
+    ...commonStyles.button.base,
+    ...commonStyles.button.primary,
     marginTop: 16,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  searchButtonText: {
-    color: colors.text.primary,
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  resultItem: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
-  },
+  searchButtonText: commonStyles.button.text,
+  resultItem: commonStyles.card.base,
   resultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -432,10 +347,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   characterName: {
-    fontSize: 16,
+    ...commonStyles.text.body,
     fontWeight: '600',
-    color: colors.text.primary,
-    letterSpacing: 0.2,
   },
   characterInfo: {
     flexDirection: 'row',
@@ -443,48 +356,36 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   characterSpecies: {
-    fontSize: 14,
-    color: colors.text.secondary,
+    ...commonStyles.text.body,
     fontWeight: '500',
   },
   presentStatusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: colors.elevated,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...commonStyles.badge.base,
+    ...commonStyles.badge.absent,
   },
   presentStatusBadgeActive: {
-    backgroundColor: colors.status.success,
-    borderColor: colors.status.success,
+    ...commonStyles.badge.present,
   },
   presentStatusText: {
+    ...commonStyles.badge.textMuted,
     fontSize: 10,
-    fontWeight: '600',
-    color: colors.text.secondary,
-    letterSpacing: 0.3,
   },
-  presentStatusTextActive: {
-    color: colors.text.primary,
-  },
+  presentStatusTextActive: commonStyles.badge.text,
   retiredStatusBadge: {
-    backgroundColor: colors.status.error,
-    borderColor: colors.status.error,
+    backgroundColor: themeColors.status.error,
+    borderColor: themeColors.status.error,
   },
-  retiredStatusText: {
-    color: colors.text.primary,
-  },
+  retiredStatusText: commonStyles.badge.text,
   recipesContainer: {
     marginTop: 12,
   },
   recipeItem: {
-    backgroundColor: colors.elevated,
+    backgroundColor: themeColors.elevated,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   recipeHeader: {
     flexDirection: 'row',
@@ -493,13 +394,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   recipeName: {
-    fontSize: 15,
+    ...commonStyles.text.body,
     fontWeight: '600',
-    color: colors.text.primary,
   },
   recipeDescription: {
-    fontSize: 14,
-    color: colors.text.secondary,
+    ...commonStyles.text.description,
     lineHeight: 20,
   }
 });

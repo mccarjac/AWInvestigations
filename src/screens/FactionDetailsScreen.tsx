@@ -6,6 +6,8 @@ import { loadCharacters, updateCharacter, getFactionDescription, saveFactionDesc
 import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
+import { colors as themeColors } from '@/styles/theme';
+import { commonStyles } from '@/styles/commonStyles';
 
 type FactionDetailsRouteProp = RouteProp<RootStackParamList, 'FactionDetails'>;
 type FactionDetailsNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -469,56 +471,15 @@ export const FactionDetailsScreen: React.FC = () => {
   );
 };
 
-// Modern Dark Color Palette
-const colors = {
-  // Background colors
-  primary: '#0F0F23',      // Deep dark blue-purple
-  secondary: '#1B1B3A',    // Slightly lighter dark
-  surface: '#262647',      // Card/surface color
-  elevated: '#2D2D54',     // Elevated surfaces
-  
-  // Text colors
-  text: {
-    primary: '#FFFFFF',    // Primary white text
-    secondary: '#B8B8CC',  // Secondary lighter text
-    muted: '#8E8EA0',      // Muted text
-  },
-  
-  // Accent colors
-  accent: {
-    primary: '#6366F1',    // Indigo primary
-    secondary: '#8B5CF6',  // Purple secondary
-    success: '#10B981',    // Green
-    warning: '#F59E0B',    // Amber
-    danger: '#EF4444',     // Red
-    info: '#3B82F6',       // Blue
-  },
-  
-  // Status colors
-  present: '#059669',      // Green for present
-  absent: '#6B7280',       // Gray for absent
-  
-  // Standing colors
-  standing: {
-    allied: '#10B981',     // Green
-    friendly: '#3B82F6',   // Blue
-    neutral: '#6B7280',    // Gray
-    hostile: '#F59E0B',    // Amber
-    enemy: '#EF4444',      // Red
-  },
-  
-  // Border and shadow
-  border: '#3F3F65',
-  shadow: '#000000',
-};
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
   },
   scrollView: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
   },
   contentContainer: {
     padding: 16,
@@ -533,37 +494,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   statCard: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
+    ...commonStyles.card.base,
     alignItems: 'center',
     flex: 1,
     marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: colors.text.muted,
+    color: themeColors.text.muted,
     textAlign: 'center',
   },
   standingDistribution: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...commonStyles.card.base,
   },
   sectionSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
+    ...commonStyles.text.h3,
     marginBottom: 12,
   },
   standingGrid: {
@@ -596,25 +547,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text.primary,
-    letterSpacing: 0.3,
+    ...commonStyles.text.h2,
   },
   sectionDescription: {
     fontSize: 14,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
     marginBottom: 16,
     lineHeight: 20,
   },
   toggleButton: {
-    backgroundColor: colors.accent.primary,
+    ...commonStyles.button.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
   },
   toggleButtonText: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -622,16 +569,13 @@ const styles = StyleSheet.create({
     maxHeight: 600,
   },
   memberCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
+    ...commonStyles.card.base,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   memberCardPresent: {
     borderLeftWidth: 4,
-    borderLeftColor: colors.present,
+    borderLeftColor: themeColors.status.present,
   },
   memberHeader: {
     flexDirection: 'row',
@@ -645,12 +589,12 @@ const styles = StyleSheet.create({
   memberName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     marginBottom: 4,
   },
   memberSpecies: {
     fontSize: 14,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
   },
   memberActions: {
     flexDirection: 'row',
@@ -661,12 +605,11 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: themeColors.border,
   },
   controlLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text.secondary,
+    ...commonStyles.text.label,
+    color: themeColors.text.secondary,
     marginBottom: 8,
   },
   standingButtons: {
@@ -683,7 +626,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   standingButtonActive: {
-    borderColor: colors.text.primary,
+    borderColor: themeColors.text.primary,
     borderWidth: 2,
   },
   standingButtonText: {
@@ -691,15 +634,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   removeButton: {
-    backgroundColor: colors.accent.danger,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    ...commonStyles.button.danger,
     alignSelf: 'flex-start',
     marginTop: 8,
   },
   removeButtonText: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -707,12 +647,8 @@ const styles = StyleSheet.create({
     maxHeight: 400,
   },
   nonMemberCard: {
-    backgroundColor: colors.surface,
-    padding: 16,
-    borderRadius: 12,
+    ...commonStyles.card.base,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   nonMemberInfo: {
     marginBottom: 12,
@@ -720,16 +656,16 @@ const styles = StyleSheet.create({
   nonMemberName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     marginBottom: 4,
   },
   nonMemberSpecies: {
     fontSize: 14,
-    color: colors.text.secondary,
+    color: themeColors.text.secondary,
   },
   addControls: {
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: themeColors.border,
     paddingTop: 12,
   },
   standingBadge: {
@@ -739,19 +675,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   standingAllied: {
-    backgroundColor: colors.standing.allied,
+    backgroundColor: themeColors.standing.allied,
   },
   standingFriendly: {
-    backgroundColor: colors.standing.friendly,
+    backgroundColor: themeColors.standing.friendly,
   },
   standingNeutral: {
-    backgroundColor: colors.standing.neutral,
+    backgroundColor: themeColors.standing.neutral,
   },
   standingHostile: {
-    backgroundColor: colors.standing.hostile,
+    backgroundColor: themeColors.standing.hostile,
   },
   standingEnemy: {
-    backgroundColor: colors.standing.enemy,
+    backgroundColor: themeColors.standing.enemy,
   },
   standingText: {
     fontSize: 11,
@@ -759,48 +695,41 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   standingTextLight: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
   },
   standingTextDark: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
   },
   presentBadge: {
+    ...commonStyles.badge.base,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
-    backgroundColor: colors.elevated,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   presentBadgeActive: {
-    backgroundColor: colors.present,
-    borderColor: colors.present,
+    backgroundColor: themeColors.status.present,
+    borderColor: themeColors.status.present,
   },
   presentBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: colors.text.muted,
+    color: themeColors.text.muted,
     letterSpacing: 0.3,
   },
   presentBadgeTextActive: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
   },
   
   // Faction Header Styles
   factionHeader: {
-    backgroundColor: colors.surface,
+    ...commonStyles.card.base,
     padding: 20,
-    borderRadius: 12,
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   factionName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-    marginBottom: 16,
+    ...commonStyles.text.h1,
     textAlign: 'center',
+    marginBottom: 16,
   },
   
   // Description Styles
@@ -814,45 +743,36 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   descriptionLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
+    ...commonStyles.text.label,
   },
   editButton: {
-    backgroundColor: colors.accent.primary,
+    ...commonStyles.button.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
   },
   editButtonText: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontSize: 14,
     fontWeight: '600',
   },
   descriptionDisplay: {
-    backgroundColor: colors.elevated,
+    backgroundColor: themeColors.elevated,
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     minHeight: 80,
   },
   descriptionText: {
     fontSize: 14,
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     lineHeight: 20,
   },
   descriptionEditContainer: {
     gap: 12,
   },
   descriptionInput: {
-    backgroundColor: colors.elevated,
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    fontSize: 14,
-    color: colors.text.primary,
+    ...commonStyles.input.base,
     textAlignVertical: 'top',
     minHeight: 100,
   },
@@ -869,20 +789,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButton: {
-    backgroundColor: colors.accent.primary,
+    backgroundColor: themeColors.accent.primary,
   },
   cancelButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...commonStyles.button.secondary,
   },
   saveButtonText: {
-    color: colors.text.primary,
+    color: themeColors.text.primary,
     fontSize: 14,
     fontWeight: '600',
   },
   cancelButtonText: {
-    color: colors.text.muted,
+    color: themeColors.text.muted,
     fontSize: 14,
     fontWeight: '600',
   },
