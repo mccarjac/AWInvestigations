@@ -387,6 +387,49 @@ export const deleteFaction = async (factionName: string): Promise<boolean> => {
   return true;
 };
 
+export const deleteFactionCompletely = async (factionName: string): Promise<{ success: boolean; charactersUpdated: number }> => {
+  try {
+    // First, remove the faction from all characters
+    const characters = await loadCharacters();
+    let charactersUpdated = 0;
+    
+    const updatedCharacters = characters.map(character => {
+      const originalFactionCount = character.factions.length;
+      const updatedFactions = character.factions.filter(faction => faction.name !== factionName);
+      
+      if (updatedFactions.length !== originalFactionCount) {
+        charactersUpdated++;
+        return {
+          ...character,
+          factions: updatedFactions,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      
+      return character;
+    });
+    
+    // Save updated characters if any were modified
+    if (charactersUpdated > 0) {
+      await saveCharacters(updatedCharacters);
+    }
+    
+    // Then remove the faction from centralized storage
+    const factionDeleted = await deleteFaction(factionName);
+    
+    return {
+      success: true,
+      charactersUpdated
+    };
+  } catch (error) {
+    console.error('Error deleting faction completely:', error);
+    return {
+      success: false,
+      charactersUpdated: 0
+    };
+  }
+};
+
 export const createFaction = async (factionData: {
   name: string;
   description: string;

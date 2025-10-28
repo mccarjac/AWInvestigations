@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Alert } from 'react-native';
 import { Text } from 'react-native';
 import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
-import { loadCharacters, getFactionDescription, migrateFactionDescriptions, loadFactions } from '@utils/characterStorage';
+import { loadCharacters, getFactionDescription, migrateFactionDescriptions, loadFactions, deleteFactionCompletely } from '@utils/characterStorage';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -27,20 +27,6 @@ export const FactionScreen: React.FC = () => {
 
   const [factionInfos, setFactionInfos] = useState<FactionInfo[]>([]);
   const navigation = useNavigation<FactionNavigationProp>();
-
-  // Set up the header with a plus button
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerAddButton}
-          onPress={handleCreateFaction}
-        >
-          <Text style={styles.headerAddButtonText}>+</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
 
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)
@@ -129,6 +115,20 @@ export const FactionScreen: React.FC = () => {
     }, [loadData])
   );
 
+  // Set up the header with a plus button
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.headerAddButton}
+          onPress={handleCreateFaction}
+        >
+          <Text style={styles.headerAddButtonText}>+</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
   const handleFactionSelect = (factionInfo: FactionInfo) => {
     navigation.navigate('FactionDetails', { factionName: factionInfo.faction.name });
   };
@@ -137,33 +137,80 @@ export const FactionScreen: React.FC = () => {
     navigation.navigate('FactionForm');
   };
 
+  const handleDeleteFaction = async (factionName: string) => {
+    Alert.alert(
+      'Delete Faction',
+      `Are you sure you want to delete "${factionName}"? This will remove it from all characters and cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await deleteFactionCompletely(factionName);
+              
+              if (result.success) {
+                // Refresh the faction list
+                await loadData();
+                
+                // Show success message
+                const message = result.charactersUpdated > 0 
+                  ? `Faction "${factionName}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
+                  : `Faction "${factionName}" deleted successfully.`;
+                
+                Alert.alert('Success', message, [{ text: 'OK' }]);
+              } else {
+                Alert.alert('Error', 'Failed to delete faction. Please try again.', [{ text: 'OK' }]);
+              }
+            } catch (error) {
+              Alert.alert('Error', 'An unexpected error occurred while deleting the faction.', [{ text: 'OK' }]);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderFactionItem = ({ item }: { item: FactionInfo }) => (
-    <TouchableOpacity
-      style={styles.factionCard}
-      onPress={() => handleFactionSelect(item)}
-    >
-      <View style={styles.factionHeader}>
-        <Text style={styles.factionName}>{item.faction.name}</Text>
-        <View style={styles.factionCounts}>
-          <Text style={styles.countText}>
-            {item.totalCount} member{item.totalCount !== 1 ? 's' : ''}
-          </Text>
-          <Text style={styles.presentText}>
-            {item.presentCount} present
-          </Text>
-        </View>
-      </View>
-      
-      <View style={styles.standingsContainer}>
-        {Object.entries(item.standingCounts).map(([standing, count]) => (
-          <View key={standing} style={[styles.standingBadge, getStandingStyle(standing)]}>
-            <Text style={[styles.standingText, getStandingTextStyle(standing)]}>
-              {standing}: {count}
+    <View style={styles.factionCard}>
+      <TouchableOpacity
+        style={styles.factionContent}
+        onPress={() => handleFactionSelect(item)}
+      >
+        <View style={styles.factionHeader}>
+          <Text style={styles.factionName}>{item.faction.name}</Text>
+          <View style={styles.factionCounts}>
+            <Text style={styles.countText}>
+              {item.totalCount} member{item.totalCount !== 1 ? 's' : ''}
+            </Text>
+            <Text style={styles.presentText}>
+              {item.presentCount} present
             </Text>
           </View>
-        ))}
-      </View>
-    </TouchableOpacity>
+        </View>
+        
+        <View style={styles.standingsContainer}>
+          {Object.entries(item.standingCounts).map(([standing, count]) => (
+            <View key={standing} style={[styles.standingBadge, getStandingStyle(standing)]}>
+              <Text style={[styles.standingText, getStandingTextStyle(standing)]}>
+                {standing}: {count}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDeleteFaction(item.faction.name)}
+      >
+        <Text style={styles.deleteText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
   );
 
 
@@ -316,6 +363,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
+  },
+  factionContent: {
+    flex: 1,
   },
 
   factionHeader: {
@@ -513,5 +563,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  deleteButton: {
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.accent.danger,
+    borderRadius: 8,
+    alignSelf: 'flex-end',
+    borderWidth: 1,
+    borderColor: colors.accent.danger,
+    shadowColor: colors.accent.danger,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  deleteText: {
+    color: colors.text.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });
