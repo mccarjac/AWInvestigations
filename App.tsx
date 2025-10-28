@@ -2,7 +2,10 @@ import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { RootStackParamList, RootDrawerParamList } from './src/navigation/types';
+import {
+  RootStackParamList,
+  RootDrawerParamList,
+} from './src/navigation/types';
 import { CharacterListScreen } from './src/screens/character/CharacterListScreen';
 import { CharacterDetailScreen } from './src/screens/character/CharacterDetailScreen';
 import { CharacterFormScreen } from './src/screens/character/CharacterFormScreen';
@@ -62,44 +65,44 @@ function MainDrawer() {
         drawerActiveBackgroundColor: 'rgba(108, 92, 231, 0.1)',
       }}
     >
-      <Drawer.Screen 
-        name="CharacterList" 
-        component={CharacterListScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="CharacterList"
+        component={CharacterListScreen}
+        options={{
           title: 'Characters',
-          drawerLabel: 'Characters'
+          drawerLabel: 'Characters',
         }}
       />
-      <Drawer.Screen 
-        name="Factions" 
-        component={FactionScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="Factions"
+        component={FactionScreen}
+        options={{
           title: 'Factions',
-          drawerLabel: 'Factions'
+          drawerLabel: 'Factions',
         }}
       />
-      <Drawer.Screen 
-        name="CharacterStats" 
-        component={CharacterStatsScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="CharacterStats"
+        component={CharacterStatsScreen}
+        options={{
           title: 'Statistics',
-          drawerLabel: 'Statistics'
+          drawerLabel: 'Statistics',
         }}
       />
-      <Drawer.Screen 
-        name="CharacterSearch" 
-        component={CharacterSearchScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="CharacterSearch"
+        component={CharacterSearchScreen}
+        options={{
           title: 'Search',
-          drawerLabel: 'Search Characters'
+          drawerLabel: 'Search Characters',
         }}
       />
-      <Drawer.Screen 
-        name="DataManagement" 
-        component={DataManagementScreen} 
-        options={{ 
+      <Drawer.Screen
+        name="DataManagement"
+        component={DataManagementScreen}
+        options={{
           title: 'Data Management',
-          drawerLabel: 'Data Management'
+          drawerLabel: 'Data Management',
         }}
       />
     </Drawer.Navigator>
@@ -111,7 +114,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer theme={DarkTheme}>
-        <Stack.Navigator 
+        <Stack.Navigator
           initialRouteName="Main"
           screenOptions={{
             headerStyle: {
@@ -130,29 +133,29 @@ export default function App() {
             },
           }}
         >
-          <Stack.Screen 
-            name="Main" 
-            component={MainDrawer} 
+          <Stack.Screen
+            name="Main"
+            component={MainDrawer}
             options={{ headerShown: false }}
           />
-          <Stack.Screen 
-            name="CharacterDetail" 
-            component={CharacterDetailScreen} 
+          <Stack.Screen
+            name="CharacterDetail"
+            component={CharacterDetailScreen}
             options={({ route }) => ({ title: route.params.character.name })}
           />
-          <Stack.Screen 
-            name="CharacterForm" 
-            component={CharacterFormScreen} 
+          <Stack.Screen
+            name="CharacterForm"
+            component={CharacterFormScreen}
             options={{ title: 'Character Form' }}
           />
-          <Stack.Screen 
-            name="FactionDetails" 
-            component={FactionDetailsScreen} 
+          <Stack.Screen
+            name="FactionDetails"
+            component={FactionDetailsScreen}
             options={({ route }) => ({ title: route.params.factionName })}
           />
-          <Stack.Screen 
-            name="FactionForm" 
-            component={FactionFormScreen} 
+          <Stack.Screen
+            name="FactionForm"
+            component={FactionFormScreen}
             options={{ title: 'Create Faction' }}
           />
         </Stack.Navigator>

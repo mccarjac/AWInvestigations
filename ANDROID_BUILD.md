@@ -11,24 +11,30 @@ This guide provides step-by-step instructions for building an Android app from t
 ## Step-by-Step Build Process
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Login to Expo
+
 ```bash
 eas login
 ```
+
 Enter your Expo account credentials when prompted.
 
 ### 3. Configure Your Project
+
 The project is already configured with:
+
 - Android package name: `com.gamecharactermanager.app`
 - Build profiles in `eas.json`
 
 ### 4. Build the Android App
 
 #### For Testing (APK - Recommended)
+
 ```bash
 eas build --platform android --profile preview
 ```
@@ -36,6 +42,7 @@ eas build --platform android --profile preview
 This creates an APK file that can be directly installed on Android devices.
 
 #### For Production (APK - Distribution)
+
 ```bash
 eas build --platform android --profile production
 ```
@@ -43,6 +50,7 @@ eas build --platform android --profile production
 This creates a production-ready APK for distribution.
 
 ### 5. Monitor the Build
+
 - The build process runs on Expo's cloud servers
 - You'll see a URL to monitor build progress
 - Build typically takes 10-20 minutes
@@ -60,25 +68,28 @@ Once the build completes:
 
 ## Build Profiles Explained
 
-| Profile | Output | Use Case |
-|---------|--------|----------|
-| `preview` | APK | Testing on devices, sharing with testers |
-| `production` | APK | Distribution outside Play Store |
-| `development` | APK | Development build with debugging tools |
+| Profile       | Output | Use Case                                 |
+| ------------- | ------ | ---------------------------------------- |
+| `preview`     | APK    | Testing on devices, sharing with testers |
+| `production`  | APK    | Distribution outside Play Store          |
+| `development` | APK    | Development build with debugging tools   |
 
 ## Troubleshooting
 
 ### Build Fails
+
 - Check the build logs on the Expo website
 - Ensure all dependencies are compatible
 - Verify app.json configuration is valid
 
 ### Cannot Install APK
+
 - Ensure "Install from Unknown Sources" is enabled
 - Check that your device runs Android 5.0 or higher
 - Try downloading the APK again
 
 ### First Build Takes Long
+
 - First build may take 20-30 minutes as it sets up the build environment
 - Subsequent builds are typically faster (10-15 minutes)
 
@@ -87,11 +98,13 @@ Once the build completes:
 For developers who want to build locally:
 
 1. Generate native Android project:
+
 ```bash
 npx expo prebuild --platform android
 ```
 
 2. Build with Android Studio or Gradle:
+
 ```bash
 cd android
 ./gradlew assembleRelease

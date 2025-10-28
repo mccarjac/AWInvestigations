@@ -1,10 +1,27 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@/models/gameData';
-import { GameCharacter, PerkId, DistinctionId, RelationshipStanding } from '@/models/types';
+import {
+  AVAILABLE_PERKS,
+  AVAILABLE_DISTINCTIONS,
+  AVAILABLE_RECIPES,
+  PerkTag,
+} from '@/models/gameData';
+import {
+  GameCharacter,
+  PerkId,
+  DistinctionId,
+  RelationshipStanding,
+} from '@/models/types';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -32,48 +49,57 @@ interface SearchCriteria {
 
 export const CharacterSearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
-  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({ 
+  const [searchCriteria, setSearchCriteria] = useState<SearchCriteria>({
     presentStatus: 'any',
-    retiredStatus: 'active' // Default to searching only active (non-retired) characters
+    retiredStatus: 'active', // Default to searching only active (non-retired) characters
   });
   const [searchResults, setSearchResults] = useState<GameCharacter[]>([]);
 
-  const calculateTagScore = (character: GameCharacter, tag: PerkTag): number => {
-    return AVAILABLE_PERKS
-      .filter(perk => character.perkIds.includes(perk.id) && perk.tag === tag)
-      .length;
+  const calculateTagScore = (
+    character: GameCharacter,
+    tag: PerkTag
+  ): number => {
+    return AVAILABLE_PERKS.filter(
+      perk => character.perkIds.includes(perk.id) && perk.tag === tag
+    ).length;
   };
 
   const handleSearch = useCallback(async () => {
     const characters = await loadCharacters();
     const results = characters.filter(character => {
       // Check perk
-      if (searchCriteria.perkId && !character.perkIds.includes(searchCriteria.perkId)) {
+      if (
+        searchCriteria.perkId &&
+        !character.perkIds.includes(searchCriteria.perkId)
+      ) {
         return false;
       }
 
       // Check distinction
-      if (searchCriteria.distinctionId && 
-          !character.distinctionIds.includes(searchCriteria.distinctionId)) {
+      if (
+        searchCriteria.distinctionId &&
+        !character.distinctionIds.includes(searchCriteria.distinctionId)
+      ) {
         return false;
       }
 
       // Check recipes
       if (searchCriteria.recipeSearch) {
         const query = searchCriteria.recipeSearch.toLowerCase();
-        const characterPerks = AVAILABLE_PERKS.filter(perk => 
-          character.perkIds.includes(perk.id) && perk.recipeIds
+        const characterPerks = AVAILABLE_PERKS.filter(
+          perk => character.perkIds.includes(perk.id) && perk.recipeIds
         );
-        
-        const hasMatchingRecipe = characterPerks.some(perk => 
+
+        const hasMatchingRecipe = characterPerks.some(perk =>
           perk.recipeIds?.some(recipeId => {
             const recipe = AVAILABLE_RECIPES.find(r => r.id === recipeId);
-            return recipe && (
-              recipe.name.toLowerCase().includes(query) ||
-              recipe.description.toLowerCase().includes(query) ||
-              recipe.materials.some(material => 
-                material.toLowerCase().includes(query)
-              )
+            return (
+              recipe &&
+              (recipe.name.toLowerCase().includes(query) ||
+                recipe.description.toLowerCase().includes(query) ||
+                recipe.materials.some(material =>
+                  material.toLowerCase().includes(query)
+                ))
             );
           })
         );
@@ -94,11 +120,18 @@ export const CharacterSearchScreen: React.FC = () => {
       // Check faction
       if (searchCriteria.factionName || searchCriteria.factionStanding) {
         const matchingFaction = character.factions.find(faction => {
-          if (searchCriteria.factionName && 
-              !faction.name.toLowerCase().includes(searchCriteria.factionName.toLowerCase())) {
+          if (
+            searchCriteria.factionName &&
+            !faction.name
+              .toLowerCase()
+              .includes(searchCriteria.factionName.toLowerCase())
+          ) {
             return false;
           }
-          if (searchCriteria.factionStanding && faction.standing !== searchCriteria.factionStanding) {
+          if (
+            searchCriteria.factionStanding &&
+            faction.standing !== searchCriteria.factionStanding
+          ) {
             return false;
           }
           return true;
@@ -109,7 +142,10 @@ export const CharacterSearchScreen: React.FC = () => {
       }
 
       // Check present status
-      if (searchCriteria.presentStatus && searchCriteria.presentStatus !== 'any') {
+      if (
+        searchCriteria.presentStatus &&
+        searchCriteria.presentStatus !== 'any'
+      ) {
         const isPresent = character.present === true;
         if (searchCriteria.presentStatus === 'present' && !isPresent) {
           return false;
@@ -120,7 +156,10 @@ export const CharacterSearchScreen: React.FC = () => {
       }
 
       // Check retired status
-      if (searchCriteria.retiredStatus && searchCriteria.retiredStatus !== 'any') {
+      if (
+        searchCriteria.retiredStatus &&
+        searchCriteria.retiredStatus !== 'any'
+      ) {
         const isRetired = character.retired === true;
         if (searchCriteria.retiredStatus === 'retired' && !isRetired) {
           return false;
@@ -140,13 +179,18 @@ export const CharacterSearchScreen: React.FC = () => {
     <ScrollView style={styles.container}>
       <View style={styles.searchSection}>
         <Text style={styles.sectionTitle}>Search Criteria</Text>
-        
+
         <View style={styles.criteriaItem}>
           <Text style={styles.label}>Perk</Text>
           <Picker
             selectedValue={searchCriteria.perkId}
             style={styles.picker}
-            onValueChange={(value) => setSearchCriteria(prev => ({ ...prev, perkId: value || undefined }))}
+            onValueChange={value =>
+              setSearchCriteria(prev => ({
+                ...prev,
+                perkId: value || undefined,
+              }))
+            }
           >
             <Picker.Item label="Any Perk" value="" />
             {AVAILABLE_PERKS.map(perk => (
@@ -160,11 +204,20 @@ export const CharacterSearchScreen: React.FC = () => {
           <Picker
             selectedValue={searchCriteria.distinctionId}
             style={styles.picker}
-            onValueChange={(value) => setSearchCriteria(prev => ({ ...prev, distinctionId: value || undefined }))}
+            onValueChange={value =>
+              setSearchCriteria(prev => ({
+                ...prev,
+                distinctionId: value || undefined,
+              }))
+            }
           >
             <Picker.Item label="Any Distinction" value="" />
             {AVAILABLE_DISTINCTIONS.map(distinction => (
-              <Picker.Item key={distinction.id} label={distinction.name} value={distinction.id} />
+              <Picker.Item
+                key={distinction.id}
+                label={distinction.name}
+                value={distinction.id}
+              />
             ))}
           </Picker>
         </View>
@@ -175,8 +228,12 @@ export const CharacterSearchScreen: React.FC = () => {
             <Picker
               selectedValue={searchCriteria.tag}
               style={[styles.picker, { flex: 2 }]}
-              onValueChange={(value: PerkTag | '') => 
-                setSearchCriteria(prev => ({ ...prev, tag: value || undefined }))}
+              onValueChange={(value: PerkTag | '') =>
+                setSearchCriteria(prev => ({
+                  ...prev,
+                  tag: value || undefined,
+                }))
+              }
             >
               <Picker.Item label="Any Tag" value="" />
               {getAllTags().map(tag => (
@@ -186,10 +243,12 @@ export const CharacterSearchScreen: React.FC = () => {
             <TextInput
               style={[styles.input, { flex: 1 }]}
               value={searchCriteria.minTagScore?.toString() || ''}
-              onChangeText={(value) => setSearchCriteria(prev => ({
-                ...prev,
-                minTagScore: value ? parseInt(value) : undefined
-              }))}
+              onChangeText={value =>
+                setSearchCriteria(prev => ({
+                  ...prev,
+                  minTagScore: value ? parseInt(value) : undefined,
+                }))
+              }
               placeholder="Min Score"
               keyboardType="numeric"
             />
@@ -201,10 +260,12 @@ export const CharacterSearchScreen: React.FC = () => {
           <TextInput
             style={styles.input}
             value={searchCriteria.recipeSearch || ''}
-            onChangeText={(value) => setSearchCriteria(prev => ({
-              ...prev,
-              recipeSearch: value || undefined
-            }))}
+            onChangeText={value =>
+              setSearchCriteria(prev => ({
+                ...prev,
+                recipeSearch: value || undefined,
+              }))
+            }
             placeholder="Search recipes or materials..."
           />
         </View>
@@ -215,19 +276,23 @@ export const CharacterSearchScreen: React.FC = () => {
             <TextInput
               style={[styles.input, { flex: 2 }]}
               value={searchCriteria.factionName || ''}
-              onChangeText={(value) => setSearchCriteria(prev => ({
-                ...prev,
-                factionName: value || undefined
-              }))}
+              onChangeText={value =>
+                setSearchCriteria(prev => ({
+                  ...prev,
+                  factionName: value || undefined,
+                }))
+              }
               placeholder="Faction Name"
             />
             <Picker
               selectedValue={searchCriteria.factionStanding}
               style={[styles.picker, { flex: 1 }]}
-              onValueChange={(value) => setSearchCriteria(prev => ({
-                ...prev,
-                factionStanding: value || undefined
-              }))}
+              onValueChange={value =>
+                setSearchCriteria(prev => ({
+                  ...prev,
+                  factionStanding: value || undefined,
+                }))
+              }
             >
               <Picker.Item label="Any Standing" value="" />
               {Object.values(RelationshipStanding).map(standing => (
@@ -242,10 +307,12 @@ export const CharacterSearchScreen: React.FC = () => {
           <Picker
             selectedValue={searchCriteria.presentStatus || 'any'}
             style={styles.picker}
-            onValueChange={(value) => setSearchCriteria(prev => ({
-              ...prev,
-              presentStatus: value as 'present' | 'absent' | 'any'
-            }))}
+            onValueChange={value =>
+              setSearchCriteria(prev => ({
+                ...prev,
+                presentStatus: value as 'present' | 'absent' | 'any',
+              }))
+            }
           >
             <Picker.Item label="Any Status" value="any" />
             <Picker.Item label="Present" value="present" />
@@ -258,10 +325,12 @@ export const CharacterSearchScreen: React.FC = () => {
           <Picker
             selectedValue={searchCriteria.retiredStatus || 'active'}
             style={styles.picker}
-            onValueChange={(value) => setSearchCriteria(prev => ({
-              ...prev,
-              retiredStatus: value as 'active' | 'retired' | 'any'
-            }))}
+            onValueChange={value =>
+              setSearchCriteria(prev => ({
+                ...prev,
+                retiredStatus: value as 'active' | 'retired' | 'any',
+              }))
+            }
           >
             <Picker.Item label="Active Only" value="active" />
             <Picker.Item label="Retired Only" value="retired" />
@@ -275,26 +344,50 @@ export const CharacterSearchScreen: React.FC = () => {
       </View>
 
       <View style={styles.resultsSection}>
-        <Text style={styles.sectionTitle}>Results ({searchResults.length})</Text>
+        <Text style={styles.sectionTitle}>
+          Results ({searchResults.length})
+        </Text>
         {searchResults.map(character => (
           <TouchableOpacity
             key={character.id}
             style={styles.resultItem}
-            onPress={() => navigation.navigate('CharacterDetail', { character })}
+            onPress={() =>
+              navigation.navigate('CharacterDetail', { character })
+            }
           >
             <View style={styles.resultHeader}>
               <Text style={styles.characterName}>{character.name}</Text>
               <View style={styles.characterInfo}>
                 <Text style={styles.characterSpecies}>{character.species}</Text>
                 {character.retired && (
-                  <View style={[styles.presentStatusBadge, styles.retiredStatusBadge]}>
-                    <Text style={[styles.presentStatusText, styles.retiredStatusText]}>
+                  <View
+                    style={[
+                      styles.presentStatusBadge,
+                      styles.retiredStatusBadge,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.presentStatusText,
+                        styles.retiredStatusText,
+                      ]}
+                    >
                       Retired
                     </Text>
                   </View>
                 )}
-                <View style={[styles.presentStatusBadge, character.present && styles.presentStatusBadgeActive]}>
-                  <Text style={[styles.presentStatusText, character.present && styles.presentStatusTextActive]}>
+                <View
+                  style={[
+                    styles.presentStatusBadge,
+                    character.present && styles.presentStatusBadgeActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.presentStatusText,
+                      character.present && styles.presentStatusTextActive,
+                    ]}
+                  >
                     {character.present ? 'Present' : 'Absent'}
                   </Text>
                 </View>
@@ -376,29 +469,4 @@ const styles = StyleSheet.create({
     borderColor: themeColors.status.error,
   },
   retiredStatusText: commonStyles.badge.text,
-  recipesContainer: {
-    marginTop: 12,
-  },
-  recipeItem: {
-    backgroundColor: themeColors.elevated,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-  },
-  recipeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  recipeName: {
-    ...commonStyles.text.body,
-    fontWeight: '600',
-  },
-  recipeDescription: {
-    ...commonStyles.text.description,
-    lineHeight: 20,
-  }
 });

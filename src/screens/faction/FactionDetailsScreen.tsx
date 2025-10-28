@@ -1,9 +1,33 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Alert, TextInput } from 'react-native';
-import { Text } from 'react-native';
-import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
-import { loadCharacters, updateCharacter, getFactionDescription, saveFactionDescription, migrateFactionDescriptions } from '@utils/characterStorage';
-import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  TextInput,
+  Text,
+} from 'react-native';
+import {
+  GameCharacter,
+  Faction,
+  RelationshipStanding,
+  POSITIVE_RELATIONSHIP_TYPE,
+  NEGATIVE_RELATIONSHIP_TYPE,
+} from '@models/types';
+import {
+  loadCharacters,
+  updateCharacter,
+  getFactionDescription,
+  saveFactionDescription,
+  migrateFactionDescriptions,
+} from '@utils/characterStorage';
+import {
+  useNavigation,
+  useRoute,
+  useFocusEffect,
+  RouteProp,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
@@ -22,7 +46,6 @@ export const FactionDetailsScreen: React.FC = () => {
   const navigation = useNavigation<FactionDetailsNavigationProp>();
   const { factionName } = route.params;
 
-  const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
   const [members, setMembers] = useState<FactionMemberInfo[]>([]);
   const [nonMembers, setNonMembers] = useState<GameCharacter[]>([]);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -33,9 +56,8 @@ export const FactionDetailsScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)
     await migrateFactionDescriptions();
-    
+
     const characters = await loadCharacters();
-    setAllCharacters(characters);
 
     // Find faction members and non-members
     const factionMembers: FactionMemberInfo[] = [];
@@ -51,9 +73,15 @@ export const FactionDetailsScreen: React.FC = () => {
       }
     });
 
-    setMembers(factionMembers.sort((a, b) => a.character.name.localeCompare(b.character.name)));
-    setNonMembers(factionNonMembers.sort((a, b) => a.name.localeCompare(b.name)));
-    
+    setMembers(
+      factionMembers.sort((a, b) =>
+        a.character.name.localeCompare(b.character.name)
+      )
+    );
+    setNonMembers(
+      factionNonMembers.sort((a, b) => a.name.localeCompare(b.name))
+    );
+
     // Get the faction description from centralized faction storage
     const description = await getFactionDescription(factionName);
     setFactionDescription(description);
@@ -78,25 +106,33 @@ export const FactionDetailsScreen: React.FC = () => {
           text: 'Remove',
           style: 'destructive',
           onPress: async () => {
-      try {
-        const updatedFactions = character.factions.filter(f => f.name !== factionName);
-        const result = await updateCharacter(character.id, { factions: updatedFactions });
-        
-        if (result) {
-          // Update local state immediately to provide immediate feedback
-          setMembers(prevMembers => prevMembers.filter(m => m.character.id !== character.id));
-          setNonMembers(prevNonMembers => [...prevNonMembers, result].sort((a, b) => a.name.localeCompare(b.name)));
-          
-          // Update the allCharacters state to reflect the change
-          setAllCharacters(prevChars => 
-            prevChars.map(c => c.id === character.id ? result : c)
-          );
-        } else {
-          throw new Error('Failed to update character');
-        }
+            try {
+              const updatedFactions = character.factions.filter(
+                f => f.name !== factionName
+              );
+              const result = await updateCharacter(character.id, {
+                factions: updatedFactions,
+              });
+
+              if (result) {
+                // Update local state immediately to provide immediate feedback
+                setMembers(prevMembers =>
+                  prevMembers.filter(m => m.character.id !== character.id)
+                );
+                setNonMembers(prevNonMembers =>
+                  [...prevNonMembers, result].sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                  )
+                );
+              } else {
+                throw new Error('Failed to update character');
+              }
             } catch (error) {
               console.error('Error removing member from faction:', error);
-              Alert.alert('Error', 'Failed to remove member from faction. Please try again.');
+              Alert.alert(
+                'Error',
+                'Failed to remove member from faction. Please try again.'
+              );
             }
           },
         },
@@ -104,7 +140,10 @@ export const FactionDetailsScreen: React.FC = () => {
     );
   };
 
-  const handleAddMember = async (character: GameCharacter, standing: RelationshipStanding) => {
+  const handleAddMember = async (
+    character: GameCharacter,
+    standing: RelationshipStanding
+  ) => {
     // Ensure the faction exists in central storage (this will create it if it doesn't exist)
     const currentDescription = await getFactionDescription(factionName);
     if (!currentDescription && factionDescription) {
@@ -118,53 +157,61 @@ export const FactionDetailsScreen: React.FC = () => {
     const newFaction: Faction = {
       name: factionName,
       standing,
-      description: '' // Description is managed centrally now
+      description: '', // Description is managed centrally now
     };
 
     const updatedFactions = [...character.factions, newFaction];
-    const result = await updateCharacter(character.id, { factions: updatedFactions });
-    
+    const result = await updateCharacter(character.id, {
+      factions: updatedFactions,
+    });
+
     if (result) {
       // Update local state immediately
-      setNonMembers(prevNonMembers => prevNonMembers.filter(c => c.id !== character.id));
-      setMembers(prevMembers => [...prevMembers, { character: result, faction: newFaction }]
-        .sort((a, b) => a.character.name.localeCompare(b.character.name)));
-      
-      // Update the allCharacters state
-      setAllCharacters(prevChars => 
-        prevChars.map(c => c.id === character.id ? result : c)
+      setNonMembers(prevNonMembers =>
+        prevNonMembers.filter(c => c.id !== character.id)
+      );
+      setMembers(prevMembers =>
+        [...prevMembers, { character: result, faction: newFaction }].sort(
+          (a, b) => a.character.name.localeCompare(b.character.name)
+        )
       );
     }
-    
+
     // Keep the add members section open for adding multiple members
     // setShowAddMember(false); // Removed to allow adding multiple members easily
   };
 
-  const handleUpdateStanding = async (character: GameCharacter, newStanding: RelationshipStanding) => {
+  const handleUpdateStanding = async (
+    character: GameCharacter,
+    newStanding: RelationshipStanding
+  ) => {
     try {
-      const updatedFactions = character.factions.map(f => 
+      const updatedFactions = character.factions.map(f =>
         f.name === factionName ? { ...f, standing: newStanding } : f
       );
-      const result = await updateCharacter(character.id, { factions: updatedFactions });
-      
+      const result = await updateCharacter(character.id, {
+        factions: updatedFactions,
+      });
+
       if (result) {
         // Update local state immediately
-        setMembers(prevMembers => 
-          prevMembers.map(member => 
-            member.character.id === character.id 
-              ? { ...member, faction: { ...member.faction, standing: newStanding } }
+        setMembers(prevMembers =>
+          prevMembers.map(member =>
+            member.character.id === character.id
+              ? {
+                  ...member,
+                  faction: { ...member.faction, standing: newStanding },
+                }
               : member
           )
-        );
-        
-        // Update the allCharacters state
-        setAllCharacters(prevChars => 
-          prevChars.map(c => c.id === character.id ? result : c)
         );
       }
     } catch (error) {
       console.error('Error updating standing:', error);
-      Alert.alert('Error', 'Failed to update relationship standing. Please try again.');
+      Alert.alert(
+        'Error',
+        'Failed to update relationship standing. Please try again.'
+      );
     }
   };
 
@@ -177,21 +224,24 @@ export const FactionDetailsScreen: React.FC = () => {
     try {
       // Save description to centralized faction storage
       await saveFactionDescription(factionName, tempDescription);
-      
+
       // Update local state to reflect the changes immediately
       setFactionDescription(tempDescription);
       setEditingDescription(false);
-      
+
       // Update the members array to reflect the new description for UI consistency
-      setMembers(prevMembers => 
+      setMembers(prevMembers =>
         prevMembers.map(member => ({
           ...member,
-          faction: { ...member.faction, description: tempDescription }
+          faction: { ...member.faction, description: tempDescription },
         }))
       );
     } catch (error) {
       console.error('Failed to save faction description:', error);
-      Alert.alert('Error', 'Failed to save faction description. Please try again.');
+      Alert.alert(
+        'Error',
+        'Failed to save faction description. Please try again.'
+      );
     }
   };
 
@@ -224,16 +274,19 @@ export const FactionDetailsScreen: React.FC = () => {
 
   const getStandingTextStyle = (standing: string) => {
     // Check if standing is positive (Allied/Ally/Friendly/Friend)
-    if (POSITIVE_RELATIONSHIP_TYPE.includes(standing as RelationshipStanding) || 
-        standing === 'Allied' || standing === 'Friendly') {
+    if (
+      POSITIVE_RELATIONSHIP_TYPE.includes(standing as RelationshipStanding) ||
+      standing === 'Allied' ||
+      standing === 'Friendly'
+    ) {
       return styles.standingTextLight;
     }
-    
+
     // Check if standing is negative (Hostile/Enemy)
     if (NEGATIVE_RELATIONSHIP_TYPE.includes(standing as RelationshipStanding)) {
       return styles.standingTextLight;
     }
-    
+
     // Neutral or unknown standings
     return styles.standingTextDark;
   };
@@ -242,46 +295,79 @@ export const FactionDetailsScreen: React.FC = () => {
     // Only count positive relationships as actual members
     const actualMembers = members.filter(member => {
       const standingValue = member.faction.standing as string;
-      return POSITIVE_RELATIONSHIP_TYPE.includes(member.faction.standing) || 
-             standingValue === 'Allied' || standingValue === 'Friendly';
+      return (
+        POSITIVE_RELATIONSHIP_TYPE.includes(member.faction.standing) ||
+        standingValue === 'Allied' ||
+        standingValue === 'Friendly'
+      );
     });
-    
+
     const totalMembers = actualMembers.length;
-    const presentMembers = actualMembers.filter(m => m.character.present === true).length;
+    const presentMembers = actualMembers.filter(
+      m => m.character.present === true
+    ).length;
     const standingCounts: Record<string, number> = {};
-    
+
     // Count all standings for display purposes (including neutral/negative)
     members.forEach(member => {
-      standingCounts[member.faction.standing] = (standingCounts[member.faction.standing] || 0) + 1;
+      standingCounts[member.faction.standing] =
+        (standingCounts[member.faction.standing] || 0) + 1;
     });
 
     return { totalMembers, presentMembers, standingCounts };
   };
 
   const renderMember = ({ item }: { item: FactionMemberInfo }) => (
-    <View style={[styles.memberCard, item.character.present && styles.memberCardPresent]}>
+    <View
+      style={[
+        styles.memberCard,
+        item.character.present && styles.memberCardPresent,
+      ]}
+    >
       <TouchableOpacity
         style={styles.memberHeader}
-        onPress={() => navigation.navigate('CharacterDetail', { character: item.character })}
+        onPress={() =>
+          navigation.navigate('CharacterDetail', { character: item.character })
+        }
       >
         <View style={styles.memberInfo}>
           <Text style={styles.memberName}>{item.character.name}</Text>
           <Text style={styles.memberSpecies}>{item.character.species}</Text>
         </View>
         <View style={styles.memberActions}>
-          <View style={[styles.standingBadge, getStandingStyle(item.faction.standing)]}>
-            <Text style={[styles.standingText, getStandingTextStyle(item.faction.standing)]}>
+          <View
+            style={[
+              styles.standingBadge,
+              getStandingStyle(item.faction.standing),
+            ]}
+          >
+            <Text
+              style={[
+                styles.standingText,
+                getStandingTextStyle(item.faction.standing),
+              ]}
+            >
               {item.faction.standing}
             </Text>
           </View>
-          <View style={[styles.presentBadge, item.character.present && styles.presentBadgeActive]}>
-            <Text style={[styles.presentBadgeText, item.character.present && styles.presentBadgeTextActive]}>
+          <View
+            style={[
+              styles.presentBadge,
+              item.character.present && styles.presentBadgeActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.presentBadgeText,
+                item.character.present && styles.presentBadgeTextActive,
+              ]}
+            >
               {item.character.present ? 'Present' : 'Absent'}
             </Text>
           </View>
         </View>
       </TouchableOpacity>
-      
+
       <View style={styles.memberControls}>
         <Text style={styles.controlLabel}>Standing:</Text>
         <View style={styles.standingButtons}>
@@ -291,17 +377,23 @@ export const FactionDetailsScreen: React.FC = () => {
               style={[
                 styles.standingButton,
                 getStandingStyle(standing),
-                item.faction.standing === standing && styles.standingButtonActive
+                item.faction.standing === standing &&
+                  styles.standingButtonActive,
               ]}
               onPress={() => handleUpdateStanding(item.character, standing)}
             >
-              <Text style={[styles.standingButtonText, getStandingTextStyle(standing)]}>
+              <Text
+                style={[
+                  styles.standingButtonText,
+                  getStandingTextStyle(standing),
+                ]}
+              >
                 {standing}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
-        
+
         <TouchableOpacity
           style={styles.removeButton}
           onPress={() => handleRemoveMember(item.character)}
@@ -319,7 +411,7 @@ export const FactionDetailsScreen: React.FC = () => {
         <Text style={styles.nonMemberName}>{item.name}</Text>
         <Text style={styles.nonMemberSpecies}>{item.species}</Text>
       </View>
-      
+
       <View style={styles.addControls}>
         <Text style={styles.controlLabel}>Add as:</Text>
         <View style={styles.standingButtons}>
@@ -329,7 +421,12 @@ export const FactionDetailsScreen: React.FC = () => {
               style={[styles.standingButton, getStandingStyle(standing)]}
               onPress={() => handleAddMember(item, standing)}
             >
-              <Text style={[styles.standingButtonText, getStandingTextStyle(standing)]}>
+              <Text
+                style={[
+                  styles.standingButtonText,
+                  getStandingTextStyle(standing),
+                ]}
+              >
                 {standing}
               </Text>
             </TouchableOpacity>
@@ -351,20 +448,20 @@ export const FactionDetailsScreen: React.FC = () => {
         {/* Faction Header */}
         <View style={styles.factionHeader}>
           <Text style={styles.factionName}>{factionName}</Text>
-          
+
           <View style={styles.descriptionSection}>
             <View style={styles.descriptionHeader}>
               <Text style={styles.descriptionLabel}>Description</Text>
               {!editingDescription && (
-                <TouchableOpacity 
-                  style={styles.editButton} 
+                <TouchableOpacity
+                  style={styles.editButton}
                   onPress={handleEditDescription}
                 >
                   <Text style={styles.editButtonText}>Edit</Text>
                 </TouchableOpacity>
               )}
             </View>
-            
+
             {editingDescription ? (
               <View style={styles.descriptionEditContainer}>
                 <TextInput
@@ -376,14 +473,14 @@ export const FactionDetailsScreen: React.FC = () => {
                   numberOfLines={4}
                 />
                 <View style={styles.descriptionActions}>
-                  <TouchableOpacity 
-                    style={[styles.actionButton, styles.cancelButton]} 
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.cancelButton]}
                     onPress={handleCancelEditDescription}
                   >
                     <Text style={styles.cancelButtonText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[styles.actionButton, styles.saveButton]} 
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.saveButton]}
                     onPress={handleSaveDescription}
                   >
                     <Text style={styles.saveButtonText}>Save</Text>
@@ -412,7 +509,9 @@ export const FactionDetailsScreen: React.FC = () => {
               <Text style={styles.statLabel}>Present Members</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.totalMembers - stats.presentMembers}</Text>
+              <Text style={styles.statValue}>
+                {stats.totalMembers - stats.presentMembers}
+              </Text>
               <Text style={styles.statLabel}>Absent</Text>
             </View>
           </View>
@@ -422,9 +521,26 @@ export const FactionDetailsScreen: React.FC = () => {
             <Text style={styles.sectionSubtitle}>Standing Distribution</Text>
             <View style={styles.standingGrid}>
               {Object.entries(stats.standingCounts).map(([standing, count]) => (
-                <View key={standing} style={[styles.standingCard, getStandingStyle(standing)]}>
-                  <Text style={[styles.standingCardCount, getStandingTextStyle(standing)]}>{count}</Text>
-                  <Text style={[styles.standingCardLabel, getStandingTextStyle(standing)]}>{standing}</Text>
+                <View
+                  key={standing}
+                  style={[styles.standingCard, getStandingStyle(standing)]}
+                >
+                  <Text
+                    style={[
+                      styles.standingCardCount,
+                      getStandingTextStyle(standing),
+                    ]}
+                  >
+                    {count}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.standingCardLabel,
+                      getStandingTextStyle(standing),
+                    ]}
+                  >
+                    {standing}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -434,17 +550,19 @@ export const FactionDetailsScreen: React.FC = () => {
         {/* Members Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>All Relationships ({members.length})</Text>
+            <Text style={styles.sectionTitle}>
+              All Relationships ({members.length})
+            </Text>
             <Text style={styles.sectionDescription}>
-              Includes all characters with any relationship to this faction. Only positive relationships (Ally/Friend) count as members in statistics.
+              Includes all characters with any relationship to this faction.
+              Only positive relationships (Ally/Friend) count as members in
+              statistics.
             </Text>
           </View>
-          
+
           <View style={styles.membersList}>
-            {members.map((item) => (
-              <View key={item.character.id}>
-                {renderMember({ item })}
-              </View>
+            {members.map(item => (
+              <View key={item.character.id}>{renderMember({ item })}</View>
             ))}
           </View>
         </View>
@@ -469,10 +587,8 @@ export const FactionDetailsScreen: React.FC = () => {
                 Add characters to {factionName} by selecting their standing:
               </Text>
               <View style={styles.nonMembersList}>
-                {nonMembers.map((item) => (
-                  <View key={item.id}>
-                    {renderNonMember({ item })}
-                  </View>
+                {nonMembers.map(item => (
+                  <View key={item.id}>{renderNonMember({ item })}</View>
                 ))}
               </View>
             </>
@@ -482,8 +598,6 @@ export const FactionDetailsScreen: React.FC = () => {
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -731,7 +845,7 @@ const styles = StyleSheet.create({
   presentBadgeTextActive: {
     color: themeColors.text.primary,
   },
-  
+
   // Faction Header Styles
   factionHeader: {
     ...commonStyles.card.base,
@@ -743,7 +857,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-  
+
   // Description Styles
   descriptionSection: {
     marginTop: 8,

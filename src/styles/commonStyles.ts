@@ -4,7 +4,7 @@
  */
 
 import { StyleSheet } from 'react-native';
-import { theme, colors, typography, spacing, borderRadius, shadows } from './theme';
+import { colors, typography, spacing, borderRadius, shadows } from './theme';
 
 // Layout and container styles
 export const layoutStyles = StyleSheet.create({
@@ -12,16 +12,16 @@ export const layoutStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.primary,
   },
-  
+
   scrollView: {
     backgroundColor: colors.primary,
   },
-  
+
   contentContainer: {
     padding: spacing.base,
     paddingBottom: 100,
   },
-  
+
   section: {
     backgroundColor: colors.surface,
     padding: spacing.lg,
@@ -31,12 +31,12 @@ export const layoutStyles = StyleSheet.create({
     borderColor: colors.border,
     ...shadows.medium,
   },
-  
+
   sectionDanger: {
     borderColor: colors.accent.danger,
     borderWidth: 2,
   },
-  
+
   formSection: {
     backgroundColor: colors.surface,
     padding: spacing.base,
@@ -45,7 +45,7 @@ export const layoutStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  
+
   footerPadding: {
     height: spacing.huge,
   },
@@ -60,21 +60,21 @@ export const textStyles = StyleSheet.create({
     color: colors.text.primary,
     letterSpacing: typography.letterSpacing.wide,
   },
-  
+
   h2: {
     fontSize: typography.fontSize.xxl,
     fontWeight: typography.fontWeight.bold,
     color: colors.text.primary,
     letterSpacing: typography.letterSpacing.normal,
   },
-  
+
   h3: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.semibold,
     color: colors.text.primary,
     letterSpacing: typography.letterSpacing.normal,
   },
-  
+
   // Labels and body text
   label: {
     fontSize: typography.fontSize.md,
@@ -83,47 +83,47 @@ export const textStyles = StyleSheet.create({
     color: colors.text.primary,
     letterSpacing: typography.letterSpacing.tight,
   },
-  
+
   body: {
     fontSize: typography.fontSize.base,
     color: colors.text.secondary,
     lineHeight: typography.lineHeight.base,
   },
-  
+
   bodyLarge: {
     fontSize: typography.fontSize.md,
     color: colors.text.secondary,
     lineHeight: typography.lineHeight.relaxed,
   },
-  
+
   description: {
     fontSize: typography.fontSize.base,
     color: colors.text.secondary,
     lineHeight: typography.lineHeight.base,
   },
-  
+
   caption: {
     fontSize: typography.fontSize.sm,
     color: colors.text.muted,
   },
-  
+
   // Special text styles
   muted: {
     color: colors.text.muted,
   },
-  
+
   accent: {
     color: colors.accent.primary,
   },
-  
+
   success: {
     color: colors.status.success,
   },
-  
+
   warning: {
     color: colors.status.warning,
   },
-  
+
   danger: {
     color: colors.accent.danger,
   },
@@ -140,7 +140,7 @@ export const cardStyles = StyleSheet.create({
     borderColor: colors.border,
     ...shadows.medium,
   },
-  
+
   present: {
     backgroundColor: colors.surface,
     borderLeftWidth: 4,
@@ -148,25 +148,25 @@ export const cardStyles = StyleSheet.create({
     borderColor: colors.status.present,
     shadowColor: colors.status.present,
   },
-  
+
   elevated: {
     backgroundColor: colors.elevated,
     borderColor: colors.border,
   },
-  
+
   clickable: {
     backgroundColor: colors.surface,
     borderWidth: 2,
     borderColor: colors.accent.primary,
   },
-  
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.md,
   },
-  
+
   content: {
     flex: 1,
   },
@@ -183,71 +183,71 @@ export const buttonStyles = StyleSheet.create({
     borderWidth: 1,
     ...shadows.small,
   },
-  
+
   large: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.base,
     borderRadius: borderRadius.md,
   },
-  
+
   small: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
   },
-  
+
   // Button variants
   primary: {
     backgroundColor: colors.accent.primary,
     borderColor: colors.accent.primary,
   },
-  
+
   secondary: {
     backgroundColor: colors.accent.secondary,
     borderColor: colors.accent.secondary,
   },
-  
+
   success: {
     backgroundColor: colors.accent.success,
     borderColor: colors.accent.success,
   },
-  
+
   warning: {
     backgroundColor: colors.accent.warning,
     borderColor: colors.accent.warning,
   },
-  
+
   danger: {
     backgroundColor: colors.accent.danger,
     borderColor: colors.accent.danger,
   },
-  
+
   info: {
     backgroundColor: colors.accent.info,
     borderColor: colors.accent.info,
   },
-  
+
   outline: {
     backgroundColor: 'transparent',
     borderColor: colors.border,
   },
-  
+
   outlineActive: {
     backgroundColor: colors.accent.success,
     borderColor: colors.accent.success,
   },
-  
+
   // Special purpose buttons
   add: {
     backgroundColor: colors.accent.success,
     borderColor: colors.accent.success,
   },
-  
+
   remove: {
     backgroundColor: colors.accent.danger,
     borderColor: colors.accent.danger,
   },
-  
+
   // Button text
   text: {
     color: colors.text.primary,
@@ -255,7 +255,7 @@ export const buttonStyles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     letterSpacing: typography.letterSpacing.wide,
   },
-  
+
   textSmall: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
@@ -274,12 +274,12 @@ export const inputStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  
+
   multiline: {
     height: 120,
     textAlignVertical: 'top',
   },
-  
+
   picker: {
     backgroundColor: colors.elevated,
     height: 50,
@@ -300,7 +300,7 @@ export const headerButtonStyles = StyleSheet.create({
     justifyContent: 'center',
     ...shadows.small,
   },
-  
+
   edit: {
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.sm,
@@ -309,14 +309,14 @@ export const headerButtonStyles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     ...shadows.small,
   },
-  
+
   text: {
     color: colors.text.primary,
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
     letterSpacing: typography.letterSpacing.normal,
   },
-  
+
   addText: {
     color: colors.text.primary,
     fontSize: typography.fontSize.xl,
@@ -334,64 +334,64 @@ export const badgeStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   small: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.sm,
   },
-  
+
   // Status badges
   present: {
     backgroundColor: colors.status.present,
   },
-  
+
   absent: {
     backgroundColor: colors.elevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  
+
   // Standing badges
   allied: {
     backgroundColor: colors.standing.allied,
   },
-  
+
   friendly: {
     backgroundColor: colors.standing.friendly,
   },
-  
+
   neutral: {
     backgroundColor: colors.standing.neutral,
   },
-  
+
   hostile: {
     backgroundColor: colors.standing.hostile,
   },
-  
+
   enemy: {
     backgroundColor: colors.standing.enemy,
   },
-  
+
   // Tag badges
   tag: {
     backgroundColor: colors.interactive.hover,
     borderWidth: 1,
     borderColor: colors.accent.primary,
   },
-  
+
   species: {
     backgroundColor: 'rgba(116, 185, 255, 0.15)',
     borderWidth: 1,
     borderColor: colors.status.info,
   },
-  
+
   retired: {
     backgroundColor: colors.status.warning,
     borderWidth: 1,
     borderColor: colors.status.warning,
   },
-  
+
   // Badge text
   text: {
     fontSize: typography.fontSize.sm,
@@ -399,11 +399,11 @@ export const badgeStyles = StyleSheet.create({
     color: colors.text.primary,
     letterSpacing: typography.letterSpacing.tight,
   },
-  
+
   textMuted: {
     color: colors.text.muted,
   },
-  
+
   textDark: {
     color: colors.primary,
   },
@@ -416,7 +416,7 @@ export const searchStyles = StyleSheet.create({
     margin: spacing.base,
     marginBottom: spacing.sm,
   },
-  
+
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -428,7 +428,7 @@ export const searchStyles = StyleSheet.create({
     color: colors.text.primary,
     ...shadows.small,
   },
-  
+
   clearButton: {
     position: 'absolute',
     right: spacing.md,
@@ -441,7 +441,7 @@ export const searchStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   clearText: {
     color: colors.text.primary,
     fontSize: typography.fontSize.sm,
@@ -462,7 +462,7 @@ export const imageStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  
+
   character: {
     width: 120,
     height: 120,
@@ -471,7 +471,7 @@ export const imageStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  
+
   characterLarge: {
     width: 200,
     height: 200,
@@ -480,7 +480,7 @@ export const imageStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  
+
   placeholder: {
     width: 200,
     height: 200,
@@ -492,7 +492,7 @@ export const imageStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.border,
   },
-  
+
   pickerButton: {
     backgroundColor: colors.accent.primary,
     padding: spacing.base,
@@ -514,14 +514,14 @@ export const statusStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent.primary,
   },
-  
+
   item: {
     fontSize: typography.fontSize.base,
     color: colors.text.primary,
     flex: 1,
     fontWeight: typography.fontWeight.medium,
   },
-  
+
   value: {
     fontWeight: typography.fontWeight.bold,
     color: colors.accent.primary,

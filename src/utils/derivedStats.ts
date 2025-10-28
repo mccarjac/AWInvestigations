@@ -1,5 +1,8 @@
-import { GameCharacter } from '@/models/types';
-import { SPECIES_BASE_STATS, MUTANT_SPECIES } from '@/models/types';
+import {
+  GameCharacter,
+  SPECIES_BASE_STATS,
+  MUTANT_SPECIES,
+} from '@/models/types';
 import { AVAILABLE_PERKS, PerkTag, TAG_SCORE_BONUSES } from '@/models/gameData';
 
 export interface CharacterDerivedStats {
@@ -7,16 +10,18 @@ export interface CharacterDerivedStats {
   maxLimit: number;
 }
 
-export const calculateDerivedStats = (character: GameCharacter): CharacterDerivedStats => {
+export const calculateDerivedStats = (
+  character: GameCharacter
+): CharacterDerivedStats => {
   // Get base stats from species
   const baseStats = SPECIES_BASE_STATS[character.species];
-  
+
   // Initialize with base values
   let maxHealth = baseStats.baseHealth;
   let maxLimit = baseStats.baseLimit;
 
   // Get all perks the character has
-  const characterPerks = AVAILABLE_PERKS.filter(perk => 
+  const characterPerks = AVAILABLE_PERKS.filter(perk =>
     character.perkIds.includes(perk.id)
   );
 
@@ -24,13 +29,15 @@ export const calculateDerivedStats = (character: GameCharacter): CharacterDerive
   const tagScores = new Map<PerkTag, number>();
   characterPerks.forEach(perk => {
     // Perfect Mutants don't get tag score bonuses from MUTANT_SPECIES restricted perks
-    if (character.species === 'Perfect Mutant' && 
-        perk.allowedSpecies && 
-        perk.allowedSpecies.length === MUTANT_SPECIES.length &&
-        MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))) {
+    if (
+      character.species === 'Perfect Mutant' &&
+      perk.allowedSpecies &&
+      perk.allowedSpecies.length === MUTANT_SPECIES.length &&
+      MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))
+    ) {
       return; // Skip this perk for tag score calculation
     }
-    
+
     const currentScore = tagScores.get(perk.tag) || 0;
     tagScores.set(perk.tag, currentScore + 1);
   });
@@ -68,6 +75,6 @@ export const calculateDerivedStats = (character: GameCharacter): CharacterDerive
 
   return {
     maxHealth,
-    maxLimit
+    maxLimit,
   };
 };

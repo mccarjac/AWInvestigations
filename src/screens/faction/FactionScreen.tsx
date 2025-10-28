@@ -1,10 +1,32 @@
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, FlatList, Alert, TextInput } from 'react-native';
-import { Text } from 'react-native';
-import { GameCharacter, Faction, RelationshipStanding, POSITIVE_RELATIONSHIP_TYPE, NEGATIVE_RELATIONSHIP_TYPE } from '@models/types';
-import { loadCharacters, getFactionDescription, migrateFactionDescriptions, loadFactions, deleteFactionCompletely } from '@utils/characterStorage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { CompositeNavigationProp } from '@react-navigation/native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  TextInput,
+  Text,
+} from 'react-native';
+import {
+  GameCharacter,
+  Faction,
+  RelationshipStanding,
+  POSITIVE_RELATIONSHIP_TYPE,
+  NEGATIVE_RELATIONSHIP_TYPE,
+} from '@models/types';
+import {
+  loadCharacters,
+  getFactionDescription,
+  migrateFactionDescriptions,
+  loadFactions,
+  deleteFactionCompletely,
+} from '@utils/characterStorage';
+import {
+  useNavigation,
+  useFocusEffect,
+  CompositeNavigationProp,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
@@ -25,7 +47,6 @@ interface FactionInfo {
 }
 
 export const FactionScreen: React.FC = () => {
-  const [characters, setCharacters] = useState<GameCharacter[]>([]);
   const [factionInfos, setFactionInfos] = useState<FactionInfo[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const navigation = useNavigation<FactionNavigationProp>();
@@ -33,16 +54,18 @@ export const FactionScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)
     await migrateFactionDescriptions();
-    
+
     const data = await loadCharacters();
-    setCharacters(data);
-    
+
     // Process factions
-    const factionMap = new Map<string, { 
-      faction: Faction; 
-      characters: GameCharacter[]; 
-      standings: Record<string, number>;
-    }>();
+    const factionMap = new Map<
+      string,
+      {
+        faction: Faction;
+        characters: GameCharacter[];
+        standings: Record<string, number>;
+      }
+    >();
 
     // First, load centralized factions to ensure all created factions appear
     const storedFactions = await loadFactions();
@@ -52,10 +75,10 @@ export const FactionScreen: React.FC = () => {
           faction: {
             name: storedFaction.name,
             standing: RelationshipStanding.Neutral,
-            description: storedFaction.description
+            description: storedFaction.description,
           },
           characters: [],
-          standings: {}
+          standings: {},
         });
       }
     });
@@ -67,21 +90,24 @@ export const FactionScreen: React.FC = () => {
           factionMap.set(faction.name, {
             faction,
             characters: [],
-            standings: {}
+            standings: {},
           });
         }
-        
+
         const factionData = factionMap.get(faction.name)!;
-        
+
         // Only count positive relationship standings as actual members
         const standingValue = faction.standing as string;
-        if (POSITIVE_RELATIONSHIP_TYPE.includes(faction.standing) || 
-            standingValue === 'Allied' || standingValue === 'Friendly') {
+        if (
+          POSITIVE_RELATIONSHIP_TYPE.includes(faction.standing) ||
+          standingValue === 'Allied' ||
+          standingValue === 'Friendly'
+        ) {
           factionData.characters.push(character);
         }
-        
+
         // Count all standings for display purposes
-        factionData.standings[faction.standing] = 
+        factionData.standings[faction.standing] =
           (factionData.standings[faction.standing] || 0) + 1;
       });
     });
@@ -91,23 +117,25 @@ export const FactionScreen: React.FC = () => {
       Array.from(factionMap.entries()).map(async ([name, data]) => {
         // Get the centralized faction description
         const centralDescription = await getFactionDescription(name);
-        
+
         return {
           faction: {
             ...data.faction,
-            description: centralDescription // Use centralized description
+            description: centralDescription, // Use centralized description
           },
           characters: data.characters,
           totalCount: data.characters.length,
           presentCount: data.characters.filter(c => c.present === true).length,
-          standingCounts: data.standings
+          standingCounts: data.standings,
         };
       })
     );
 
     // Sort alphabetically by faction name
-    factionInfosArray.sort((a, b) => a.faction.name.localeCompare(b.faction.name));
-    
+    factionInfosArray.sort((a, b) =>
+      a.faction.name.localeCompare(b.faction.name)
+    );
+
     setFactionInfos(factionInfosArray);
   }, []);
 
@@ -119,23 +147,28 @@ export const FactionScreen: React.FC = () => {
 
   const getFilteredFactions = useCallback(() => {
     let filtered = factionInfos;
-    
+
     // Filter by search query if provided
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(factionInfo => 
-        factionInfo.faction.name.toLowerCase().includes(query) ||
-        (factionInfo.faction.description && factionInfo.faction.description.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        factionInfo =>
+          factionInfo.faction.name.toLowerCase().includes(query) ||
+          (factionInfo.faction.description &&
+            factionInfo.faction.description.toLowerCase().includes(query))
       );
     }
-    
+
     // Sort alphabetically by faction name
-    return filtered.sort((a, b) => 
+    return filtered.sort((a, b) =>
       a.faction.name.localeCompare(b.faction.name)
     );
   }, [factionInfos, searchQuery]);
 
-  const filteredFactions = React.useMemo(() => getFilteredFactions(), [getFilteredFactions]);
+  const filteredFactions = React.useMemo(
+    () => getFilteredFactions(),
+    [getFilteredFactions]
+  );
 
   // Set up the header with a plus button
   useLayoutEffect(() => {
@@ -152,7 +185,9 @@ export const FactionScreen: React.FC = () => {
   }, [navigation]);
 
   const handleFactionSelect = (factionInfo: FactionInfo) => {
-    navigation.navigate('FactionDetails', { factionName: factionInfo.faction.name });
+    navigation.navigate('FactionDetails', {
+      factionName: factionInfo.faction.name,
+    });
   };
 
   const handleCreateFaction = () => {
@@ -174,22 +209,31 @@ export const FactionScreen: React.FC = () => {
           onPress: async () => {
             try {
               const result = await deleteFactionCompletely(factionName);
-              
+
               if (result.success) {
                 // Refresh the faction list
                 await loadData();
-                
+
                 // Show success message
-                const message = result.charactersUpdated > 0 
-                  ? `Faction "${factionName}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
-                  : `Faction "${factionName}" deleted successfully.`;
-                
+                const message =
+                  result.charactersUpdated > 0
+                    ? `Faction "${factionName}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
+                    : `Faction "${factionName}" deleted successfully.`;
+
                 Alert.alert('Success', message, [{ text: 'OK' }]);
               } else {
-                Alert.alert('Error', 'Failed to delete faction. Please try again.', [{ text: 'OK' }]);
+                Alert.alert(
+                  'Error',
+                  'Failed to delete faction. Please try again.',
+                  [{ text: 'OK' }]
+                );
               }
-            } catch (error) {
-              Alert.alert('Error', 'An unexpected error occurred while deleting the faction.', [{ text: 'OK' }]);
+            } catch {
+              Alert.alert(
+                'Error',
+                'An unexpected error occurred while deleting the faction.',
+                [{ text: 'OK' }]
+              );
             }
           },
         },
@@ -209,23 +253,26 @@ export const FactionScreen: React.FC = () => {
             <Text style={styles.countText}>
               {item.totalCount} member{item.totalCount !== 1 ? 's' : ''}
             </Text>
-            <Text style={styles.presentText}>
-              {item.presentCount} present
-            </Text>
+            <Text style={styles.presentText}>{item.presentCount} present</Text>
           </View>
         </View>
-        
+
         <View style={styles.standingsContainer}>
           {Object.entries(item.standingCounts).map(([standing, count]) => (
-            <View key={standing} style={[styles.standingBadge, getStandingStyle(standing)]}>
-              <Text style={[styles.standingText, getStandingTextStyle(standing)]}>
+            <View
+              key={standing}
+              style={[styles.standingBadge, getStandingStyle(standing)]}
+            >
+              <Text
+                style={[styles.standingText, getStandingTextStyle(standing)]}
+              >
                 {standing}: {count}
               </Text>
             </View>
           ))}
         </View>
       </TouchableOpacity>
-      
+
       <TouchableOpacity
         style={styles.deleteButton}
         onPress={() => handleDeleteFaction(item.faction.name)}
@@ -234,8 +281,6 @@ export const FactionScreen: React.FC = () => {
       </TouchableOpacity>
     </View>
   );
-
-
 
   const getStandingStyle = (standing: string) => {
     switch (standing) {
@@ -261,16 +306,19 @@ export const FactionScreen: React.FC = () => {
 
   const getStandingTextStyle = (standing: string) => {
     // Check if standing is positive (Allied/Ally/Friendly/Friend)
-    if (POSITIVE_RELATIONSHIP_TYPE.includes(standing as RelationshipStanding) || 
-        standing === 'Allied' || standing === 'Friendly') {
+    if (
+      POSITIVE_RELATIONSHIP_TYPE.includes(standing as RelationshipStanding) ||
+      standing === 'Allied' ||
+      standing === 'Friendly'
+    ) {
       return styles.standingTextLight;
     }
-    
+
     // Check if standing is negative (Hostile/Enemy)
     if (NEGATIVE_RELATIONSHIP_TYPE.includes(standing as RelationshipStanding)) {
       return styles.standingTextLight;
     }
-    
+
     // Neutral or unknown standings
     return styles.standingTextDark;
   };
@@ -279,32 +327,32 @@ export const FactionScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Fixed search bar outside of FlatList to prevent focus loss */}
       {/* <View style={styles.fixedHeader}> */}
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search factions by name..."
-            placeholderTextColor={themeColors.text.muted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-            blurOnSubmit={false}
-            autoFocus={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearSearchButton}
-              onPress={() => setSearchQuery('')}
-            >
-              <Text style={styles.clearSearchText}>✕</Text>
-            </TouchableOpacity>
-          )}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search factions by name..."
+          placeholderTextColor={themeColors.text.muted}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          autoCorrect={false}
+          blurOnSubmit={false}
+          autoFocus={false}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearSearchButton}
+            onPress={() => setSearchQuery('')}
+          >
+            <Text style={styles.clearSearchText}>✕</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <FlatList
         data={filteredFactions}
         renderItem={renderFactionItem}
-        keyExtractor={(item) => item.faction.name}
+        keyExtractor={item => item.faction.name}
         style={styles.factionList}
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
@@ -313,43 +361,16 @@ export const FactionScreen: React.FC = () => {
   );
 };
 
-
-
 const styles = StyleSheet.create({
   container: commonStyles.layout.container,
-  fixedHeader: {
-    backgroundColor: themeColors.primary,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-  },
-  scrollView: commonStyles.layout.scrollView,
   contentContainer: commonStyles.layout.contentContainer,
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    ...commonStyles.text.h1,
-    fontSize: 24,
-  },
-  sectionDescription: {
-    ...commonStyles.text.bodyLarge,
-    marginBottom: 20,
-    lineHeight: 24,
-  },
   factionList: {
     flex: 1,
-  },
-  headerSection: {
-    marginBottom: 20,
   },
   factionCard: commonStyles.card.base,
   factionContent: {
     flex: 1,
   },
-
   factionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -385,81 +406,6 @@ const styles = StyleSheet.create({
   standingText: commonStyles.badge.text,
   standingTextLight: commonStyles.badge.text,
   standingTextDark: commonStyles.badge.text,
-  factionStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: themeColors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statLabel: {
-    ...commonStyles.text.caption,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  statValue: {
-    ...commonStyles.text.h2,
-  },
-  descriptionContainer: {
-    backgroundColor: themeColors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-  },
-  descriptionLabel: {
-    ...commonStyles.text.body,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  descriptionText: {
-    ...commonStyles.text.body,
-    lineHeight: 20,
-  },
-  characterList: {
-    maxHeight: 600,
-  },
-  characterCard: commonStyles.card.base,
-  characterCardPresent: commonStyles.card.present,
-  characterHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  characterName: {
-    ...commonStyles.text.body,
-    fontWeight: '600',
-    flex: 1,
-  },
-  characterInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  characterSpecies: {
-    ...commonStyles.text.body,
-    marginTop: 4,
-  },
-  characterDescription: {
-    ...commonStyles.text.caption,
-    marginTop: 4,
-    fontStyle: 'italic',
-  },
-  presentBadge: {
-    ...commonStyles.badge.base,
-    ...commonStyles.badge.absent,
-  },
-  presentBadgeActive: commonStyles.badge.present,
-  presentBadgeText: commonStyles.badge.textMuted,
-  presentBadgeTextActive: commonStyles.badge.text,
   headerAddButton: commonStyles.headerButton.add,
   headerAddButtonText: commonStyles.headerButton.addText,
   deleteButton: {

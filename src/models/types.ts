@@ -1,7 +1,7 @@
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from './gameData';
 
-export type PerkId = typeof AVAILABLE_PERKS[number]['id'];
-export type DistinctionId = typeof AVAILABLE_DISTINCTIONS[number]['id'];
+export type PerkId = (typeof AVAILABLE_PERKS)[number]['id'];
+export type DistinctionId = (typeof AVAILABLE_DISTINCTIONS)[number]['id'];
 
 export enum Location {
   Hospital = 'Hospital',
@@ -10,28 +10,29 @@ export enum Location {
   Downtown = 'Downtown',
   SanguineSprings = 'Sanguine Springs',
   GrimerustHeights = 'Grimerust Heights',
-  Unknown = 'Unknown'
+  Fringe = 'Fringe',
+  Unknown = 'Unknown',
 }
 
 export enum RelationshipStanding {
-  Ally = 'Ally', 
+  Ally = 'Ally',
   Friend = 'Friend',
   Neutral = 'Neutral',
   Hostile = 'Hostile',
-  Enemy = 'Enemy'
+  Enemy = 'Enemy',
 }
 
 export const POSITIVE_RELATIONSHIP_TYPE: RelationshipStanding[] = [
   RelationshipStanding.Ally,
-  RelationshipStanding.Friend
+  RelationshipStanding.Friend,
 ];
 
 export const NEGATIVE_RELATIONSHIP_TYPE: RelationshipStanding[] = [
   RelationshipStanding.Hostile,
-  RelationshipStanding.Enemy
+  RelationshipStanding.Enemy,
 ];
 
-export type BaseSpecies = 
+export type BaseSpecies =
   | 'Android'
   | 'Drone'
   | 'Human'
@@ -75,24 +76,18 @@ export const ORGANIC_SPECIES: Species[] = [
   'Perfect Mutant',
   'Rad-Titan',
   'Roadkill',
-  'Tech-Mutant'
+  'Tech-Mutant',
 ];
 
-export const ROBOTIC_SPECIES: Species[] = [
-  'Android',
-  'Drone'
-];
+export const ROBOTIC_SPECIES: Species[] = ['Android', 'Drone'];
 
 export const MUTANT_SPECIES: Species[] = [
   'Mutant',
   'Perfect Mutant',
-  'Tech-Mutant'
+  'Tech-Mutant',
 ];
 
-export const ANDROID_SPECIES: Species[] = [
-  'Android',
-  'Tech-Mutant'
-];
+export const ANDROID_SPECIES: Species[] = ['Android', 'Tech-Mutant'];
 
 const organicDefaultSpeciesStats: SpeciesStats = {
   baseHealth: 2,
@@ -102,7 +97,7 @@ const organicDefaultSpeciesStats: SpeciesStats = {
   canUseCyberware: true,
   canUseChems: true,
   canTakeInjuries: true,
-  canTakeMalfunctions: false
+  canTakeMalfunctions: false,
 };
 
 const roboticDefaultSpeciesStats: SpeciesStats = {
@@ -113,47 +108,47 @@ const roboticDefaultSpeciesStats: SpeciesStats = {
   canUseCyberware: false,
   canUseChems: false,
   canTakeInjuries: false,
-  canTakeMalfunctions: true
+  canTakeMalfunctions: true,
 };
 
 export const SPECIES_BASE_STATS: Record<Species, SpeciesStats> = {
   // Base Species
   Android: {
-    ...roboticDefaultSpeciesStats
+    ...roboticDefaultSpeciesStats,
   },
   Drone: {
-    ...roboticDefaultSpeciesStats
+    ...roboticDefaultSpeciesStats,
   },
   Human: {
     ...organicDefaultSpeciesStats,
-    baseLimit: 2
+    baseLimit: 2,
   },
   Mutant: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   Nomad: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   Stray: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   Unturned: {
     ...organicDefaultSpeciesStats,
     baseHealth: 0,
     baseLimit: 3,
     healthCap: 0,
-    limitCap: 10
+    limitCap: 10,
   },
   Unknown: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
-  
+
   // Prestige Species
   Cyborg: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   Mook: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   // TODO: Mutoid is weird
   Mutoid: {
@@ -164,24 +159,24 @@ export const SPECIES_BASE_STATS: Record<Species, SpeciesStats> = {
     canUseCyberware: true,
     canUseChems: true,
     canTakeInjuries: true,
-    canTakeMalfunctions: false
+    canTakeMalfunctions: false,
   },
   'Perfect Mutant': {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   'Rad-Titan': {
     ...organicDefaultSpeciesStats,
     baseHealth: 3,
     baseLimit: 0,
     healthCap: 10,
-    limitCap: 0
+    limitCap: 0,
   },
   Roadkill: {
-    ...organicDefaultSpeciesStats
+    ...organicDefaultSpeciesStats,
   },
   'Tech-Mutant': {
-    ...organicDefaultSpeciesStats
-  }
+    ...organicDefaultSpeciesStats,
+  },
 };
 
 export interface Recipe {
@@ -235,4 +230,7 @@ export interface CharacterDataset {
   lastUpdated: string;
 }
 
-export type CharacterFormData = Omit<GameCharacter, 'id' | 'createdAt' | 'updatedAt'>;
+export type CharacterFormData = Omit<
+  GameCharacter,
+  'id' | 'createdAt' | 'updatedAt'
+>;

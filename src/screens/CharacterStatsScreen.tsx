@@ -1,9 +1,18 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import { useFocusEffect } from '@react-navigation/native';
 import { loadCharacters } from '../utils/characterStorage';
-import { calculateCharacterStats, CharacterStats } from '../utils/characterStats';
+import {
+  calculateCharacterStats,
+  CharacterStats,
+} from '../utils/characterStats';
 import { GameCharacter } from '@/models/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -14,37 +23,43 @@ export const CharacterStatsScreen = () => {
   const [showOnlyPresent, setShowOnlyPresent] = useState<boolean>(false);
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
 
-  useEffect(() => {
-    // Recalculate stats when filter changes
+  const calculateStats = useCallback(
+    (characters: GameCharacter[]): CharacterStats => {
+      return calculateCharacterStats(characters);
+    },
+    []
+  );
+
+  // Calculate stats whenever characters or filter changes
+  React.useEffect(() => {
     if (allCharacters.length > 0) {
       // Filter out retired characters and optionally filter to only present
-      const filteredCharacters = allCharacters.filter(c => 
-        !c.retired && (!showOnlyPresent || c.present === true)
+      const filteredCharacters = allCharacters.filter(
+        c => !c.retired && (!showOnlyPresent || c.present === true)
       );
-      
-      if (filteredCharacters.length === 0) {
-        setStats(null);
-      } else {
-        const stats = calculateStats(filteredCharacters);
-        setStats(stats);
-      }
+
+      const newStats =
+        filteredCharacters.length === 0
+          ? null
+          : calculateStats(filteredCharacters);
+      setStats(newStats);
     }
-  }, [showOnlyPresent, allCharacters]);
+  }, [showOnlyPresent, allCharacters, calculateStats]);
 
   const loadStats = useCallback(async () => {
     const characters = await loadCharacters();
     setAllCharacters(characters);
-    
+
     if (!characters.length) {
       setStats(null);
       return;
     }
 
     // Filter out retired characters and optionally filter to only present
-    const filteredCharacters = characters.filter(c => 
-      !c.retired && (!showOnlyPresent || c.present === true)
+    const filteredCharacters = characters.filter(
+      c => !c.retired && (!showOnlyPresent || c.present === true)
     );
-    
+
     if (filteredCharacters.length === 0) {
       setStats(null);
     } else {
@@ -59,13 +74,9 @@ export const CharacterStatsScreen = () => {
     }, [loadStats])
   );
 
-  const calculateStats = (characters: GameCharacter[]): CharacterStats => {
-    return calculateCharacterStats(characters);
-  };
-
   const getSpeciesPieChartData = () => {
     if (!stats) return [];
-    
+
     // More distinct and readable colors
     const colors = [
       '#E74C3C', // Red
@@ -82,22 +93,23 @@ export const CharacterStatsScreen = () => {
       '#00BCD4', // Cyan
       '#FF9800', // Amber
       '#4CAF50', // Light Green
-      '#673AB7'  // Deep Purple
+      '#673AB7', // Deep Purple
     ];
-    
-    return Object.entries(stats.speciesDistribution).map(([species, count], index) => ({
-      value: count,
-      color: colors[index % colors.length],
-      text: `${count}`, // Show count on slice
-      label: species,
-      onPress: () => handleSlicePress(species, count),
-    }));
+
+    return Object.entries(stats.speciesDistribution).map(
+      ([species, count], index) => ({
+        value: count,
+        color: colors[index % colors.length],
+        text: `${count}`, // Show count on slice
+        label: species,
+        onPress: () => handleSlicePress(species, count),
+      })
+    );
   };
 
-  const handleSlicePress = (species: string, count: number) => {
-    const percentage = ((count / (stats?.totalCharacters || 1)) * 100).toFixed(1);
+  const handleSlicePress = (species: string, _count: number) => {
     setSelectedSlice(selectedSlice === species ? null : species);
-    
+
     // Show a temporary alert or tooltip-like behavior
     if (selectedSlice !== species) {
       setTimeout(() => {
@@ -108,18 +120,30 @@ export const CharacterStatsScreen = () => {
 
   const getSpeciesColors = () => {
     if (!stats) return {};
-    
+
     const colors = [
-      '#E74C3C', '#3498DB', '#F39C12', '#2ECC71', '#9B59B6',
-      '#1ABC9C', '#E67E22', '#34495E', '#F1C40F', '#95A5A6',
-      '#E91E63', '#00BCD4', '#FF9800', '#4CAF50', '#673AB7'
+      '#E74C3C',
+      '#3498DB',
+      '#F39C12',
+      '#2ECC71',
+      '#9B59B6',
+      '#1ABC9C',
+      '#E67E22',
+      '#34495E',
+      '#F1C40F',
+      '#95A5A6',
+      '#E91E63',
+      '#00BCD4',
+      '#FF9800',
+      '#4CAF50',
+      '#673AB7',
     ];
-    
+
     const colorMap: { [key: string]: string } = {};
     Object.keys(stats.speciesDistribution).forEach((species, index) => {
       colorMap[species] = colors[index % colors.length];
     });
-    
+
     return colorMap;
   };
 
@@ -131,19 +155,27 @@ export const CharacterStatsScreen = () => {
         showsVerticalScrollIndicator={true}
       >
         <Text style={styles.header}>Character Statistics</Text>
-        
+
         <View style={styles.filterContainer}>
           <TouchableOpacity
-            style={[styles.filterButton, showOnlyPresent && styles.filterButtonActive]}
+            style={[
+              styles.filterButton,
+              showOnlyPresent && styles.filterButtonActive,
+            ]}
             onPress={() => setShowOnlyPresent(!showOnlyPresent)}
           >
-            <Text style={[styles.filterButtonText, showOnlyPresent && styles.filterButtonTextActive]}>
+            <Text
+              style={[
+                styles.filterButtonText,
+                showOnlyPresent && styles.filterButtonTextActive,
+              ]}
+            >
               {showOnlyPresent ? 'Present Only ✓' : 'Show Present Only'}
             </Text>
           </TouchableOpacity>
           <Text style={styles.filterInfo}>
-            {showOnlyPresent 
-              ? `Showing ${stats?.totalCharacters || 0} present characters` 
+            {showOnlyPresent
+              ? `Showing ${stats?.totalCharacters || 0} present characters`
               : `Showing all ${stats?.totalCharacters || 0} characters`}
           </Text>
         </View>
@@ -151,151 +183,168 @@ export const CharacterStatsScreen = () => {
         {!stats ? (
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>
-              {showOnlyPresent 
+              {showOnlyPresent
                 ? 'No present characters found. Try toggling the filter to see all characters.'
-                : 'No character data available'
-              }
+                : 'No character data available'}
             </Text>
           </View>
         ) : (
           <>
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>General Stats</Text>
-              <Text style={styles.listItemText}>Total Characters: {stats.totalCharacters}</Text>
+              <Text style={styles.listItemText}>
+                Total Characters: {stats.totalCharacters}
+              </Text>
             </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Species Distribution</Text>
-        {getSpeciesPieChartData().length > 0 && (
-          <View style={styles.chartContainer}>
-            <PieChart
-              data={getSpeciesPieChartData()}
-              donut
-              showText
-              textColor="white"
-              textSize={14}
-              fontWeight="bold"
-              radius={100}
-              innerRadius={40}
-              innerCircleColor={themeColors.surface}
-              strokeColor={themeColors.border}
-              strokeWidth={2}
-              sectionAutoFocus
-              focusOnPress
-              toggleFocusOnPress
-              centerLabelComponent={() => {
-                if (selectedSlice && stats) {
-                  const count = stats.speciesDistribution[selectedSlice];
-                  const percentage = ((count / stats.totalCharacters) * 100).toFixed(1);
-                  return (
-                    <View style={styles.centerLabel}>
-                      <Text style={styles.centerLabelSpecies}>
-                        {selectedSlice}
-                      </Text>
-                      <Text style={styles.centerLabelNumber}>
-                        {count}
-                      </Text>
-                      <Text style={styles.centerLabelText}>
-                        {percentage}%
+              {getSpeciesPieChartData().length > 0 && (
+                <View style={styles.chartContainer}>
+                  <PieChart
+                    data={getSpeciesPieChartData()}
+                    donut
+                    showText
+                    textColor="white"
+                    textSize={14}
+                    fontWeight="bold"
+                    radius={100}
+                    innerRadius={40}
+                    innerCircleColor={themeColors.surface}
+                    strokeColor={themeColors.border}
+                    strokeWidth={2}
+                    sectionAutoFocus
+                    focusOnPress
+                    toggleFocusOnPress
+                    centerLabelComponent={() => {
+                      if (selectedSlice && stats) {
+                        const count = stats.speciesDistribution[selectedSlice];
+                        const percentage = (
+                          (count / stats.totalCharacters) *
+                          100
+                        ).toFixed(1);
+                        return (
+                          <View style={styles.centerLabel}>
+                            <Text style={styles.centerLabelSpecies}>
+                              {selectedSlice}
+                            </Text>
+                            <Text style={styles.centerLabelNumber}>
+                              {count}
+                            </Text>
+                            <Text style={styles.centerLabelText}>
+                              {percentage}%
+                            </Text>
+                          </View>
+                        );
+                      }
+                      return (
+                        <View style={styles.centerLabel}>
+                          <Text style={styles.centerLabelNumber}>
+                            {stats?.totalCharacters}
+                          </Text>
+                          <Text style={styles.centerLabelText}>Characters</Text>
+                        </View>
+                      );
+                    }}
+                  />
+                  {selectedSlice && (
+                    <View style={styles.tooltip}>
+                      <Text style={styles.tooltipText}>
+                        Tap slice again or wait to return to overview
                       </Text>
                     </View>
-                  );
-                }
-                return (
-                  <View style={styles.centerLabel}>
-                    <Text style={styles.centerLabelNumber}>
-                      {stats?.totalCharacters}
-                    </Text>
-                    <Text style={styles.centerLabelText}>
-                      Characters
-                    </Text>
-                  </View>
-                );
-              }}
-            />
-            {selectedSlice && (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>
-                  Tap slice again or wait to return to overview
-                </Text>
+                  )}
+                </View>
+              )}
+              <View style={styles.speciesLegend}>
+                {Object.entries(stats.speciesDistribution).map(
+                  ([species, count]) => {
+                    const colors = getSpeciesColors();
+                    const percentage = (
+                      (count / stats.totalCharacters) *
+                      100
+                    ).toFixed(1);
+                    const isSelected = selectedSlice === species;
+                    return (
+                      <View
+                        key={species}
+                        style={[
+                          styles.legendItem,
+                          isSelected && styles.legendItemSelected,
+                        ]}
+                      >
+                        <View
+                          style={[
+                            styles.legendColorBox,
+                            { backgroundColor: colors[species] },
+                            isSelected && styles.legendColorBoxSelected,
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.legendText,
+                            isSelected && styles.legendTextSelected,
+                          ]}
+                        >
+                          {species}: {count} ({percentage}%)
+                        </Text>
+                      </View>
+                    );
+                  }
+                )}
               </View>
-            )}
-          </View>
-        )}
-        <View style={styles.speciesLegend}>
-          {Object.entries(stats.speciesDistribution).map(([species, count]) => {
-            const colors = getSpeciesColors();
-            const percentage = ((count / stats.totalCharacters) * 100).toFixed(1);
-            const isSelected = selectedSlice === species;
-            return (
-              <View 
-                key={species} 
-                style={[
-                  styles.legendItem, 
-                  isSelected && styles.legendItemSelected
-                ]}
-              >
-                <View 
-                  style={[
-                    styles.legendColorBox, 
-                    { backgroundColor: colors[species] },
-                    isSelected && styles.legendColorBoxSelected
-                  ]} 
-                />
-                <Text style={[
-                  styles.legendText,
-                  isSelected && styles.legendTextSelected
-                ]}>
-                  {species}: {count} ({percentage}%)
-                </Text>
-              </View>
-            );
-          })}
-        </View>
             </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Faction Membership</Text>
-              {Object.entries(stats.factionDistribution).map(([factionName, count]) => (
-                <Text key={factionName} style={styles.factionMembershipText}>{factionName}: {count} characters</Text>
-              ))}
+              {Object.entries(stats.factionDistribution).map(
+                ([factionName, count]) => (
+                  <Text key={factionName} style={styles.factionMembershipText}>
+                    {factionName}: {count} characters
+                  </Text>
+                )
+              )}
             </View>
 
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>Faction Standings</Text>
-              {Object.entries(stats.factionStandings).map(([faction, standings]) => (
-                <View key={faction} style={styles.factionItem}>
-                  <Text style={styles.factionName}>{faction}</Text>
-                  {Object.entries(standings).map(([standing, count]) => (
-                    <Text key={standing} style={styles.standingText}>
-                      {standing}: {count} character{count !== 1 ? 's' : ''}
-                    </Text>
-                  ))}
-                </View>
+              {Object.entries(stats.factionStandings).map(
+                ([faction, standings]) => (
+                  <View key={faction} style={styles.factionItem}>
+                    <Text style={styles.factionName}>{faction}</Text>
+                    {Object.entries(standings).map(([standing, count]) => (
+                      <Text key={standing} style={styles.standingText}>
+                        {standing}: {count} character{count !== 1 ? 's' : ''}
+                      </Text>
+                    ))}
+                  </View>
+                )
+              )}
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Most Common Perks</Text>
+              {stats.commonPerks.map(({ name, count }) => (
+                <Text key={name} style={styles.listItemText}>
+                  {name}: {count} characters
+                </Text>
               ))}
             </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Most Common Perks</Text>
-            {stats.commonPerks.map(({ name, count }) => (
-              <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
-            ))}
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Most Common Distinctions</Text>
-            {stats.commonDistinctions.map(({ name, count }) => (
-              <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
-            ))}
-          </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Most Common Distinctions</Text>
+              {stats.commonDistinctions.map(({ name, count }) => (
+                <Text key={name} style={styles.listItemText}>
+                  {name}: {count} characters
+                </Text>
+              ))}
+            </View>
           </>
         )}
       </ScrollView>
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -470,11 +519,6 @@ const styles = StyleSheet.create({
   legendTextSelected: {
     fontWeight: '600',
     color: themeColors.text.primary,
-  },
-  speciesText: {
-    fontSize: 14,
-    marginVertical: 2,
-    color: themeColors.text.secondary,
   },
   factionMembershipText: {
     fontSize: 15,

@@ -1,10 +1,26 @@
 import React, { useLayoutEffect } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Platform, TextInput } from 'react-native';
-import { Text } from 'react-native';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+  TextInput,
+  Text,
+} from 'react-native';
 import { GameCharacter } from '@models/types';
-import { loadCharacters, deleteCharacter, toggleCharacterPresent, resetAllPresentStatus } from '@utils/characterStorage';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { CompositeNavigationProp } from '@react-navigation/native';
+import {
+  loadCharacters,
+  deleteCharacter,
+  toggleCharacterPresent,
+  resetAllPresentStatus,
+} from '@utils/characterStorage';
+import {
+  useNavigation,
+  useFocusEffect,
+  CompositeNavigationProp,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
@@ -53,8 +69,6 @@ export const CharacterListScreen: React.FC = () => {
     setCharacters(characters.filter(c => c.id !== id));
   };
 
-
-
   const handleTogglePresent = async (id: string) => {
     await toggleCharacterPresent(id);
     await loadData(); // Refresh the list
@@ -67,7 +81,7 @@ export const CharacterListScreen: React.FC = () => {
           'Are you sure you want to reset present status for all characters?'
         );
       } else {
-        return new Promise<boolean>((resolve) => {
+        return new Promise<boolean>(resolve => {
           Alert.alert(
             'Reset Present Status',
             'Are you sure you want to reset present status for all characters?',
@@ -97,84 +111,101 @@ export const CharacterListScreen: React.FC = () => {
   const getFilteredCharacters = React.useCallback(() => {
     // First filter out retired characters
     let filtered = characters.filter(c => !c.retired);
-    
+
     // Filter by search query if provided
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter(c => c.name.toLowerCase().includes(query));
     }
-    
+
     // Filter by present status if enabled
     if (showOnlyPresent) {
       filtered = filtered.filter(c => c.present === true);
     }
-    
+
     // Sort alphabetically
     return filtered.sort((a, b) => a.name.localeCompare(b.name));
   }, [characters, searchQuery, showOnlyPresent]);
 
-  const filteredCharacters = React.useMemo(() => getFilteredCharacters(), [getFilteredCharacters]);
+  const filteredCharacters = React.useMemo(
+    () => getFilteredCharacters(),
+    [getFilteredCharacters]
+  );
 
-  const renderItem = React.useCallback(({ item }: { item: GameCharacter }) => (
-    <TouchableOpacity
-      style={[styles.card, item.present && styles.cardPresent]}
-      onPress={() => navigation.navigate('CharacterDetail', { character: item })}
-    >
-      <View style={styles.cardHeader}>
-        <Text 
-          style={styles.name}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {item.name}
+  const renderItem = React.useCallback(
+    ({ item }: { item: GameCharacter }) => (
+      <TouchableOpacity
+        style={[styles.card, item.present && styles.cardPresent]}
+        onPress={() =>
+          navigation.navigate('CharacterDetail', { character: item })
+        }
+      >
+        <View style={styles.cardHeader}>
+          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+            {item.name}
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.presentButton,
+              item.present && styles.presentButtonActive,
+            ]}
+            onPress={() => handleTogglePresent(item.id)}
+          >
+            <Text
+              style={[
+                styles.presentText,
+                item.present && styles.presentTextActive,
+              ]}
+            >
+              {item.present ? 'Present' : 'Absent'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.factions}>
+          {(item.factions || []).map(f => f.name).join(', ') || 'No factions'}
         </Text>
         <TouchableOpacity
-          style={[styles.presentButton, item.present && styles.presentButtonActive]}
-          onPress={() => handleTogglePresent(item.id)}
+          style={styles.deleteButton}
+          onPress={() => handleDelete(item.id)}
         >
-          <Text style={[styles.presentText, item.present && styles.presentTextActive]}>
-            {item.present ? 'Present' : 'Absent'}
-          </Text>
+          <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
-      </View>
-      <Text style={styles.factions}>
-        {(item.factions || []).map(f => f.name).join(', ') || 'No factions'}
-      </Text>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDelete(item.id)}
-      >
-        <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
-    </TouchableOpacity>
-  ), [navigation, handleTogglePresent, handleDelete]);
+    ),
+    [navigation, handleTogglePresent, handleDelete]
+  );
 
-  const renderHeader = React.useCallback(() => (
-    <View>
-      <View style={styles.headerButtons}>
-        <TouchableOpacity
-          style={[styles.actionButton, showOnlyPresent ? styles.filterButtonActive : styles.filterButton]}
-          onPress={() => setShowOnlyPresent(!showOnlyPresent)}
-        >
-          <Text style={styles.buttonText}>
-            {showOnlyPresent ? 'Show All' : 'Present Only'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.resetButton]}
-          onPress={handleResetAllPresent}
-        >
-          <Text style={styles.buttonText}>Reset Present</Text>
-        </TouchableOpacity>
+  const renderHeader = React.useCallback(
+    () => (
+      <View>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={[
+              styles.actionButton,
+              showOnlyPresent ? styles.filterButtonActive : styles.filterButton,
+            ]}
+            onPress={() => setShowOnlyPresent(!showOnlyPresent)}
+          >
+            <Text style={styles.buttonText}>
+              {showOnlyPresent ? 'Show All' : 'Present Only'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.resetButton]}
+            onPress={handleResetAllPresent}
+          >
+            <Text style={styles.buttonText}>Reset Present</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  ), [showOnlyPresent, handleResetAllPresent]);
+    ),
+    [showOnlyPresent, handleResetAllPresent]
+  );
 
-  const renderFooter = React.useCallback(() => (
-    <View style={styles.footerPadding} />
-  ), []);
+  const renderFooter = React.useCallback(
+    () => <View style={styles.footerPadding} />,
+    []
+  );
 
   return (
     <View style={styles.container}>
@@ -217,7 +248,7 @@ export const CharacterListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   // Use common layout styles where possible
   container: commonStyles.layout.container,
-  
+
   contentContainer: commonStyles.layout.contentContainer,
   headerButtons: {
     flexDirection: 'row',
@@ -231,8 +262,7 @@ const styles = StyleSheet.create({
   },
   headerAddButton: commonStyles.headerButton.add,
   headerAddButtonText: commonStyles.headerButton.addText,
-  dataManagementButton: commonStyles.button.info,
-  factionButton: commonStyles.button.secondary,
+
   filterButton: commonStyles.button.outline,
   filterButtonActive: commonStyles.button.outlineActive,
   resetButton: commonStyles.button.warning,
@@ -247,7 +277,7 @@ const styles = StyleSheet.create({
     ...commonStyles.text.h3,
     flex: 1, // Allow name to take available space but not overflow
   },
-  xp: commonStyles.text.body,
+
   factions: {
     ...commonStyles.text.caption,
     marginTop: 8,
@@ -271,11 +301,7 @@ const styles = StyleSheet.create({
   presentButtonActive: commonStyles.badge.present,
   presentText: commonStyles.badge.textMuted,
   presentTextActive: commonStyles.badge.text,
-  headerButton: {
-    ...commonStyles.button.base,
-    ...commonStyles.button.primary,
-  },
-  headerButtonText: commonStyles.button.text,
+
   searchContainer: commonStyles.search.container,
   searchInput: commonStyles.search.input,
   clearSearchButton: commonStyles.search.clearButton,

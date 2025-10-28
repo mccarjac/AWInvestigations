@@ -18,7 +18,10 @@ import { createFaction } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
-type FactionFormNavigationProp = StackNavigationProp<RootStackParamList, 'FactionForm'>;
+type FactionFormNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'FactionForm'
+>;
 
 interface FactionFormData {
   name: string;
@@ -28,25 +31,25 @@ interface FactionFormData {
 
 export const FactionFormScreen: React.FC = () => {
   const navigation = useNavigation<FactionFormNavigationProp>();
-  
+
   const [formData, setFormData] = useState<FactionFormData>({
     name: '',
     description: '',
     defaultStanding: RelationshipStanding.Neutral,
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Faction name is required';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Faction name must be at least 2 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -57,7 +60,7 @@ export const FactionFormScreen: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const success = await createFaction({
         name: formData.name.trim(),
@@ -66,16 +69,12 @@ export const FactionFormScreen: React.FC = () => {
       });
 
       if (success) {
-        Alert.alert(
-          'Success',
-          'Faction created successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.goBack(),
-            },
-          ]
-        );
+        Alert.alert('Success', 'Faction created successfully!', [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]);
       } else {
         Alert.alert(
           'Error',
@@ -83,12 +82,10 @@ export const FactionFormScreen: React.FC = () => {
           [{ text: 'OK' }]
         );
       }
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to create faction. Please try again.',
-        [{ text: 'OK' }]
-      );
+    } catch {
+      Alert.alert('Error', 'Failed to create faction. Please try again.', [
+        { text: 'OK' },
+      ]);
     } finally {
       setIsSubmitting(false);
     }
@@ -112,7 +109,10 @@ export const FactionFormScreen: React.FC = () => {
     );
   };
 
-  const renderStandingOption = (standing: RelationshipStanding, label: string) => (
+  const renderStandingOption = (
+    standing: RelationshipStanding,
+    label: string
+  ) => (
     <TouchableOpacity
       key={standing}
       style={[
@@ -125,7 +125,8 @@ export const FactionFormScreen: React.FC = () => {
       <Text
         style={[
           styles.standingOptionText,
-          formData.defaultStanding === standing && styles.standingOptionTextSelected,
+          formData.defaultStanding === standing &&
+            styles.standingOptionTextSelected,
         ]}
       >
         {label}
@@ -155,10 +156,13 @@ export const FactionFormScreen: React.FC = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+      >
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Faction Information</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
               Faction Name <Text style={styles.required}>*</Text>
@@ -166,7 +170,7 @@ export const FactionFormScreen: React.FC = () => {
             <TextInput
               style={[styles.textInput, errors.name && styles.inputError]}
               value={formData.name}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setFormData({ ...formData, name: text });
                 if (errors.name) {
                   setErrors({ ...errors, name: '' });
@@ -184,7 +188,9 @@ export const FactionFormScreen: React.FC = () => {
             <TextInput
               style={[styles.textArea]}
               value={formData.description}
-              onChangeText={(text) => setFormData({ ...formData, description: text })}
+              onChangeText={text =>
+                setFormData({ ...formData, description: text })
+              }
               placeholder="Enter faction description, goals, or background"
               placeholderTextColor={themeColors.text.muted}
               multiline
@@ -223,7 +229,11 @@ export const FactionFormScreen: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.submitButton, isSubmitting && styles.buttonDisabled]}
+          style={[
+            styles.button,
+            styles.submitButton,
+            isSubmitting && styles.buttonDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >
@@ -235,8 +245,6 @@ export const FactionFormScreen: React.FC = () => {
     </KeyboardAvoidingView>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {

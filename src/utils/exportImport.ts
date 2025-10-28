@@ -3,20 +3,34 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Alert, Platform } from 'react-native';
-import { exportDataset, importDataset, mergeDatasets, mergeDatasetWithConflictResolution, MergeResult, MergeConflict, updateCharacter, saveCharacters } from './characterStorage';
-import { GameCharacter, Species, Location, RelationshipStanding } from '../models/types';
+import {
+  exportDataset,
+  importDataset,
+  mergeDatasetWithConflictResolution,
+  MergeConflict,
+  updateCharacter,
+  saveCharacters,
+} from './characterStorage';
+import {
+  GameCharacter,
+  Species,
+  Location,
+  RelationshipStanding,
+} from '../models/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '../models/gameData';
 
 /**
  * Handle conflicts by asking the user for each conflicting property
  */
-const handleMergeConflicts = async (conflicts: MergeConflict[]): Promise<void> => {
+const handleMergeConflicts = async (
+  conflicts: MergeConflict[]
+): Promise<void> => {
   for (const conflict of conflicts) {
     for (const property of conflict.conflicts) {
       const existingValue = (conflict.existing as any)[property];
       const importedValue = (conflict.imported as any)[property];
-      
-      await new Promise<void>((resolve) => {
+
+      await new Promise<void>(resolve => {
         Alert.alert(
           'Merge Conflict',
           `Character "${conflict.existing.name}" has conflicting ${property}:\n\nExisting: ${existingValue}\nImported: ${importedValue}\n\nWhich value would you like to keep?`,
@@ -53,15 +67,15 @@ const exportCharacterDataWeb = async (): Promise<void> => {
   try {
     // Get the character data as JSON string
     const jsonData = await exportDataset();
-    
+
     // Create a filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `character-data-${timestamp}.json`;
-    
+
     // Create blob and download link for web
     const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    
+
     // Create temporary download link
     const link = document.createElement('a');
     link.href = url;
@@ -70,7 +84,7 @@ const exportCharacterDataWeb = async (): Promise<void> => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
+
     Alert.alert(
       'Export Complete',
       `Character data has been downloaded as ${filename}`,
@@ -93,15 +107,17 @@ const exportCharacterDataNative = async (): Promise<void> => {
   try {
     // Get the character data as JSON string
     const jsonData = await exportDataset();
-    
+
     // Create a filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
     const filename = `character-data-${timestamp}.json`;
-    
+
     // Write to a temporary file using legacy API
-    const fileUri = (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') + filename;
+    const fileUri =
+      (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') +
+      filename;
     await FileSystem.writeAsStringAsync(fileUri, jsonData);
-    
+
     // Check if sharing is available
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(fileUri, {
@@ -109,11 +125,9 @@ const exportCharacterDataNative = async (): Promise<void> => {
         dialogTitle: 'Export Character Data',
       });
     } else {
-      Alert.alert(
-        'Export Complete',
-        `Character data exported to: ${fileUri}`,
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Export Complete', `Character data exported to: ${fileUri}`, [
+        { text: 'OK' },
+      ]);
     }
   } catch (error) {
     console.error('Export error:', error);
@@ -141,13 +155,13 @@ export const exportCharacterData = async (): Promise<void> => {
  */
 const importCharacterDataWeb = async (): Promise<boolean> => {
   console.log('importCharacterDataWeb called');
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     try {
       console.log('Creating file input element');
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json,application/json';
-      
+
       input.onchange = async (event: any) => {
         console.log('File selected', event);
         try {
@@ -158,13 +172,13 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
             resolve(false);
             return;
           }
-          
+
           const reader = new FileReader();
-          reader.onload = async (e) => {
+          reader.onload = async e => {
             try {
               const fileContent = e.target?.result as string;
               const success = await importDataset(fileContent);
-              
+
               if (success) {
                 Alert.alert(
                   'Import Successful',
@@ -201,7 +215,7 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
           resolve(false);
         }
       };
-      
+
       // Make sure input is attached to DOM for some browsers
       input.style.display = 'none';
       document.body.appendChild(input);
@@ -241,11 +255,13 @@ const importCharacterDataNative = async (): Promise<boolean> => {
     }
 
     // Read the file content
-    const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
-    
+    const fileContent = await FileSystem.readAsStringAsync(
+      result.assets[0].uri
+    );
+
     // Import the data (this will replace existing data)
     const success = await importDataset(fileContent);
-    
+
     if (success) {
       Alert.alert(
         'Import Successful',
@@ -287,12 +303,12 @@ export const importCharacterData = async (): Promise<boolean> => {
  * Merge character data for web platform
  */
 const mergeCharacterDataWeb = async (): Promise<boolean> => {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     try {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.json,application/json';
-      
+
       input.onchange = async (event: any) => {
         try {
           const file = event.target?.files?.[0];
@@ -300,13 +316,14 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
             resolve(false);
             return;
           }
-          
+
           const reader = new FileReader();
-          reader.onload = async (e) => {
+          reader.onload = async e => {
             try {
               const fileContent = e.target?.result as string;
-              const result = await mergeDatasetWithConflictResolution(fileContent);
-              
+              const result =
+                await mergeDatasetWithConflictResolution(fileContent);
+
               if (result.success) {
                 if (result.conflicts.length > 0) {
                   Alert.alert(
@@ -322,7 +339,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
                             `Successfully merged ${result.added.length} new characters and resolved conflicts for ${result.conflicts.length} existing characters.`,
                             [{ text: 'OK' }]
                           );
-                        }
+                        },
                       },
                       {
                         text: 'Skip Conflicts',
@@ -333,8 +350,8 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
                             `Successfully merged ${result.added.length} new characters. Conflicts were resolved automatically by merging compatible properties.`,
                             [{ text: 'OK' }]
                           );
-                        }
-                      }
+                        },
+                      },
                     ]
                   );
                 } else {
@@ -374,7 +391,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
           resolve(false);
         }
       };
-      
+
       // Make sure input is attached to DOM for some browsers
       input.style.display = 'none';
       document.body.appendChild(input);
@@ -413,11 +430,13 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     }
 
     // Read the file content
-    const fileContent = await FileSystem.readAsStringAsync(result.assets[0].uri);
-    
+    const fileContent = await FileSystem.readAsStringAsync(
+      result.assets[0].uri
+    );
+
     // Merge the data with conflict resolution
     const result_merge = await mergeDatasetWithConflictResolution(fileContent);
-    
+
     if (result_merge.success) {
       if (result_merge.conflicts.length > 0) {
         Alert.alert(
@@ -433,7 +452,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
                   `Successfully merged ${result_merge.added.length} new characters and resolved conflicts for ${result_merge.conflicts.length} existing characters.`,
                   [{ text: 'OK' }]
                 );
-              }
+              },
             },
             {
               text: 'Skip Conflicts',
@@ -444,8 +463,8 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
                   `Successfully merged ${result_merge.added.length} new characters. Conflicts were resolved automatically by merging compatible properties.`,
                   [{ text: 'OK' }]
                 );
-              }
-            }
+              },
+            },
           ]
         );
       } else {
@@ -491,32 +510,28 @@ export const mergeCharacterData = async (): Promise<boolean> => {
  */
 export const showImportOptions = (): void => {
   console.log('showImportOptions called');
-  Alert.alert(
-    'Import Options',
-    'Choose how to import character data:',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-        onPress: () => console.log('Import cancelled'),
+  Alert.alert('Import Options', 'Choose how to import character data:', [
+    {
+      text: 'Cancel',
+      style: 'cancel',
+      onPress: () => console.log('Import cancelled'),
+    },
+    {
+      text: 'Replace All',
+      onPress: async () => {
+        console.log('Replace All selected');
+        await importCharacterData();
       },
-      {
-        text: 'Replace All',
-        onPress: async () => {
-          console.log('Replace All selected');
-          await importCharacterData();
-        },
-        style: 'destructive',
+      style: 'destructive',
+    },
+    {
+      text: 'Merge',
+      onPress: async () => {
+        console.log('Merge selected');
+        await mergeCharacterData();
       },
-      {
-        text: 'Merge',
-        onPress: async () => {
-          console.log('Merge selected');
-          await mergeCharacterData();
-        },
-      },
-    ]
-  );
+    },
+  ]);
 };
 
 /**
@@ -535,15 +550,20 @@ const showAlert = (title: string, message: string): void => {
  */
 const mapLocationString = (locationStr: string): Location => {
   const normalizedStr = locationStr.toLowerCase().trim();
-  
+
   // Handle common location mappings
   if (normalizedStr.includes('hospital')) return Location.Hospital;
-  if (normalizedStr.includes('garage') || normalizedStr.includes('repair hall')) return Location.Garage;
-  if (normalizedStr.includes('craft') || normalizedStr.includes('crafting')) return Location.CraftingHall;
-  if (normalizedStr.includes('downtown') || normalizedStr.includes('sprawl')) return Location.Downtown;
-  if (normalizedStr.includes('sanguine') || normalizedStr.includes('spring')) return Location.SanguineSprings;
-  if (normalizedStr.includes('grimerust') || normalizedStr.includes('grimer')) return Location.GrimerustHeights;
-  
+  if (normalizedStr.includes('garage') || normalizedStr.includes('repair hall'))
+    return Location.Garage;
+  if (normalizedStr.includes('craft') || normalizedStr.includes('crafting'))
+    return Location.CraftingHall;
+  if (normalizedStr.includes('downtown') || normalizedStr.includes('sprawl'))
+    return Location.Downtown;
+  if (normalizedStr.includes('sanguine') || normalizedStr.includes('spring'))
+    return Location.SanguineSprings;
+  if (normalizedStr.includes('grimerust') || normalizedStr.includes('grimer'))
+    return Location.GrimerustHeights;
+
   // Default to Unknown for unrecognized locations
   return Location.Unknown;
 };
@@ -555,11 +575,11 @@ const parseCSVLine = (line: string): string[] => {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
     const nextChar = line[i + 1];
-    
+
     if (char === '"') {
       if (inQuotes && nextChar === '"') {
         // Escaped quote
@@ -577,10 +597,10 @@ const parseCSVLine = (line: string): string[] => {
       current += char;
     }
   }
-  
+
   // Add the last field
   result.push(current.trim());
-  
+
   return result;
 };
 
@@ -596,7 +616,7 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
   // Parse headers - first column is the property name, rest are character names
   const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, ''));
   const characterNames = headers.slice(1).filter(name => name.length > 0);
-  
+
   if (characterNames.length === 0) {
     throw new Error('No character names found in CSV headers');
   }
@@ -612,7 +632,7 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
     factions: [],
     present: false, // Default to not present
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   }));
 
   // Process each data line
@@ -620,9 +640,9 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
     const line = lines[i];
     const values = parseCSVLine(line).map(v => v.replace(/"/g, ''));
     const propertyName = values[0];
-    
+
     if (!propertyName) continue;
-    
+
     // Handle different property types
     if (propertyName.toLowerCase() === 'species') {
       // Set species for each character
@@ -632,7 +652,10 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
           characters[j - 1].species = speciesValue as Species;
         }
       }
-    } else if (propertyName.toLowerCase() === 'location' || propertyName.toLowerCase() === 'frequently located') {
+    } else if (
+      propertyName.toLowerCase() === 'location' ||
+      propertyName.toLowerCase() === 'frequently located'
+    ) {
       // Set location for each character
       for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
         const locationValue = values[j];
@@ -656,55 +679,81 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
           characters[j - 1].occupation = occupationValue;
         }
       }
-    } else if (propertyName.toLowerCase() === 'factions' || propertyName.toLowerCase() === 'faction') {
+    } else if (
+      propertyName.toLowerCase() === 'factions' ||
+      propertyName.toLowerCase() === 'faction'
+    ) {
       // Set factions for each character with Ally standing (supports comma-separated list)
       console.log(`Processing factions row with values:`, values);
       for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
         const factionValue = values[j];
-        console.log(`Character ${characters[j - 1].name} faction value: "${factionValue}"`);
+        console.log(
+          `Character ${characters[j - 1].name} faction value: "${factionValue}"`
+        );
         if (factionValue && factionValue !== '' && factionValue !== 'Unknown') {
           // Initialize factions array if it doesn't exist
           if (!characters[j - 1].factions) {
             characters[j - 1].factions = [];
           }
-          
+
           // Split by comma or semicolon and process each faction
           const separator = factionValue.includes(';') ? ';' : ',';
-          const factionNames = factionValue.split(separator).map(name => name.trim()).filter(name => name.length > 0);
-          console.log(`Raw faction value for ${characters[j - 1].name}: "${factionValue}"`);
+          const factionNames = factionValue
+            .split(separator)
+            .map(name => name.trim())
+            .filter(name => name.length > 0);
+          console.log(
+            `Raw faction value for ${characters[j - 1].name}: "${factionValue}"`
+          );
           console.log(`Using separator: "${separator}"`);
-          console.log(`Split result: [${factionNames.map(f => `"${f}"`).join(', ')}]`);
+          console.log(
+            `Split result: [${factionNames.map(f => `"${f}"`).join(', ')}]`
+          );
           console.log(`Number of factions found: ${factionNames.length}`);
-          
+
           for (const factionName of factionNames) {
             // Check if faction already exists to avoid duplicates
-            const existingFaction = characters[j - 1].factions!.find(f => f.name === factionName);
+            const existingFaction = characters[j - 1].factions!.find(
+              f => f.name === factionName
+            );
             if (!existingFaction) {
               // Add faction with Ally standing
               characters[j - 1].factions!.push({
                 name: factionName,
                 standing: RelationshipStanding.Ally,
-                description: `Imported from CSV as ally`
+                description: `Imported from CSV as ally`,
               });
-              console.log(`Added faction "${factionName}" to ${characters[j - 1].name}`);
+              console.log(
+                `Added faction "${factionName}" to ${characters[j - 1].name}`
+              );
             } else {
-              console.log(`Faction "${factionName}" already exists for ${characters[j - 1].name}`);
+              console.log(
+                `Faction "${factionName}" already exists for ${characters[j - 1].name}`
+              );
             }
           }
         }
-        console.log(`${characters[j - 1].name} now has ${characters[j - 1].factions?.length || 0} factions:`, 
-          characters[j - 1].factions?.map(f => f.name) || []);
+        console.log(
+          `${characters[j - 1].name} now has ${characters[j - 1].factions?.length || 0} factions:`,
+          characters[j - 1].factions?.map(f => f.name) || []
+        );
       }
     } else {
       // Check if it's a perk or distinction
       const perk = AVAILABLE_PERKS.find(p => p.name === propertyName);
-      const distinction = AVAILABLE_DISTINCTIONS.find(d => d.name === propertyName);
-      
+      const distinction = AVAILABLE_DISTINCTIONS.find(
+        d => d.name === propertyName
+      );
+
       if (perk) {
         // Handle perk
         for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
           const hasValue = values[j];
-          if (hasValue && (hasValue.toLowerCase() === 'true' || hasValue.toLowerCase() === '1')) {
+          if (
+            hasValue &&
+            (hasValue.toLowerCase() === 'true' ||
+              hasValue.toLowerCase() === '1')
+          ) {
             characters[j - 1].perkIds!.push(perk.id);
           }
         }
@@ -712,7 +761,11 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
         // Handle distinction
         for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
           const hasValue = values[j];
-          if (hasValue && (hasValue.toLowerCase() === 'true' || hasValue.toLowerCase() === '1')) {
+          if (
+            hasValue &&
+            (hasValue.toLowerCase() === 'true' ||
+              hasValue.toLowerCase() === '1')
+          ) {
             characters[j - 1].distinctionIds!.push(distinction.id);
           }
         }
@@ -722,12 +775,15 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
   }
 
   // Debug log final character data
-  console.log('Final parsed characters:', characters.map(c => ({
-    name: c.name,
-    factions: c.factions,
-    species: c.species,
-    location: c.location
-  })));
+  console.log(
+    'Final parsed characters:',
+    characters.map(c => ({
+      name: c.name,
+      factions: c.factions,
+      species: c.species,
+      location: c.location,
+    }))
+  );
 
   return characters as GameCharacter[];
 };
@@ -737,12 +793,12 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
  */
 const importCSVCharactersWeb = async (): Promise<boolean> => {
   try {
-    return new Promise<boolean>((resolve) => {
+    return new Promise<boolean>(resolve => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.csv';
       input.style.display = 'none';
-      
+
       input.onchange = async (event: any) => {
         try {
           const file = event.target.files[0];
@@ -750,16 +806,16 @@ const importCSVCharactersWeb = async (): Promise<boolean> => {
             resolve(false);
             return;
           }
-          
+
           const reader = new FileReader();
-          reader.onload = async (e) => {
+          reader.onload = async e => {
             try {
               const csvContent = e.target?.result as string;
               const characters = parseCSVToCharacters(csvContent);
-              
+
               // Save the characters
               await saveCharacters(characters);
-              
+
               showAlert(
                 'CSV Import Successful',
                 `Successfully imported ${characters.length} characters from CSV.`
@@ -774,19 +830,19 @@ const importCSVCharactersWeb = async (): Promise<boolean> => {
               resolve(false);
             }
           };
-          
+
           reader.onerror = () => {
             showAlert('File Read Error', 'Failed to read the selected file.');
             resolve(false);
           };
-          
+
           reader.readAsText(file);
         } catch (error) {
           console.error('File selection error:', error);
           resolve(false);
         }
       };
-      
+
       document.body.appendChild(input);
       input.click();
       document.body.removeChild(input);
@@ -811,22 +867,22 @@ const importCSVCharactersNative = async (): Promise<boolean> => {
       type: 'text/csv',
       copyToCacheDirectory: true,
     });
-    
+
     console.log('Document picker result:', result);
-    
+
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
       console.log('Selected file:', asset);
-      
+
       // Read the file content
       const fileContent = await FileSystem.readAsStringAsync(asset.uri);
       console.log('File content length:', fileContent.length);
-      
+
       const characters = parseCSVToCharacters(fileContent);
-      
+
       // Save the characters
       await saveCharacters(characters);
-      
+
       showAlert(
         'CSV Import Successful',
         `Successfully imported ${characters.length} characters from CSV.`

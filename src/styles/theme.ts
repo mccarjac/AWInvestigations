@@ -6,27 +6,27 @@
 // Modern Dark Color Palette
 export const colors = {
   // Background colors
-  primary: '#0F0F23',      // Deep dark blue-purple (main background)
-  secondary: '#1B1B3A',    // Slightly lighter dark
-  surface: '#262647',      // Card/surface color
-  elevated: '#2D2D54',     // Elevated surfaces
+  primary: '#0F0F23', // Deep dark blue-purple (main background)
+  secondary: '#1B1B3A', // Slightly lighter dark
+  surface: '#262647', // Card/surface color
+  elevated: '#2D2D54', // Elevated surfaces
 
   // Text colors
   text: {
-    primary: '#FFFFFF',    // Primary white text
-    secondary: '#B8B8CC',  // Secondary lighter text
-    muted: '#8E8EA0',      // Muted text
-    accent: '#8A8A8A',     // Accent text color
+    primary: '#FFFFFF', // Primary white text
+    secondary: '#B8B8CC', // Secondary lighter text
+    muted: '#8E8EA0', // Muted text
+    accent: '#8A8A8A', // Accent text color
   },
 
   // Accent colors
   accent: {
-    primary: '#6366F1',    // Indigo primary
-    secondary: '#8B5CF6',  // Purple secondary
-    success: '#10B981',    // Green
-    warning: '#F59E0B',    // Amber
-    danger: '#EF4444',     // Red
-    info: '#3B82F6',       // Blue
+    primary: '#6366F1', // Indigo primary
+    secondary: '#8B5CF6', // Purple secondary
+    success: '#10B981', // Green
+    warning: '#F59E0B', // Amber
+    danger: '#EF4444', // Red
+    info: '#3B82F6', // Blue
   },
 
   // Status colors
@@ -35,24 +35,24 @@ export const colors = {
     warning: '#FDCB6E',
     error: '#E17055',
     info: '#74B9FF',
-    present: '#059669',    // Green for present
-    absent: '#6B7280',     // Gray for absent
+    present: '#059669', // Green for present
+    absent: '#6B7280', // Gray for absent
   },
 
   // Standing/relationship colors
   standing: {
-    allied: '#10B981',     // Green
-    friendly: '#3B82F6',   // Blue
-    neutral: '#6B7280',    // Gray
-    hostile: '#F59E0B',    // Amber
-    enemy: '#EF4444',      // Red
+    allied: '#10B981', // Green
+    friendly: '#3B82F6', // Blue
+    neutral: '#6B7280', // Gray
+    hostile: '#F59E0B', // Amber
+    enemy: '#EF4444', // Red
   },
 
   // Interactive colors
   interactive: {
-    hover: 'rgba(108, 92, 231, 0.15)',  // Light overlay for hover states
+    hover: 'rgba(108, 92, 231, 0.15)', // Light overlay for hover states
     pressed: 'rgba(108, 92, 231, 0.25)', // Slightly darker for pressed states
-    disabled: '#404066',                  // Disabled state color
+    disabled: '#404066', // Disabled state color
   },
 
   // Border and shadow

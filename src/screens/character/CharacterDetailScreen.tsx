@@ -1,16 +1,36 @@
-import React, { useLayoutEffect, useState, useEffect } from 'react';
-import { View, ScrollView, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useState, useCallback, useLayoutEffect } from 'react';
+import {
+  View,
+  ScrollView,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import {
+  RouteProp,
+  useRoute,
+  useNavigation,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
-import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, AVAILABLE_RECIPES, PerkTag } from '@models/gameData';
+import {
+  AVAILABLE_PERKS,
+  AVAILABLE_DISTINCTIONS,
+  AVAILABLE_RECIPES,
+  PerkTag,
+} from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
 import { MUTANT_SPECIES, GameCharacter } from '@/models/types';
 import { loadCharacters } from '@/utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
-type CharacterDetailRouteProp = RouteProp<RootStackParamList, 'CharacterDetail'>;
+type CharacterDetailRouteProp = RouteProp<
+  RootStackParamList,
+  'CharacterDetail'
+>;
 type CharacterDetailNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const CharacterDetailScreen: React.FC = () => {
@@ -19,31 +39,32 @@ export const CharacterDetailScreen: React.FC = () => {
   const { character } = route.params;
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
 
-  const loadAllCharacters = async () => {
+  const loadAllCharacters = useCallback(async () => {
     try {
       const characters = await loadCharacters();
       setAllCharacters(characters);
-      
+
       // Update the current character with the latest data
-      const updatedCurrentChar = characters.find(char => char.id === character.id);
-      if (updatedCurrentChar && JSON.stringify(updatedCurrentChar) !== JSON.stringify(character)) {
+      const updatedCurrentChar = characters.find(
+        char => char.id === character.id
+      );
+      if (
+        updatedCurrentChar &&
+        JSON.stringify(updatedCurrentChar) !== JSON.stringify(character)
+      ) {
         // Update the route params with the fresh character data
         navigation.setParams({ character: updatedCurrentChar });
       }
     } catch (error) {
       console.error('Failed to load characters:', error);
     }
-  };
-
-  useEffect(() => {
-    loadAllCharacters();
-  }, []);
+  }, [character, navigation]);
 
   // Refresh character data when screen comes back into focus
   useFocusEffect(
     React.useCallback(() => {
       loadAllCharacters();
-    }, [character.id])
+    }, [loadAllCharacters])
   );
 
   const findCharacterByName = (name: string): GameCharacter | undefined => {
@@ -62,9 +83,11 @@ export const CharacterDetailScreen: React.FC = () => {
       headerRight: () => (
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => navigation.navigate('CharacterForm', { 
-            character
-          })}
+          onPress={() =>
+            navigation.navigate('CharacterForm', {
+              character,
+            })
+          }
         >
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
@@ -74,15 +97,19 @@ export const CharacterDetailScreen: React.FC = () => {
 
   const calculateTagScores = () => {
     const scores = new Map<PerkTag, number>();
-    const characterPerks = AVAILABLE_PERKS.filter(perk => character.perkIds.includes(perk.id));
-    
+    const characterPerks = AVAILABLE_PERKS.filter(perk =>
+      character.perkIds.includes(perk.id)
+    );
+
     characterPerks.forEach(perk => {
-       if (character.species === 'Perfect Mutant' && 
-              perk.allowedSpecies && 
-              MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))) {
-                console.log("Skipping perk for tag score calculation");
-            return; // Skip this perk for tag score calculation
-          }
+      if (
+        character.species === 'Perfect Mutant' &&
+        perk.allowedSpecies &&
+        MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))
+      ) {
+        console.log('Skipping perk for tag score calculation');
+        return; // Skip this perk for tag score calculation
+      }
 
       const currentScore = scores.get(perk.tag) || 0;
       scores.set(perk.tag, currentScore + 1);
@@ -115,9 +142,8 @@ export const CharacterDetailScreen: React.FC = () => {
   const renderPerks = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Perks</Text>
-      {AVAILABLE_PERKS
-        .filter(perk => character.perkIds.includes(perk.id))
-        .map(perk => (
+      {AVAILABLE_PERKS.filter(perk => character.perkIds.includes(perk.id)).map(
+        perk => (
           <View key={perk.id} style={styles.itemContainer}>
             <Text style={styles.titleText}>{perk.name}</Text>
             <Text style={styles.descriptionText}>{perk.description}</Text>
@@ -132,10 +158,16 @@ export const CharacterDetailScreen: React.FC = () => {
                       <View style={styles.recipeHeader}>
                         <Text style={styles.recipeName}>{recipe.name}</Text>
                       </View>
-                      <Text style={styles.recipeDescription}>{recipe.description}</Text>
-                      <Text style={styles.materialsTitle}>Materials Needed:</Text>
+                      <Text style={styles.recipeDescription}>
+                        {recipe.description}
+                      </Text>
+                      <Text style={styles.materialsTitle}>
+                        Materials Needed:
+                      </Text>
                       {recipe.materials.map((material, index) => (
-                        <Text key={index} style={styles.materialItem}>• {material}</Text>
+                        <Text key={index} style={styles.materialItem}>
+                          • {material}
+                        </Text>
                       ))}
                     </View>
                   );
@@ -143,21 +175,22 @@ export const CharacterDetailScreen: React.FC = () => {
               </View>
             )}
           </View>
-        ))}
+        )
+      )}
     </View>
   );
 
   const renderDistinctions = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Distinctions</Text>
-      {AVAILABLE_DISTINCTIONS
-        .filter(distinction => character.distinctionIds.includes(distinction.id))
-        .map(distinction => (
-          <View key={distinction.id} style={styles.itemContainer}>
-            <Text style={styles.titleText}>{distinction.name}</Text>
-            <Text style={styles.descriptionText}>{distinction.description}</Text>
-          </View>
-        ))}
+      {AVAILABLE_DISTINCTIONS.filter(distinction =>
+        character.distinctionIds.includes(distinction.id)
+      ).map(distinction => (
+        <View key={distinction.id} style={styles.itemContainer}>
+          <Text style={styles.titleText}>{distinction.name}</Text>
+          <Text style={styles.descriptionText}>{distinction.description}</Text>
+        </View>
+      ))}
     </View>
   );
 
@@ -179,41 +212,52 @@ export const CharacterDetailScreen: React.FC = () => {
     if (!character.relationships || character.relationships.length === 0) {
       return null;
     }
-    
+
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Relationships</Text>
         {character.relationships.map((relationship, index) => {
-          const targetCharacter = findCharacterByName(relationship.characterName);
+          const targetCharacter = findCharacterByName(
+            relationship.characterName
+          );
           const isClickable = !!targetCharacter;
-          
+
           return (
             <TouchableOpacity
               key={index}
               style={[
                 styles.itemContainer,
-                isClickable && styles.clickableRelationship
+                isClickable && styles.clickableRelationship,
               ]}
-              onPress={() => isClickable && handleRelationshipPress(relationship.characterName)}
+              onPress={() =>
+                isClickable &&
+                handleRelationshipPress(relationship.characterName)
+              }
               disabled={!isClickable}
               activeOpacity={isClickable ? 0.7 : 1}
             >
               <View style={styles.headerContainer}>
                 <View style={styles.relationshipNameContainer}>
-                  <Text style={[
-                    styles.titleText,
-                    isClickable && styles.clickableText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.titleText,
+                      isClickable && styles.clickableText,
+                    ]}
+                  >
                     {relationship.characterName}
                   </Text>
                   {!isClickable && (
                     <Text style={styles.unavailableText}> (Not found)</Text>
                   )}
                 </View>
-                <Text style={styles.relationshipTypeText}>{relationship.relationshipType}</Text>
+                <Text style={styles.relationshipTypeText}>
+                  {relationship.relationshipType}
+                </Text>
               </View>
               {relationship.description && (
-                <Text style={styles.descriptionText}>{relationship.description}</Text>
+                <Text style={styles.descriptionText}>
+                  {relationship.description}
+                </Text>
               )}
             </TouchableOpacity>
           );
@@ -224,67 +268,72 @@ export const CharacterDetailScreen: React.FC = () => {
 
   return (
     <View style={{ height: 882, overflow: 'scroll' }}>
-                <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={true}
-          >
-      <View style={styles.header}>
-        {character.imageUri && (
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: character.imageUri }} style={styles.characterImage} />
-          </View>
-        )}
-        <Text style={styles.name}>{character.name}</Text>
-        <View style={styles.headerInfo}>
-          <Text style={styles.subheader}>
-            Species: {character.species} / Location: {character.location}
-          </Text>
-          {character.occupation && (
-            <Text style={styles.subheader}>
-              Occupation: {character.occupation}
-            </Text>
-          )}
-          {character.retired && (
-            <View style={styles.retiredBadge}>
-              <Text style={styles.retiredText}>RETIRED</Text>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={true}
+      >
+        <View style={styles.header}>
+          {character.imageUri && (
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: character.imageUri }}
+                style={styles.characterImage}
+              />
             </View>
           )}
-          <View style={styles.statsContainer}>
-            {(() => {
-              const { maxHealth, maxLimit } = calculateDerivedStats(character);
-              return (
-                <>
-                  <Text style={styles.statItem}>
-                    Max Health: <Text style={styles.statValue}>{maxHealth}</Text>
-                  </Text>
-                  <Text style={styles.statItem}>
-                    Max Limit: <Text style={styles.statValue}>{maxLimit}</Text>
-                  </Text>
-                </>
-              );
-            })()}
+          <Text style={styles.name}>{character.name}</Text>
+          <View style={styles.headerInfo}>
+            <Text style={styles.subheader}>
+              Species: {character.species} / Location: {character.location}
+            </Text>
+            {character.occupation && (
+              <Text style={styles.subheader}>
+                Occupation: {character.occupation}
+              </Text>
+            )}
+            {character.retired && (
+              <View style={styles.retiredBadge}>
+                <Text style={styles.retiredText}>RETIRED</Text>
+              </View>
+            )}
+            <View style={styles.statsContainer}>
+              {(() => {
+                const { maxHealth, maxLimit } =
+                  calculateDerivedStats(character);
+                return (
+                  <>
+                    <Text style={styles.statItem}>
+                      Max Health:{' '}
+                      <Text style={styles.statValue}>{maxHealth}</Text>
+                    </Text>
+                    <Text style={styles.statItem}>
+                      Max Limit:{' '}
+                      <Text style={styles.statValue}>{maxLimit}</Text>
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
           </View>
         </View>
-      </View>
-      {renderTagScores()}
-      {renderPerks()}
-      {renderDistinctions()}
-      {renderFactions()}
-      {renderRelationships()}
-      {character.notes && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notes</Text>
-          <Text style={styles.notes}>{character.notes}</Text>
-        </View>
-      )}
-    </ScrollView>
+        {renderTagScores()}
+        {renderPerks()}
+        {renderDistinctions()}
+        {renderFactions()}
+        {renderRelationships()}
+        {character.notes && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notes</Text>
+            <Text style={styles.notes}>{character.notes}</Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: commonStyles.layout.container,
   scrollView: commonStyles.layout.scrollView,
   imageContainer: commonStyles.image.container,
   characterImage: commonStyles.image.character,
@@ -431,13 +480,7 @@ const styles = StyleSheet.create({
     color: themeColors.status.warning,
     fontStyle: 'italic',
   },
-  tapHintText: {
-    fontSize: 12,
-    color: themeColors.accent.primary,
-    fontStyle: 'italic',
-    marginTop: 8,
-    textAlign: 'right',
-  },
+
   notes: {
     ...commonStyles.text.description,
     lineHeight: 22,

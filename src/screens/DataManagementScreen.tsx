@@ -1,19 +1,24 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
-import { Text } from 'react-native';
-import { loadCharacters, clearStorage } from '@utils/characterStorage';
-import { exportCharacterData, importCharacterData, mergeCharacterData, importCSVCharacters } from '@utils/exportImport';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '@/navigation/types';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Platform,
+  ScrollView,
+  Text,
+} from 'react-native';
+import { clearStorage } from '@utils/characterStorage';
+import {
+  exportCharacterData,
+  importCharacterData,
+  mergeCharacterData,
+  importCSVCharacters,
+} from '@utils/exportImport';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
-type DataManagementNavigationProp = StackNavigationProp<RootStackParamList>;
-
 export const DataManagementScreen: React.FC = () => {
-  const navigation = useNavigation<DataManagementNavigationProp>();
-
   const handleClearAll = async () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
@@ -21,7 +26,7 @@ export const DataManagementScreen: React.FC = () => {
           'Are you sure you want to delete all characters? This action cannot be undone.'
         );
       } else {
-        return new Promise<boolean>((resolve) => {
+        return new Promise<boolean>(resolve => {
           Alert.alert(
             'Clear All Characters',
             'Are you sure you want to delete all characters? This action cannot be undone.',
@@ -45,11 +50,9 @@ export const DataManagementScreen: React.FC = () => {
     const shouldClear = await confirmClear();
     if (shouldClear) {
       await clearStorage();
-      Alert.alert(
-        'Success',
-        'All characters have been deleted.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Success', 'All characters have been deleted.', [
+        { text: 'OK' },
+      ]);
     }
   };
 
@@ -64,11 +67,9 @@ export const DataManagementScreen: React.FC = () => {
       console.log('Import result:', success);
       if (success) {
         console.log('Import successful');
-        Alert.alert(
-          'Success',
-          'Character data imported successfully.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Success', 'Character data imported successfully.', [
+          { text: 'OK' },
+        ]);
       }
     } catch (error) {
       console.error('Import error:', error);
@@ -82,11 +83,9 @@ export const DataManagementScreen: React.FC = () => {
       console.log('Merge result:', success);
       if (success) {
         console.log('Merge successful');
-        Alert.alert(
-          'Success',
-          'Character data merged successfully.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Success', 'Character data merged successfully.', [
+          { text: 'OK' },
+        ]);
       }
     } catch (error) {
       console.error('Merge error:', error);
@@ -100,11 +99,9 @@ export const DataManagementScreen: React.FC = () => {
       console.log('CSV Import result:', success);
       if (success) {
         console.log('CSV Import successful');
-        Alert.alert(
-          'Success',
-          'CSV data imported successfully.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Success', 'CSV data imported successfully.', [
+          { text: 'OK' },
+        ]);
       }
     } catch (error) {
       console.error('CSV Import error:', error);
@@ -120,7 +117,8 @@ export const DataManagementScreen: React.FC = () => {
       >
         <Text style={styles.header}>Data Management</Text>
         <Text style={styles.description}>
-          Manage your character data with import, export, merge, and backup options.
+          Manage your character data with import, export, merge, and backup
+          options.
         </Text>
 
         {/* Export Section */}
@@ -141,7 +139,8 @@ export const DataManagementScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Import Data</Text>
           <Text style={styles.sectionDescription}>
-            Import character data from a JSON file. This will replace all existing data.
+            Import character data from a JSON file. This will replace all
+            existing data.
           </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.importButton]}
@@ -155,7 +154,8 @@ export const DataManagementScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Merge Data</Text>
           <Text style={styles.sectionDescription}>
-            Merge character data from a JSON file with your existing data. Duplicates will be handled intelligently.
+            Merge character data from a JSON file with your existing data.
+            Duplicates will be handled intelligently.
           </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.mergeButton]}
@@ -169,7 +169,8 @@ export const DataManagementScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>CSV Import</Text>
           <Text style={styles.sectionDescription}>
-            Import character data from a CSV file. Useful for bulk character creation from spreadsheets.
+            Import character data from a CSV file. Useful for bulk character
+            creation from spreadsheets.
           </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.csvImportButton]}
@@ -181,7 +182,9 @@ export const DataManagementScreen: React.FC = () => {
 
         {/* Danger Zone */}
         <View style={[styles.section, styles.dangerSection]}>
-          <Text style={[styles.sectionTitle, styles.dangerTitle]}>Danger Zone</Text>
+          <Text style={[styles.sectionTitle, styles.dangerTitle]}>
+            Danger Zone
+          </Text>
           <Text style={styles.sectionDescription}>
             Irreversible actions that will permanently delete your data.
           </Text>

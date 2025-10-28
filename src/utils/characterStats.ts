@@ -10,7 +10,9 @@ export interface CharacterStats {
   factionStandings: Record<string, Record<string, number>>;
 }
 
-export const calculateCharacterStats = (characters: GameCharacter[]): CharacterStats => {
+export const calculateCharacterStats = (
+  characters: GameCharacter[]
+): CharacterStats => {
   if (!characters.length) {
     throw new Error('No characters available for statistics calculation');
   }
@@ -18,18 +20,24 @@ export const calculateCharacterStats = (characters: GameCharacter[]): CharacterS
   const totalCharacters = characters.length;
 
   // Calculate species distribution
-  const speciesDistribution = characters.reduce((acc, char) => {
-    acc[char.species] = (acc[char.species] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const speciesDistribution = characters.reduce(
+    (acc, char) => {
+      acc[char.species] = (acc[char.species] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   // Calculate faction distribution
-  const factionDistribution = characters.reduce((acc, char) => {
-    char.factions.forEach(faction => {
-      acc[faction.name] = (acc[faction.name] || 0) + 1;
-    });
-    return acc;
-  }, {} as Record<string, number>);
+  const factionDistribution = characters.reduce(
+    (acc, char) => {
+      char.factions.forEach(faction => {
+        acc[faction.name] = (acc[faction.name] || 0) + 1;
+      });
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   // Calculate faction standings distribution
   const factionStandings: Record<string, Record<string, number>> = {};
@@ -38,7 +46,7 @@ export const calculateCharacterStats = (characters: GameCharacter[]): CharacterS
       if (!factionStandings[faction.name]) {
         factionStandings[faction.name] = {};
       }
-      factionStandings[faction.name][faction.standing] = 
+      factionStandings[faction.name][faction.standing] =
         (factionStandings[faction.name][faction.standing] || 0) + 1;
     });
   });
@@ -54,7 +62,7 @@ export const calculateCharacterStats = (characters: GameCharacter[]): CharacterS
   const commonPerks = Object.entries(perkCount)
     .map(([id, count]) => ({
       name: AVAILABLE_PERKS.find(p => p.id === id)?.name || 'Unknown Perk',
-      count
+      count,
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
@@ -63,14 +71,17 @@ export const calculateCharacterStats = (characters: GameCharacter[]): CharacterS
   const distinctionCount: Record<string, number> = {};
   characters.forEach(char => {
     char.distinctionIds.forEach(distinctionId => {
-      distinctionCount[distinctionId] = (distinctionCount[distinctionId] || 0) + 1;
+      distinctionCount[distinctionId] =
+        (distinctionCount[distinctionId] || 0) + 1;
     });
   });
 
   const commonDistinctions = Object.entries(distinctionCount)
     .map(([id, count]) => ({
-      name: AVAILABLE_DISTINCTIONS.find(d => d.id === id)?.name || 'Unknown Distinction',
-      count
+      name:
+        AVAILABLE_DISTINCTIONS.find(d => d.id === id)?.name ||
+        'Unknown Distinction',
+      count,
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);

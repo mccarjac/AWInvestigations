@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CharacterDataset, GameCharacter, Faction } from '@models/types';
+import { CharacterDataset, GameCharacter } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface StoredFaction {
@@ -18,11 +18,13 @@ interface FactionDataset {
 const STORAGE_KEY = 'gameCharacterManager';
 const FACTION_STORAGE_KEY = 'gameCharacterManager_factions';
 
-export const saveCharacters = async (characters: GameCharacter[]): Promise<void> => {
+export const saveCharacters = async (
+  characters: GameCharacter[]
+): Promise<void> => {
   const dataset: CharacterDataset = {
     characters,
     version: '1.0',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
   };
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
 };
@@ -30,18 +32,20 @@ export const saveCharacters = async (characters: GameCharacter[]): Promise<void>
 export const loadCharacters = async (): Promise<GameCharacter[]> => {
   const data = await AsyncStorage.getItem(STORAGE_KEY);
   if (!data) return [];
-  
+
   const dataset: CharacterDataset = JSON.parse(data);
   // Handle backward compatibility - set defaults for missing properties
   return dataset.characters.map(character => ({
     ...character,
     present: character.present ?? false,
     retired: character.retired ?? false,
-    relationships: character.relationships ?? []
+    relationships: character.relationships ?? [],
   }));
 };
 
-export const addCharacter = async (character: Omit<GameCharacter, 'id' | 'createdAt' | 'updatedAt'>): Promise<GameCharacter> => {
+export const addCharacter = async (
+  character: Omit<GameCharacter, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<GameCharacter> => {
   const characters = await loadCharacters();
   const newCharacter: GameCharacter = {
     ...character,
@@ -50,25 +54,28 @@ export const addCharacter = async (character: Omit<GameCharacter, 'id' | 'create
     retired: false, // Default to not retired
     relationships: character.relationships ?? [], // Ensure relationships array exists
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
-  
+
   await saveCharacters([...characters, newCharacter]);
   return newCharacter;
 };
 
-export const updateCharacter = async (id: string, updates: Partial<GameCharacter>): Promise<GameCharacter | null> => {
+export const updateCharacter = async (
+  id: string,
+  updates: Partial<GameCharacter>
+): Promise<GameCharacter | null> => {
   const characters = await loadCharacters();
   const index = characters.findIndex(c => c.id === id);
-  
+
   if (index === -1) return null;
-  
+
   const updatedCharacter: GameCharacter = {
     ...characters[index],
     ...updates,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
-  
+
   characters[index] = updatedCharacter;
   await saveCharacters(characters);
   return updatedCharacter;
@@ -77,9 +84,9 @@ export const updateCharacter = async (id: string, updates: Partial<GameCharacter
 export const deleteCharacter = async (id: string): Promise<boolean> => {
   const characters = await loadCharacters();
   const filtered = characters.filter(c => c.id !== id);
-  
+
   if (filtered.length === characters.length) return false;
-  
+
   await saveCharacters(filtered);
   return true;
 };
@@ -94,7 +101,7 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
     const dataset: CharacterDataset = JSON.parse(jsonData);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -115,7 +122,10 @@ export interface MergeResult {
 }
 
 // Smart property merger that combines properties intelligently
-const mergeCharacterProperties = (existing: GameCharacter, imported: GameCharacter): { merged: GameCharacter; conflicts: string[] } => {
+const mergeCharacterProperties = (
+  existing: GameCharacter,
+  imported: GameCharacter
+): { merged: GameCharacter; conflicts: string[] } => {
   const conflicts: string[] = [];
   const merged: GameCharacter = { ...existing };
 
@@ -135,16 +145,25 @@ const mergeCharacterProperties = (existing: GameCharacter, imported: GameCharact
 
   if (imported.distinctionIds && imported.distinctionIds.length > 0) {
     const existingDistinctionIds = new Set(existing.distinctionIds || []);
-    const newDistinctions = imported.distinctionIds.filter(id => !existingDistinctionIds.has(id));
+    const newDistinctions = imported.distinctionIds.filter(
+      id => !existingDistinctionIds.has(id)
+    );
     if (newDistinctions.length > 0) {
-      merged.distinctionIds = [...(existing.distinctionIds || []), ...newDistinctions];
+      merged.distinctionIds = [
+        ...(existing.distinctionIds || []),
+        ...newDistinctions,
+      ];
     }
   }
 
   // Merge factions (keep all unique factions)
   if (imported.factions && imported.factions.length > 0) {
-    const existingFactionNames = new Set((existing.factions || []).map(f => f.name));
-    const newFactions = imported.factions.filter(f => !existingFactionNames.has(f.name));
+    const existingFactionNames = new Set(
+      (existing.factions || []).map(f => f.name)
+    );
+    const newFactions = imported.factions.filter(
+      f => !existingFactionNames.has(f.name)
+    );
     if (newFactions.length > 0) {
       merged.factions = [...(existing.factions || []), ...newFactions];
     }
@@ -152,23 +171,32 @@ const mergeCharacterProperties = (existing: GameCharacter, imported: GameCharact
 
   // Merge relationships (keep all unique relationships by character name)
   if (imported.relationships && imported.relationships.length > 0) {
-    const existingRelationshipNames = new Set((existing.relationships || []).map(r => r.characterName));
-    const newRelationships = imported.relationships.filter(r => !existingRelationshipNames.has(r.characterName));
-    
+    const existingRelationshipNames = new Set(
+      (existing.relationships || []).map(r => r.characterName)
+    );
+    const newRelationships = imported.relationships.filter(
+      r => !existingRelationshipNames.has(r.characterName)
+    );
+
     // Update existing relationships if they exist with different types or descriptions
-    const updatedRelationships = (existing.relationships || []).map(existingRel => {
-      const importedRel = imported.relationships.find(r => r.characterName === existingRel.characterName);
-      if (importedRel) {
-        // If relationship exists in both, prefer the one with more recent timestamp or better description
-        return {
-          ...existingRel,
-          relationshipType: importedRel.relationshipType || existingRel.relationshipType,
-          description: importedRel.description || existingRel.description
-        };
+    const updatedRelationships = (existing.relationships || []).map(
+      existingRel => {
+        const importedRel = imported.relationships.find(
+          r => r.characterName === existingRel.characterName
+        );
+        if (importedRel) {
+          // If relationship exists in both, prefer the one with more recent timestamp or better description
+          return {
+            ...existingRel,
+            relationshipType:
+              importedRel.relationshipType || existingRel.relationshipType,
+            description: importedRel.description || existingRel.description,
+          };
+        }
+        return existingRel;
       }
-      return existingRel;
-    });
-    
+    );
+
     merged.relationships = [...updatedRelationships, ...newRelationships];
   } else if (!existing.relationships) {
     // Ensure relationships array exists even if empty
@@ -176,11 +204,21 @@ const mergeCharacterProperties = (existing: GameCharacter, imported: GameCharact
   }
 
   // Handle conflicting simple properties
-  const simpleProperties: (keyof GameCharacter)[] = ['name', 'species', 'location', 'imageUri', 'notes'];
-  
+  const simpleProperties: (keyof GameCharacter)[] = [
+    'name',
+    'species',
+    'location',
+    'imageUri',
+    'notes',
+  ];
+
   for (const prop of simpleProperties) {
     if (imported[prop] !== undefined && existing[prop] !== imported[prop]) {
-      if (existing[prop] === undefined || existing[prop] === '' || existing[prop] === null) {
+      if (
+        existing[prop] === undefined ||
+        existing[prop] === '' ||
+        existing[prop] === null
+      ) {
         // If existing is empty, use imported
         (merged as any)[prop] = imported[prop];
       } else if (imported[prop] !== '' && imported[prop] !== null) {
@@ -197,14 +235,16 @@ export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
   try {
     const currentData = await loadCharacters();
     const importedData: CharacterDataset = JSON.parse(jsonData);
-    
+
     const mergedCharacters = [...currentData];
     const addedCharacters: GameCharacter[] = [];
     const conflicts: MergeConflict[] = [];
 
     for (const importedChar of importedData.characters) {
-      const existingIndex = currentData.findIndex(current => current.id === importedChar.id);
-      
+      const existingIndex = currentData.findIndex(
+        current => current.id === importedChar.id
+      );
+
       if (existingIndex === -1) {
         // No conflict - add new character
         addedCharacters.push(importedChar);
@@ -212,17 +252,20 @@ export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
       } else {
         // Potential conflict - merge properties
         const existing = currentData[existingIndex];
-        const { merged, conflicts: propConflicts } = mergeCharacterProperties(existing, importedChar);
-        
+        const { merged, conflicts: propConflicts } = mergeCharacterProperties(
+          existing,
+          importedChar
+        );
+
         if (propConflicts.length > 0) {
           conflicts.push({
             id: importedChar.id,
             existing,
             imported: importedChar,
-            conflicts: propConflicts
+            conflicts: propConflicts,
           });
         }
-        
+
         // Use merged version (even if there are conflicts, we still merge non-conflicting properties)
         mergedCharacters[existingIndex] = merged;
       }
@@ -237,18 +280,22 @@ export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
 };
 
 // Enhanced merge function that can handle user interaction
-export const mergeDatasetWithConflictResolution = async (jsonData: string): Promise<MergeResult> => {
+export const mergeDatasetWithConflictResolution = async (
+  jsonData: string
+): Promise<MergeResult> => {
   try {
     const currentData = await loadCharacters();
     const importedData: CharacterDataset = JSON.parse(jsonData);
-    
+
     const mergedCharacters = [...currentData];
     const addedCharacters: GameCharacter[] = [];
     const conflicts: MergeConflict[] = [];
 
     for (const importedChar of importedData.characters) {
-      const existingIndex = currentData.findIndex(current => current.id === importedChar.id);
-      
+      const existingIndex = currentData.findIndex(
+        current => current.id === importedChar.id
+      );
+
       if (existingIndex === -1) {
         // No conflict - add new character
         addedCharacters.push(importedChar);
@@ -256,17 +303,20 @@ export const mergeDatasetWithConflictResolution = async (jsonData: string): Prom
       } else {
         // Potential conflict - merge properties
         const existing = currentData[existingIndex];
-        const { merged, conflicts: propConflicts } = mergeCharacterProperties(existing, importedChar);
-        
+        const { merged, conflicts: propConflicts } = mergeCharacterProperties(
+          existing,
+          importedChar
+        );
+
         if (propConflicts.length > 0) {
           conflicts.push({
             id: importedChar.id,
             existing,
             imported: importedChar,
-            conflicts: propConflicts
+            conflicts: propConflicts,
           });
         }
-        
+
         // Use merged version for now
         mergedCharacters[existingIndex] = merged;
       }
@@ -277,7 +327,7 @@ export const mergeDatasetWithConflictResolution = async (jsonData: string): Prom
       success: true,
       conflicts,
       merged: mergedCharacters,
-      added: addedCharacters
+      added: addedCharacters,
     };
   } catch (error) {
     console.error('Error merging datasets:', error);
@@ -285,23 +335,25 @@ export const mergeDatasetWithConflictResolution = async (jsonData: string): Prom
       success: false,
       conflicts: [],
       merged: [],
-      added: []
+      added: [],
     };
   }
 };
 
-export const toggleCharacterPresent = async (id: string): Promise<GameCharacter | null> => {
+export const toggleCharacterPresent = async (
+  id: string
+): Promise<GameCharacter | null> => {
   const characters = await loadCharacters();
   const index = characters.findIndex(c => c.id === id);
-  
+
   if (index === -1) return null;
-  
+
   const updatedCharacter: GameCharacter = {
     ...characters[index],
     present: !characters[index].present,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
-  
+
   characters[index] = updatedCharacter;
   await saveCharacters(characters);
   return updatedCharacter;
@@ -312,9 +364,9 @@ export const resetAllPresentStatus = async (): Promise<void> => {
   const updatedCharacters = characters.map(character => ({
     ...character,
     present: false,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   }));
-  
+
   await saveCharacters(updatedCharacters);
 };
 
@@ -324,11 +376,13 @@ export const clearStorage = async (): Promise<void> => {
 };
 
 // Faction management functions
-export const saveFactions = async (factions: StoredFaction[]): Promise<void> => {
+export const saveFactions = async (
+  factions: StoredFaction[]
+): Promise<void> => {
   const dataset: FactionDataset = {
     factions,
     version: '1.0',
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
   };
   await AsyncStorage.setItem(FACTION_STORAGE_KEY, JSON.stringify(dataset));
 };
@@ -336,29 +390,34 @@ export const saveFactions = async (factions: StoredFaction[]): Promise<void> => 
 export const loadFactions = async (): Promise<StoredFaction[]> => {
   const data = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
   if (!data) return [];
-  
+
   const dataset: FactionDataset = JSON.parse(data);
   return dataset.factions || [];
 };
 
-export const getFactionDescription = async (factionName: string): Promise<string> => {
+export const getFactionDescription = async (
+  factionName: string
+): Promise<string> => {
   const factions = await loadFactions();
   const faction = factions.find(f => f.name === factionName);
   return faction?.description || '';
 };
 
-export const saveFactionDescription = async (factionName: string, description: string): Promise<void> => {
+export const saveFactionDescription = async (
+  factionName: string,
+  description: string
+): Promise<void> => {
   const factions = await loadFactions();
   const existingIndex = factions.findIndex(f => f.name === factionName);
-  
+
   const now = new Date().toISOString();
-  
+
   if (existingIndex >= 0) {
     // Update existing faction
     factions[existingIndex] = {
       ...factions[existingIndex],
       description,
-      updatedAt: now
+      updatedAt: now,
     };
   } else {
     // Create new faction
@@ -366,10 +425,10 @@ export const saveFactionDescription = async (factionName: string, description: s
       name: factionName,
       description,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
     });
   }
-  
+
   await saveFactions(factions);
 };
 
@@ -380,52 +439,56 @@ export const getAllStoredFactions = async (): Promise<StoredFaction[]> => {
 export const deleteFaction = async (factionName: string): Promise<boolean> => {
   const factions = await loadFactions();
   const filtered = factions.filter(f => f.name !== factionName);
-  
+
   if (filtered.length === factions.length) return false;
-  
+
   await saveFactions(filtered);
   return true;
 };
 
-export const deleteFactionCompletely = async (factionName: string): Promise<{ success: boolean; charactersUpdated: number }> => {
+export const deleteFactionCompletely = async (
+  factionName: string
+): Promise<{ success: boolean; charactersUpdated: number }> => {
   try {
     // First, remove the faction from all characters
     const characters = await loadCharacters();
     let charactersUpdated = 0;
-    
+
     const updatedCharacters = characters.map(character => {
       const originalFactionCount = character.factions.length;
-      const updatedFactions = character.factions.filter(faction => faction.name !== factionName);
-      
+      const updatedFactions = character.factions.filter(
+        faction => faction.name !== factionName
+      );
+
       if (updatedFactions.length !== originalFactionCount) {
         charactersUpdated++;
         return {
           ...character,
           factions: updatedFactions,
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
       }
-      
+
       return character;
     });
-    
+
     // Save updated characters if any were modified
     if (charactersUpdated > 0) {
       await saveCharacters(updatedCharacters);
     }
-    
+
     // Then remove the faction from centralized storage
-    const factionDeleted = await deleteFaction(factionName);
-    
+    await deleteFaction(factionName);
+
     return {
       success: true,
-      charactersUpdated
+      charactersUpdated,
     };
   } catch (error) {
     console.error('Error deleting faction completely:', error);
     return {
       success: false,
-      charactersUpdated: 0
+      charactersUpdated: 0,
     };
   }
 };
@@ -436,21 +499,23 @@ export const createFaction = async (factionData: {
   defaultStanding: string;
 }): Promise<boolean> => {
   const existingFactions = await loadFactions();
-  
+
   // Check if faction with this name already exists
-  const existingFaction = existingFactions.find(f => f.name.toLowerCase() === factionData.name.toLowerCase());
+  const existingFaction = existingFactions.find(
+    f => f.name.toLowerCase() === factionData.name.toLowerCase()
+  );
   if (existingFaction) {
     return false; // Faction already exists
   }
-  
+
   const now = new Date().toISOString();
   const newFaction: StoredFaction = {
     name: factionData.name,
     description: factionData.description,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
-  
+
   await saveFactions([...existingFactions, newFaction]);
   return true;
 };
@@ -476,18 +541,20 @@ export const migrateFactionDescriptions = async (): Promise<void> => {
 
     // Create or update centralized faction storage
     const updatedFactions = [...existingFactions];
-    
+
     factionDescriptions.forEach((description, factionName) => {
-      const existingIndex = updatedFactions.findIndex(f => f.name === factionName);
+      const existingIndex = updatedFactions.findIndex(
+        f => f.name === factionName
+      );
       const now = new Date().toISOString();
-      
+
       if (existingIndex >= 0) {
         // Update existing faction if it has no description
         if (!updatedFactions[existingIndex].description) {
           updatedFactions[existingIndex] = {
             ...updatedFactions[existingIndex],
             description,
-            updatedAt: now
+            updatedAt: now,
           };
         }
       } else {
@@ -496,7 +563,7 @@ export const migrateFactionDescriptions = async (): Promise<void> => {
           name: factionName,
           description,
           createdAt: now,
-          updatedAt: now
+          updatedAt: now,
         });
       }
     });
