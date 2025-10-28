@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
+import { useFocusEffect } from '@react-navigation/native';
 import { loadCharacters } from '../utils/characterStorage';
 import { calculateCharacterStats, CharacterStats } from '../utils/characterStats';
 import { GameCharacter } from '@/models/types';
@@ -10,10 +11,6 @@ export const CharacterStatsScreen = () => {
   const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const [showOnlyPresent, setShowOnlyPresent] = useState<boolean>(false);
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
-
-  useEffect(() => {
-    loadStats();
-  }, []);
 
   useEffect(() => {
     // Recalculate stats when filter changes
@@ -32,7 +29,7 @@ export const CharacterStatsScreen = () => {
     }
   }, [showOnlyPresent, allCharacters]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     const characters = await loadCharacters();
     setAllCharacters(characters);
     
@@ -52,7 +49,13 @@ export const CharacterStatsScreen = () => {
       const stats = calculateStats(filteredCharacters);
       setStats(stats);
     }
-  };
+  }, [showOnlyPresent]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+    }, [loadStats])
+  );
 
   const calculateStats = (characters: GameCharacter[]): CharacterStats => {
     return calculateCharacterStats(characters);
@@ -118,46 +121,49 @@ export const CharacterStatsScreen = () => {
     return colorMap;
   };
 
-  if (!stats) {
-    return (
-      <View style={styles.container}>
-        <Text>No character data available</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={{ height: 882, overflow: 'scroll' }}>
-                <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.container}
-            showsVerticalScrollIndicator={true}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={true}
+      >
+        <Text style={styles.header}>Character Statistics</Text>
+        
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={[styles.filterButton, showOnlyPresent && styles.filterButtonActive]}
+            onPress={() => setShowOnlyPresent(!showOnlyPresent)}
           >
-      <Text style={styles.header}>Character Statistics</Text>
-      
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterButton, showOnlyPresent && styles.filterButtonActive]}
-          onPress={() => setShowOnlyPresent(!showOnlyPresent)}
-        >
-          <Text style={[styles.filterButtonText, showOnlyPresent && styles.filterButtonTextActive]}>
-            {showOnlyPresent ? 'Present Only ✓' : 'Show Present Only'}
+            <Text style={[styles.filterButtonText, showOnlyPresent && styles.filterButtonTextActive]}>
+              {showOnlyPresent ? 'Present Only ✓' : 'Show Present Only'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.filterInfo}>
+            {showOnlyPresent 
+              ? `Showing ${stats?.totalCharacters || 0} present characters` 
+              : `Showing all ${stats?.totalCharacters || 0} characters`}
           </Text>
-        </TouchableOpacity>
-        <Text style={styles.filterInfo}>
-          {showOnlyPresent 
-            ? `Showing ${stats?.totalCharacters || 0} present characters` 
-            : `Showing all ${stats?.totalCharacters || 0} characters`}
-        </Text>
-      </View>
-      
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>General Stats</Text>
-        <Text style={styles.listItemText}>Total Characters: {stats.totalCharacters}</Text>
-      </View>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Species Distribution</Text>
+        {!stats ? (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>
+              {showOnlyPresent 
+                ? 'No present characters found. Try toggling the filter to see all characters.'
+                : 'No character data available'
+              }
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>General Stats</Text>
+              <Text style={styles.listItemText}>Total Characters: {stats.totalCharacters}</Text>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Species Distribution</Text>
         {getSpeciesPieChartData().length > 0 && (
           <View style={styles.chartContainer}>
             <PieChart
@@ -244,43 +250,45 @@ export const CharacterStatsScreen = () => {
             );
           })}
         </View>
-      </View>
+            </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Faction Membership</Text>
-        {Object.entries(stats.factionDistribution).map(([factionName, count]) => (
-          <Text key={factionName} style={styles.factionMembershipText}>{factionName}: {count} characters</Text>
-        ))}
-      </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Faction Membership</Text>
+              {Object.entries(stats.factionDistribution).map(([factionName, count]) => (
+                <Text key={factionName} style={styles.factionMembershipText}>{factionName}: {count} characters</Text>
+              ))}
+            </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Faction Standings</Text>
-        {Object.entries(stats.factionStandings).map(([faction, standings]) => (
-          <View key={faction} style={styles.factionItem}>
-            <Text style={styles.factionName}>{faction}</Text>
-            {Object.entries(standings).map(([standing, count]) => (
-              <Text key={standing} style={styles.standingText}>
-                {standing}: {count} character{count !== 1 ? 's' : ''}
-              </Text>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>Faction Standings</Text>
+              {Object.entries(stats.factionStandings).map(([faction, standings]) => (
+                <View key={faction} style={styles.factionItem}>
+                  <Text style={styles.factionName}>{faction}</Text>
+                  {Object.entries(standings).map(([standing, count]) => (
+                    <Text key={standing} style={styles.standingText}>
+                      {standing}: {count} character{count !== 1 ? 's' : ''}
+                    </Text>
+                  ))}
+                </View>
+              ))}
+            </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Most Common Perks</Text>
+            {stats.commonPerks.map(({ name, count }) => (
+              <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
             ))}
           </View>
-        ))}
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Most Common Perks</Text>
-        {stats.commonPerks.map(({ name, count }) => (
-          <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Most Common Distinctions</Text>
-        {stats.commonDistinctions.map(({ name, count }) => (
-          <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
-        ))}
-      </View>
-    </ScrollView>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Most Common Distinctions</Text>
+            {stats.commonDistinctions.map(({ name, count }) => (
+              <Text key={name} style={styles.listItemText}>{name}: {count} characters</Text>
+            ))}
+          </View>
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -521,5 +529,20 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginVertical: 4,
     fontWeight: '500',
+  },
+  noDataContainer: {
+    backgroundColor: colors.surface,
+    padding: 24,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
