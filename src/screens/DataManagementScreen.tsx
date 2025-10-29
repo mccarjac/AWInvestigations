@@ -23,13 +23,13 @@ export const DataManagementScreen: React.FC = () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
         return window.confirm(
-          'Are you sure you want to delete all characters? This action cannot be undone.'
+          'Are you sure you want to delete all characters and factions? This action cannot be undone.'
         );
       } else {
         return new Promise<boolean>(resolve => {
           Alert.alert(
-            'Clear All Characters',
-            'Are you sure you want to delete all characters? This action cannot be undone.',
+            'Clear All Data',
+            'Are you sure you want to delete all characters and factions? This action cannot be undone.',
             [
               {
                 text: 'Cancel',
@@ -50,7 +50,7 @@ export const DataManagementScreen: React.FC = () => {
     const shouldClear = await confirmClear();
     if (shouldClear) {
       await clearStorage();
-      Alert.alert('Success', 'All characters have been deleted.', [
+      Alert.alert('Success', 'All characters and factions have been deleted.', [
         { text: 'OK' },
       ]);
     }
@@ -67,9 +67,11 @@ export const DataManagementScreen: React.FC = () => {
       console.log('Import result:', success);
       if (success) {
         console.log('Import successful');
-        Alert.alert('Success', 'Character data imported successfully.', [
-          { text: 'OK' },
-        ]);
+        Alert.alert(
+          'Success',
+          'Character and faction data imported successfully.',
+          [{ text: 'OK' }]
+        );
       }
     } catch (error) {
       console.error('Import error:', error);
@@ -83,9 +85,11 @@ export const DataManagementScreen: React.FC = () => {
       console.log('Merge result:', success);
       if (success) {
         console.log('Merge successful');
-        Alert.alert('Success', 'Character data merged successfully.', [
-          { text: 'OK' },
-        ]);
+        Alert.alert(
+          'Success',
+          'Character and faction data merged successfully.',
+          [{ text: 'OK' }]
+        );
       }
     } catch (error) {
       console.error('Merge error:', error);
@@ -117,21 +121,22 @@ export const DataManagementScreen: React.FC = () => {
       >
         <Text style={styles.header}>Data Management</Text>
         <Text style={styles.description}>
-          Manage your character data with import, export, merge, and backup
-          options.
+          Manage your character and faction data with import, export, merge, and
+          backup options.
         </Text>
 
         {/* Export Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Export Data</Text>
           <Text style={styles.sectionDescription}>
-            Export all your character data to a JSON file for backup or sharing.
+            Export all your character and faction data to a JSON file for backup
+            or sharing.
           </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.exportButton]}
             onPress={handleExport}
           >
-            <Text style={styles.buttonText}>Export Characters</Text>
+            <Text style={styles.buttonText}>Export Characters & Factions</Text>
           </TouchableOpacity>
         </View>
 
@@ -139,8 +144,8 @@ export const DataManagementScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Import Data</Text>
           <Text style={styles.sectionDescription}>
-            Import character data from a JSON file. This will replace all
-            existing data.
+            Import character and faction data from a JSON file. This will
+            replace all existing data.
           </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.importButton]}
@@ -154,8 +159,8 @@ export const DataManagementScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Merge Data</Text>
           <Text style={styles.sectionDescription}>
-            Merge character data from a JSON file with your existing data.
-            Duplicates will be handled intelligently.
+            Merge character and faction data from a JSON file with your existing
+            data. Duplicates will be handled intelligently.
           </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.mergeButton]}
@@ -192,7 +197,7 @@ export const DataManagementScreen: React.FC = () => {
             style={[styles.actionButton, styles.clearButton]}
             onPress={handleClearAll}
           >
-            <Text style={styles.buttonText}>Clear All Characters</Text>
+            <Text style={styles.buttonText}>Clear All Data</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

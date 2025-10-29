@@ -92,14 +92,51 @@ export const deleteCharacter = async (id: string): Promise<boolean> => {
 };
 
 export const exportDataset = async (): Promise<string> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEY);
-  return data || '{"characters":[],"version":"1.0","lastUpdated":""}';
+  const characterData = await AsyncStorage.getItem(STORAGE_KEY);
+  const factionData = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
+
+  const characters = characterData
+    ? JSON.parse(characterData)
+    : { characters: [], version: '1.0', lastUpdated: '' };
+  const factions = factionData
+    ? JSON.parse(factionData)
+    : { factions: [], version: '1.0', lastUpdated: '' };
+
+  const combinedDataset = {
+    characters: characters.characters || [],
+    factions: factions.factions || [],
+    version: '1.0',
+    lastUpdated: new Date().toISOString(),
+  };
+
+  return JSON.stringify(combinedDataset);
 };
 
 export const importDataset = async (jsonData: string): Promise<boolean> => {
   try {
-    const dataset: CharacterDataset = JSON.parse(jsonData);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
+    const dataset = JSON.parse(jsonData);
+
+    // Handle character data
+    const characterDataset: CharacterDataset = {
+      characters: dataset.characters || [],
+      version: dataset.version || '1.0',
+      lastUpdated: dataset.lastUpdated || new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(characterDataset));
+
+    // Handle faction data if present
+    if (dataset.factions) {
+      const factionDataset: FactionDataset = {
+        factions: dataset.factions,
+        version: dataset.version || '1.0',
+        lastUpdated: dataset.lastUpdated || new Date().toISOString(),
+      };
+      await AsyncStorage.setItem(
+        FACTION_STORAGE_KEY,
+        JSON.stringify(factionDataset)
+      );
+    }
+
     return true;
   } catch {
     return false;
@@ -234,13 +271,15 @@ const mergeCharacterProperties = (
 export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
   try {
     const currentData = await loadCharacters();
-    const importedData: CharacterDataset = JSON.parse(jsonData);
+    const currentFactions = await loadFactions();
+    const importedData = JSON.parse(jsonData);
 
     const mergedCharacters = [...currentData];
     const addedCharacters: GameCharacter[] = [];
     const conflicts: MergeConflict[] = [];
 
-    for (const importedChar of importedData.characters) {
+    // Merge characters
+    for (const importedChar of importedData.characters || []) {
       const existingIndex = currentData.findIndex(
         current => current.id === importedChar.id
       );
@@ -272,6 +311,32 @@ export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
     }
 
     await saveCharacters(mergedCharacters);
+
+    // Merge factions
+    if (importedData.factions) {
+      const mergedFactions = [...currentFactions];
+      const existingFactionNames = new Set(currentFactions.map(f => f.name));
+
+      for (const importedFaction of importedData.factions) {
+        if (!existingFactionNames.has(importedFaction.name)) {
+          mergedFactions.push(importedFaction);
+        } else {
+          // Update existing faction if imported one has more recent update
+          const existingIndex = mergedFactions.findIndex(
+            f => f.name === importedFaction.name
+          );
+          if (
+            existingIndex >= 0 &&
+            importedFaction.updatedAt > mergedFactions[existingIndex].updatedAt
+          ) {
+            mergedFactions[existingIndex] = importedFaction;
+          }
+        }
+      }
+
+      await saveFactions(mergedFactions);
+    }
+
     return true;
   } catch (error) {
     console.error('Error merging datasets:', error);
@@ -285,13 +350,15 @@ export const mergeDatasetWithConflictResolution = async (
 ): Promise<MergeResult> => {
   try {
     const currentData = await loadCharacters();
-    const importedData: CharacterDataset = JSON.parse(jsonData);
+    const currentFactions = await loadFactions();
+    const importedData = JSON.parse(jsonData);
 
     const mergedCharacters = [...currentData];
     const addedCharacters: GameCharacter[] = [];
     const conflicts: MergeConflict[] = [];
 
-    for (const importedChar of importedData.characters) {
+    // Merge characters
+    for (const importedChar of importedData.characters || []) {
       const existingIndex = currentData.findIndex(
         current => current.id === importedChar.id
       );
@@ -323,6 +390,32 @@ export const mergeDatasetWithConflictResolution = async (
     }
 
     await saveCharacters(mergedCharacters);
+
+    // Merge factions
+    if (importedData.factions) {
+      const mergedFactions = [...currentFactions];
+      const existingFactionNames = new Set(currentFactions.map(f => f.name));
+
+      for (const importedFaction of importedData.factions) {
+        if (!existingFactionNames.has(importedFaction.name)) {
+          mergedFactions.push(importedFaction);
+        } else {
+          // Update existing faction if imported one has more recent update
+          const existingIndex = mergedFactions.findIndex(
+            f => f.name === importedFaction.name
+          );
+          if (
+            existingIndex >= 0 &&
+            importedFaction.updatedAt > mergedFactions[existingIndex].updatedAt
+          ) {
+            mergedFactions[existingIndex] = importedFaction;
+          }
+        }
+      }
+
+      await saveFactions(mergedFactions);
+    }
+
     return {
       success: true,
       conflicts,

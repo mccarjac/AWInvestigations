@@ -70,7 +70,7 @@ const exportCharacterDataWeb = async (): Promise<void> => {
 
     // Create a filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `character-data-${timestamp}.json`;
+    const filename = `character-faction-data-${timestamp}.json`;
 
     // Create blob and download link for web
     const blob = new Blob([jsonData], { type: 'application/json' });
@@ -87,21 +87,21 @@ const exportCharacterDataWeb = async (): Promise<void> => {
 
     Alert.alert(
       'Export Complete',
-      `Character data has been downloaded as ${filename}`,
+      `Character and faction data has been downloaded as ${filename}`,
       [{ text: 'OK' }]
     );
   } catch (error) {
     console.error('Export error:', error);
     Alert.alert(
       'Export Failed',
-      'Failed to export character data. Please try again.',
+      'Failed to export character and faction data. Please try again.',
       [{ text: 'OK' }]
     );
   }
 };
 
 /**
- * Export character data for native platforms
+ * Export character and faction data for native platforms
  */
 const exportCharacterDataNative = async (): Promise<void> => {
   try {
@@ -110,7 +110,7 @@ const exportCharacterDataNative = async (): Promise<void> => {
 
     // Create a filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `character-data-${timestamp}.json`;
+    const filename = `character-faction-data-${timestamp}.json`;
 
     // Write to a temporary file using legacy API
     const fileUri =
@@ -125,22 +125,24 @@ const exportCharacterDataNative = async (): Promise<void> => {
         dialogTitle: 'Export Character Data',
       });
     } else {
-      Alert.alert('Export Complete', `Character data exported to: ${fileUri}`, [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        'Export Complete',
+        `Character and faction data exported to: ${fileUri}`,
+        [{ text: 'OK' }]
+      );
     }
   } catch (error) {
     console.error('Export error:', error);
     Alert.alert(
       'Export Failed',
-      'Failed to export character data. Please try again.',
+      'Failed to export character and faction data. Please try again.',
       [{ text: 'OK' }]
     );
   }
 };
 
 /**
- * Export character data to a JSON file and share it
+ * Export character and faction data to a JSON file and share it
  */
 export const exportCharacterData = async (): Promise<void> => {
   if (Platform.OS === 'web') {
@@ -182,14 +184,14 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
               if (success) {
                 Alert.alert(
                   'Import Successful',
-                  'Character data has been imported successfully. All existing data has been replaced.',
+                  'Character and faction data has been imported successfully. All existing data has been replaced.',
                   [{ text: 'OK' }]
                 );
                 resolve(true);
               } else {
                 Alert.alert(
                   'Import Failed',
-                  'The selected file is not a valid character data file.',
+                  'The selected file is not a valid character and faction data file.',
                   [{ text: 'OK' }]
                 );
                 resolve(false);
@@ -265,14 +267,14 @@ const importCharacterDataNative = async (): Promise<boolean> => {
     if (success) {
       Alert.alert(
         'Import Successful',
-        'Character data has been imported successfully. All existing data has been replaced.',
+        'Character and faction data has been imported successfully. All existing data has been replaced.',
         [{ text: 'OK' }]
       );
       return true;
     } else {
       Alert.alert(
         'Import Failed',
-        'The selected file is not a valid character data file.',
+        'The selected file is not a valid character and faction data file.',
         [{ text: 'OK' }]
       );
       return false;
@@ -300,7 +302,7 @@ export const importCharacterData = async (): Promise<boolean> => {
 };
 
 /**
- * Merge character data for web platform
+ * Merge character and faction data for web platform
  */
 const mergeCharacterDataWeb = async (): Promise<boolean> => {
   return new Promise(resolve => {
@@ -336,7 +338,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
                           await handleMergeConflicts(result.conflicts);
                           Alert.alert(
                             'Merge Complete',
-                            `Successfully merged ${result.added.length} new characters and resolved conflicts for ${result.conflicts.length} existing characters.`,
+                            `Successfully merged ${result.added.length} new characters and factions, and resolved conflicts for ${result.conflicts.length} existing characters.`,
                             [{ text: 'OK' }]
                           );
                         },
@@ -347,7 +349,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
                         onPress: () => {
                           Alert.alert(
                             'Merge Complete',
-                            `Successfully merged ${result.added.length} new characters. Conflicts were resolved automatically by merging compatible properties.`,
+                            `Successfully merged ${result.added.length} new characters and factions. Conflicts were resolved automatically by merging compatible properties.`,
                             [{ text: 'OK' }]
                           );
                         },
@@ -357,7 +359,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
                 } else {
                   Alert.alert(
                     'Merge Successful',
-                    `Successfully merged ${result.added.length} new characters with no conflicts.`,
+                    `Successfully merged ${result.added.length} new characters and factions with no conflicts.`,
                     [{ text: 'OK' }]
                   );
                 }
@@ -374,7 +376,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
               console.error('Merge error:', error);
               Alert.alert(
                 'Merge Failed',
-                'Failed to merge character data. Please check the file format and try again.',
+                'Failed to merge character and faction data. Please check the file format and try again.',
                 [{ text: 'OK' }]
               );
               resolve(false);
@@ -385,7 +387,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
           console.error('Merge error:', error);
           Alert.alert(
             'Merge Failed',
-            'Failed to merge character data. Please try again.',
+            'Failed to merge character and faction data. Please try again.',
             [{ text: 'OK' }]
           );
           resolve(false);
@@ -406,7 +408,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
       console.error('Merge error:', error);
       Alert.alert(
         'Merge Failed',
-        'Failed to merge character data. Please try again.',
+        'Failed to merge character and faction data. Please try again.',
         [{ text: 'OK' }]
       );
       resolve(false);
@@ -415,7 +417,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
 };
 
 /**
- * Merge character data for native platforms
+ * Merge character and faction data for native platforms
  */
 const mergeCharacterDataNative = async (): Promise<boolean> => {
   try {
@@ -449,7 +451,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
                 await handleMergeConflicts(result_merge.conflicts);
                 Alert.alert(
                   'Merge Complete',
-                  `Successfully merged ${result_merge.added.length} new characters and resolved conflicts for ${result_merge.conflicts.length} existing characters.`,
+                  `Successfully merged ${result_merge.added.length} new characters and factions, and resolved conflicts for ${result_merge.conflicts.length} existing characters.`,
                   [{ text: 'OK' }]
                 );
               },
@@ -460,7 +462,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
               onPress: () => {
                 Alert.alert(
                   'Merge Complete',
-                  `Successfully merged ${result_merge.added.length} new characters. Conflicts were resolved automatically by merging compatible properties.`,
+                  `Successfully merged ${result_merge.added.length} new characters and factions. Conflicts were resolved automatically by merging compatible properties.`,
                   [{ text: 'OK' }]
                 );
               },
@@ -470,7 +472,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       } else {
         Alert.alert(
           'Merge Successful',
-          `Successfully merged ${result_merge.added.length} new characters with no conflicts.`,
+          `Successfully merged ${result_merge.added.length} new characters and factions with no conflicts.`,
           [{ text: 'OK' }]
         );
       }
@@ -487,7 +489,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     console.error('Merge error:', error);
     Alert.alert(
       'Merge Failed',
-      'Failed to merge character data. Please check the file format and try again.',
+      'Failed to merge character and faction data. Please check the file format and try again.',
       [{ text: 'OK' }]
     );
     return false;
@@ -495,7 +497,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
 };
 
 /**
- * Import and merge character data from a JSON file (keeps existing data)
+ * Import and merge character and faction data from a JSON file (keeps existing data)
  */
 export const mergeCharacterData = async (): Promise<boolean> => {
   if (Platform.OS === 'web') {
@@ -510,28 +512,32 @@ export const mergeCharacterData = async (): Promise<boolean> => {
  */
 export const showImportOptions = (): void => {
   console.log('showImportOptions called');
-  Alert.alert('Import Options', 'Choose how to import character data:', [
-    {
-      text: 'Cancel',
-      style: 'cancel',
-      onPress: () => console.log('Import cancelled'),
-    },
-    {
-      text: 'Replace All',
-      onPress: async () => {
-        console.log('Replace All selected');
-        await importCharacterData();
+  Alert.alert(
+    'Import Options',
+    'Choose how to import character and faction data:',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+        onPress: () => console.log('Import cancelled'),
       },
-      style: 'destructive',
-    },
-    {
-      text: 'Merge',
-      onPress: async () => {
-        console.log('Merge selected');
-        await mergeCharacterData();
+      {
+        text: 'Replace All',
+        onPress: async () => {
+          console.log('Replace All selected');
+          await importCharacterData();
+        },
+        style: 'destructive',
       },
-    },
-  ]);
+      {
+        text: 'Merge',
+        onPress: async () => {
+          console.log('Merge selected');
+          await mergeCharacterData();
+        },
+      },
+    ]
+  );
 };
 
 /**
