@@ -47,6 +47,7 @@
     "react-native-svg": "15.12.1",
     "react-native-svg-web": "^1.0.9",
     "react-native-web": "^0.21.0",
+    "react-native-worklets-core": "^1.6.2",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
