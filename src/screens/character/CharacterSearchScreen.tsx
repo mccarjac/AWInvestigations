@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   AVAILABLE_DISTINCTIONS,
   AVAILABLE_RECIPES,
   PerkTag,
+  RecipeId,
 } from '@/models/gameData';
 import {
   GameCharacter,
@@ -33,7 +34,7 @@ const getAllTags = (): PerkTag[] => {
   const tagSet = new Set(AVAILABLE_PERKS.map(perk => perk.tag));
   return Array.from(tagSet);
 };
-import { loadCharacters } from '@/utils/characterStorage';
+import { loadCharacters, loadFactions } from '@/utils/characterStorage';
 
 interface SearchCriteria {
   perkId?: PerkId;
@@ -42,7 +43,7 @@ interface SearchCriteria {
   minTagScore?: number;
   factionName?: string;
   factionStanding?: RelationshipStanding;
-  recipeSearch?: string;
+  recipeId?: RecipeId;
   presentStatus?: 'present' | 'absent' | 'any';
   retiredStatus?: 'active' | 'retired' | 'any';
 }
@@ -54,6 +55,17 @@ export const CharacterSearchScreen: React.FC = () => {
     retiredStatus: 'active', // Default to searching only active (non-retired) characters
   });
   const [searchResults, setSearchResults] = useState<GameCharacter[]>([]);
+  const [availableFactions, setAvailableFactions] = useState<string[]>([]);
+
+  // Load factions on mount
+  useEffect(() => {
+    const loadAvailableFactions = async () => {
+      const factions = await loadFactions();
+      const factionNames = factions.map(f => f.name).sort();
+      setAvailableFactions(factionNames);
+    };
+    loadAvailableFactions();
+  }, []);
 
   const calculateTagScore = (
     character: GameCharacter,
@@ -84,24 +96,13 @@ export const CharacterSearchScreen: React.FC = () => {
       }
 
       // Check recipes
-      if (searchCriteria.recipeSearch) {
-        const query = searchCriteria.recipeSearch.toLowerCase();
+      if (searchCriteria.recipeId) {
         const characterPerks = AVAILABLE_PERKS.filter(
           perk => character.perkIds.includes(perk.id) && perk.recipeIds
         );
 
         const hasMatchingRecipe = characterPerks.some(perk =>
-          perk.recipeIds?.some(recipeId => {
-            const recipe = AVAILABLE_RECIPES.find(r => r.id === recipeId);
-            return (
-              recipe &&
-              (recipe.name.toLowerCase().includes(query) ||
-                recipe.description.toLowerCase().includes(query) ||
-                recipe.materials.some(material =>
-                  material.toLowerCase().includes(query)
-                ))
-            );
-          })
+          perk.recipeIds?.includes(searchCriteria.recipeId!)
         );
 
         if (!hasMatchingRecipe) {
@@ -122,9 +123,7 @@ export const CharacterSearchScreen: React.FC = () => {
         const matchingFaction = character.factions.find(faction => {
           if (
             searchCriteria.factionName &&
-            !faction.name
-              .toLowerCase()
-              .includes(searchCriteria.factionName.toLowerCase())
+            faction.name !== searchCriteria.factionName
           ) {
             return false;
           }
@@ -256,34 +255,50 @@ export const CharacterSearchScreen: React.FC = () => {
         </View>
 
         <View style={styles.criteriaItem}>
-          <Text style={styles.label}>Recipe Search</Text>
-          <TextInput
-            style={styles.input}
-            value={searchCriteria.recipeSearch || ''}
-            onChangeText={value =>
+          <Text style={styles.label}>Recipe</Text>
+          <Picker
+            selectedValue={searchCriteria.recipeId}
+            style={styles.picker}
+            onValueChange={value =>
               setSearchCriteria(prev => ({
                 ...prev,
-                recipeSearch: value || undefined,
+                recipeId: value || undefined,
               }))
             }
-            placeholder="Search recipes or materials..."
-          />
+          >
+            <Picker.Item label="Any Recipe" value="" />
+            {AVAILABLE_RECIPES.map(recipe => (
+              <Picker.Item
+                key={recipe.id}
+                label={recipe.name}
+                value={recipe.id}
+              />
+            ))}
+          </Picker>
         </View>
 
         <View style={styles.criteriaItem}>
           <Text style={styles.label}>Faction</Text>
           <View style={styles.factionContainer}>
-            <TextInput
-              style={[styles.input, { flex: 2 }]}
-              value={searchCriteria.factionName || ''}
-              onChangeText={value =>
+            <Picker
+              selectedValue={searchCriteria.factionName}
+              style={[styles.picker, { flex: 2 }]}
+              onValueChange={value =>
                 setSearchCriteria(prev => ({
                   ...prev,
                   factionName: value || undefined,
                 }))
               }
-              placeholder="Faction Name"
-            />
+            >
+              <Picker.Item label="Any Faction" value="" />
+              {availableFactions.map(factionName => (
+                <Picker.Item
+                  key={factionName}
+                  label={factionName}
+                  value={factionName}
+                />
+              ))}
+            </Picker>
             <Picker
               selectedValue={searchCriteria.factionStanding}
               style={[styles.picker, { flex: 1 }]}

@@ -411,12 +411,30 @@ export const CharacterFormScreen: React.FC = () => {
                       styles.selectedItem,
                   ]}
                   onPress={() => {
-                    const newDistinctionIds = form.distinctionIds.includes(
+                    const isSelected = form.distinctionIds.includes(
                       distinction.id
-                    )
-                      ? form.distinctionIds.filter(id => id !== distinction.id)
-                      : [...form.distinctionIds, distinction.id];
-                    handleChange('distinctionIds', newDistinctionIds);
+                    );
+
+                    if (isSelected) {
+                      // Allow deselection
+                      const newDistinctionIds = form.distinctionIds.filter(
+                        id => id !== distinction.id
+                      );
+                      handleChange('distinctionIds', newDistinctionIds);
+                    } else if (form.distinctionIds.length < 3) {
+                      // Allow selection if under limit
+                      const newDistinctionIds = [
+                        ...form.distinctionIds,
+                        distinction.id,
+                      ];
+                      handleChange('distinctionIds', newDistinctionIds);
+                    } else {
+                      // Show alert when limit reached
+                      Alert.alert(
+                        'Maximum Reached',
+                        'You can only select up to 3 distinctions.'
+                      );
+                    }
                   }}
                 >
                   <Text style={styles.itemName}>{distinction.name}</Text>

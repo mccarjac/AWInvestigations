@@ -13,7 +13,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
-import { RelationshipStanding } from '@models/types';
 import { createFaction } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -26,7 +25,6 @@ type FactionFormNavigationProp = StackNavigationProp<
 interface FactionFormData {
   name: string;
   description: string;
-  defaultStanding: RelationshipStanding;
 }
 
 export const FactionFormScreen: React.FC = () => {
@@ -35,7 +33,6 @@ export const FactionFormScreen: React.FC = () => {
   const [formData, setFormData] = useState<FactionFormData>({
     name: '',
     description: '',
-    defaultStanding: RelationshipStanding.Neutral,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +62,6 @@ export const FactionFormScreen: React.FC = () => {
       const success = await createFaction({
         name: formData.name.trim(),
         description: formData.description.trim(),
-        defaultStanding: formData.defaultStanding,
       });
 
       if (success) {
@@ -107,48 +103,6 @@ export const FactionFormScreen: React.FC = () => {
         },
       ]
     );
-  };
-
-  const renderStandingOption = (
-    standing: RelationshipStanding,
-    label: string
-  ) => (
-    <TouchableOpacity
-      key={standing}
-      style={[
-        styles.standingOption,
-        formData.defaultStanding === standing && styles.standingOptionSelected,
-      ]}
-      onPress={() => setFormData({ ...formData, defaultStanding: standing })}
-    >
-      <View style={[styles.standingIndicator, getStandingStyle(standing)]} />
-      <Text
-        style={[
-          styles.standingOptionText,
-          formData.defaultStanding === standing &&
-            styles.standingOptionTextSelected,
-        ]}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const getStandingStyle = (standing: RelationshipStanding) => {
-    switch (standing) {
-      case RelationshipStanding.Ally:
-        return styles.standingAllied;
-      case RelationshipStanding.Friend:
-        return styles.standingFriendly;
-      case RelationshipStanding.Neutral:
-        return styles.standingNeutral;
-      case RelationshipStanding.Hostile:
-        return styles.standingHostile;
-      case RelationshipStanding.Enemy:
-        return styles.standingEnemy;
-      default:
-        return styles.standingNeutral;
-    }
   };
 
   return (
@@ -201,20 +155,6 @@ export const FactionFormScreen: React.FC = () => {
             <Text style={styles.characterCount}>
               {formData.description.length}/500 characters
             </Text>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Default Standing</Text>
-            <Text style={styles.inputDescription}>
-              Choose the default relationship standing for new members
-            </Text>
-            <View style={styles.standingOptions}>
-              {renderStandingOption(RelationshipStanding.Ally, 'Allied')}
-              {renderStandingOption(RelationshipStanding.Friend, 'Friendly')}
-              {renderStandingOption(RelationshipStanding.Neutral, 'Neutral')}
-              {renderStandingOption(RelationshipStanding.Hostile, 'Hostile')}
-              {renderStandingOption(RelationshipStanding.Enemy, 'Enemy')}
-            </View>
           </View>
         </View>
       </ScrollView>
@@ -272,12 +212,6 @@ const styles = StyleSheet.create({
     ...commonStyles.text.label,
     marginBottom: 8,
   },
-  inputDescription: {
-    fontSize: 14,
-    color: themeColors.text.secondary,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
   required: {
     color: themeColors.accent.danger,
   },
@@ -301,52 +235,6 @@ const styles = StyleSheet.create({
     color: themeColors.text.muted,
     textAlign: 'right',
     marginTop: 6,
-  },
-  standingOptions: {
-    gap: 12,
-  },
-  standingOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: themeColors.surface,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: 12,
-    padding: 16,
-  },
-  standingOptionSelected: {
-    borderColor: themeColors.accent.primary,
-    backgroundColor: themeColors.elevated,
-  },
-  standingIndicator: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  standingOptionText: {
-    fontSize: 16,
-    color: themeColors.text.secondary,
-    fontWeight: '500',
-  },
-  standingOptionTextSelected: {
-    color: themeColors.text.primary,
-    fontWeight: '600',
-  },
-  standingAllied: {
-    backgroundColor: themeColors.standing.allied,
-  },
-  standingFriendly: {
-    backgroundColor: themeColors.standing.friendly,
-  },
-  standingNeutral: {
-    backgroundColor: themeColors.standing.neutral,
-  },
-  standingHostile: {
-    backgroundColor: themeColors.standing.hostile,
-  },
-  standingEnemy: {
-    backgroundColor: themeColors.standing.enemy,
   },
   buttonContainer: {
     flexDirection: 'row',

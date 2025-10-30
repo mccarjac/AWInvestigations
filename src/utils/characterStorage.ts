@@ -589,7 +589,6 @@ export const deleteFactionCompletely = async (
 export const createFaction = async (factionData: {
   name: string;
   description: string;
-  defaultStanding: string;
 }): Promise<boolean> => {
   const existingFactions = await loadFactions();
 
