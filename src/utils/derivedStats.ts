@@ -8,6 +8,7 @@ import { AVAILABLE_PERKS, PerkTag, TAG_SCORE_BONUSES } from '@/models/gameData';
 export interface CharacterDerivedStats {
   maxHealth: number;
   maxLimit: number;
+  tagScores?: Map<PerkTag, number>;
 }
 
 export const calculateDerivedStats = (
@@ -30,20 +31,18 @@ export const calculateDerivedStats = (
   characterPerks.forEach(perk => {
     // Perfect Mutants don't get tag score bonuses from MUTANT_SPECIES restricted perks
     if (
-      character.species === 'Perfect Mutant' &&
-      perk.allowedSpecies &&
-      perk.allowedSpecies.length === MUTANT_SPECIES.length &&
-      MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))
+      character.species !== 'Perfect Mutant' ||
+      !perk.allowedSpecies ||
+      !(
+        perk.allowedSpecies.length === MUTANT_SPECIES.length &&
+        MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))
+      )
     ) {
-      return; // Skip this perk for tag score calculation
+      const currentScore = tagScores.get(perk.tag) || 0;
+      tagScores.set(perk.tag, currentScore + 1);
     }
 
-    const currentScore = tagScores.get(perk.tag) || 0;
-    tagScores.set(perk.tag, currentScore + 1);
-  });
-
-  // Apply perk modifiers
-  characterPerks.forEach(perk => {
+    // Apply perk modifiers
     if (perk.statModifiers) {
       if (perk.statModifiers.health) {
         maxHealth += perk.statModifiers.health;
@@ -69,6 +68,35 @@ export const calculateDerivedStats = (
     });
   });
 
+  // Apply cyberware modifiers
+  if (character.cyberware && character.cyberware.length > 0) {
+    character.cyberware.forEach(cyber => {
+      if (cyber.statModifiers) {
+        if (cyber.statModifiers.healthModifier) {
+          maxHealth += cyber.statModifiers.healthModifier;
+        }
+        if (cyber.statModifiers.limitModifier) {
+          maxLimit += cyber.statModifiers.limitModifier;
+        }
+        if (cyber.statModifiers.healthCapModifier) {
+          baseStats.healthCap += cyber.statModifiers.healthCapModifier;
+        }
+        if (cyber.statModifiers.limitCapModifier) {
+          baseStats.limitCap += cyber.statModifiers.limitCapModifier;
+        }
+        // Tag modifiers can be added to tag scores if needed
+        if (cyber.statModifiers.tagModifiers) {
+          Object.entries(cyber.statModifiers.tagModifiers).forEach(
+            ([tag, modifier]) => {
+              const currentScore = tagScores.get(tag as PerkTag) || 0;
+              tagScores.set(tag as PerkTag, currentScore + modifier);
+            }
+          );
+        }
+      }
+    });
+  }
+
   // Apply species caps
   maxHealth = Math.min(maxHealth, baseStats.healthCap);
   maxLimit = Math.min(maxLimit, baseStats.limitCap);
@@ -76,5 +104,6 @@ export const calculateDerivedStats = (
   return {
     maxHealth,
     maxLimit,
+    tagScores,
   };
 };

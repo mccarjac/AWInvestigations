@@ -19,10 +19,9 @@ import {
   AVAILABLE_PERKS,
   AVAILABLE_DISTINCTIONS,
   AVAILABLE_RECIPES,
-  PerkTag,
 } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
-import { MUTANT_SPECIES, GameCharacter } from '@/models/types';
+import { GameCharacter } from '@/models/types';
 import { loadCharacters } from '@/utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -78,6 +77,8 @@ export const CharacterDetailScreen: React.FC = () => {
     }
   };
 
+  const derivedStats = calculateDerivedStats(character);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -95,40 +96,15 @@ export const CharacterDetailScreen: React.FC = () => {
     });
   }, [navigation, character]);
 
-  const calculateTagScores = () => {
-    const scores = new Map<PerkTag, number>();
-    const characterPerks = AVAILABLE_PERKS.filter(perk =>
-      character.perkIds.includes(perk.id)
-    );
-
-    characterPerks.forEach(perk => {
-      if (
-        character.species === 'Perfect Mutant' &&
-        perk.allowedSpecies &&
-        MUTANT_SPECIES.every(species => perk.allowedSpecies!.includes(species))
-      ) {
-        console.log('Skipping perk for tag score calculation');
-        return; // Skip this perk for tag score calculation
-      }
-
-      const currentScore = scores.get(perk.tag) || 0;
-      scores.set(perk.tag, currentScore + 1);
-    });
-
-    return Array.from(scores.entries())
-      .filter(([_, score]) => score > 0)
-      .sort((a, b) => b[1] - a[1]); // Sort by score descending
-  };
-
   const renderTagScores = () => {
-    const tagScores = calculateTagScores();
-    if (tagScores.length === 0) return null;
+    const tagScores = derivedStats.tagScores;
+    if (!tagScores || tagScores.size === 0) return null;
 
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Tag Scores</Text>
         <View style={styles.tagScoresContainer}>
-          {tagScores.map(([tag, score]) => (
+          {Array.from(tagScores.entries()).map(([tag, score]) => (
             <View key={tag} style={styles.tagScoreItem}>
               <Text style={styles.tagName}>{tag}</Text>
               <Text style={styles.tagScore}>{score}</Text>
@@ -266,6 +242,67 @@ export const CharacterDetailScreen: React.FC = () => {
     );
   };
 
+  const renderCyberware = () => {
+    if (!character.cyberware || character.cyberware.length === 0) {
+      return null;
+    }
+
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Cyberware</Text>
+        {character.cyberware.map((cyber, index) => (
+          <View key={index} style={styles.itemContainer}>
+            <Text style={styles.titleText}>{cyber.name}</Text>
+            <Text style={styles.descriptionText}>{cyber.description}</Text>
+            {cyber.statModifiers && (
+              <View style={styles.cyberwareModifiersContainer}>
+                <Text style={styles.cyberwareModifiersTitle}>
+                  Stat Modifiers:
+                </Text>
+                {cyber.statModifiers.healthModifier !== undefined && (
+                  <Text style={styles.cyberwareModifier}>
+                    • Health:{' '}
+                    {cyber.statModifiers.healthModifier > 0 ? '+' : ''}
+                    {cyber.statModifiers.healthModifier}
+                  </Text>
+                )}
+                {cyber.statModifiers.limitModifier !== undefined && (
+                  <Text style={styles.cyberwareModifier}>
+                    • Limit: {cyber.statModifiers.limitModifier > 0 ? '+' : ''}
+                    {cyber.statModifiers.limitModifier}
+                  </Text>
+                )}
+                {cyber.statModifiers.healthCapModifier !== undefined && (
+                  <Text style={styles.cyberwareModifier}>
+                    • Health Cap:{' '}
+                    {cyber.statModifiers.healthCapModifier > 0 ? '+' : ''}
+                    {cyber.statModifiers.healthCapModifier}
+                  </Text>
+                )}
+                {cyber.statModifiers.limitCapModifier !== undefined && (
+                  <Text style={styles.cyberwareModifier}>
+                    • Limit Cap:{' '}
+                    {cyber.statModifiers.limitCapModifier > 0 ? '+' : ''}
+                    {cyber.statModifiers.limitCapModifier}
+                  </Text>
+                )}
+                {cyber.statModifiers.tagModifiers &&
+                  Object.entries(cyber.statModifiers.tagModifiers).map(
+                    ([tag, modifier]) => (
+                      <Text key={tag} style={styles.cyberwareModifier}>
+                        • {tag} Tag Score: {modifier > 0 ? '+' : ''}
+                        {modifier}
+                      </Text>
+                    )
+                  )}
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <View style={{ height: 882, overflow: 'scroll' }}>
       <ScrollView
@@ -298,28 +335,21 @@ export const CharacterDetailScreen: React.FC = () => {
               </View>
             )}
             <View style={styles.statsContainer}>
-              {(() => {
-                const { maxHealth, maxLimit } =
-                  calculateDerivedStats(character);
-                return (
-                  <>
-                    <Text style={styles.statItem}>
-                      Max Health:{' '}
-                      <Text style={styles.statValue}>{maxHealth}</Text>
-                    </Text>
-                    <Text style={styles.statItem}>
-                      Max Limit:{' '}
-                      <Text style={styles.statValue}>{maxLimit}</Text>
-                    </Text>
-                  </>
-                );
-              })()}
+              <Text style={styles.statItem}>
+                Max Health:{' '}
+                <Text style={styles.statValue}>{derivedStats.maxHealth}</Text>
+              </Text>
+              <Text style={styles.statItem}>
+                Max Limit:{' '}
+                <Text style={styles.statValue}>{derivedStats.maxLimit}</Text>
+              </Text>
             </View>
           </View>
         </View>
         {renderTagScores()}
         {renderPerks()}
         {renderDistinctions()}
+        {renderCyberware()}
         {renderFactions()}
         {renderRelationships()}
         {character.notes && (
@@ -501,5 +531,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.2,
+  },
+  cyberwareModifiersContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: themeColors.border,
+  },
+  cyberwareModifiersTitle: {
+    ...commonStyles.text.label,
+    fontSize: 14,
+    marginBottom: 8,
+    color: themeColors.accent.primary,
+  },
+  cyberwareModifier: {
+    ...commonStyles.text.body,
+    fontSize: 14,
+    marginLeft: 8,
+    marginBottom: 4,
+    color: themeColors.text.secondary,
   },
 });

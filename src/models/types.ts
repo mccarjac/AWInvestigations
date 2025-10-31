@@ -1,4 +1,4 @@
-import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from './gameData';
+import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, PerkTag } from './gameData';
 
 export type PerkId = (typeof AVAILABLE_PERKS)[number]['id'];
 export type DistinctionId = (typeof AVAILABLE_DISTINCTIONS)[number]['id'];
@@ -206,6 +206,20 @@ export interface Relationship {
   customName?: string;
 }
 
+export interface CyberwareStatModifiers {
+  healthModifier?: number;
+  limitModifier?: number;
+  healthCapModifier?: number;
+  limitCapModifier?: number;
+  tagModifiers?: Record<PerkTag, number>;
+}
+
+export interface Cyberware {
+  name: string;
+  description: string;
+  statModifiers?: CyberwareStatModifiers;
+}
+
 export interface GameCharacter {
   id: string;
   name: string;
@@ -218,6 +232,7 @@ export interface GameCharacter {
   notes?: string;
   location?: Location;
   occupation?: string;
+  cyberware?: Cyberware[];
   present?: boolean;
   retired?: boolean;
   createdAt: string;

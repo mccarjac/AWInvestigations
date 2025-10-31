@@ -41,3 +41,4 @@ yarn-error.*
 /android
 
 package-lock.json
+yarn.lock

@@ -35,7 +35,11 @@ import {
   saveCharacters,
   loadFactions,
 } from '@utils/characterStorage';
-import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '@models/gameData';
+import {
+  AVAILABLE_PERKS,
+  AVAILABLE_DISTINCTIONS,
+  PerkTag,
+} from '@models/gameData';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
@@ -69,6 +73,7 @@ export const CharacterFormScreen: React.FC = () => {
           imageUri: editingCharacter.imageUri,
           location: editingCharacter.location,
           retired: editingCharacter.retired,
+          cyberware: [...(editingCharacter.cyberware || [])],
         }
       : {
           name: '',
@@ -82,6 +87,7 @@ export const CharacterFormScreen: React.FC = () => {
           imageUri: undefined,
           location: Location.Downtown,
           retired: false,
+          cyberware: [],
         }
   );
 
@@ -442,6 +448,303 @@ export const CharacterFormScreen: React.FC = () => {
               ))}
             </>
           )}
+        </View>
+
+        <View style={styles.formSection}>
+          <Text style={styles.label}>Cyberware</Text>
+          {form.cyberware &&
+            form.cyberware.map((cyber, index) => (
+              <View key={index} style={styles.cyberwareContainer}>
+                <View style={styles.cyberwareHeaderRow}>
+                  <TextInput
+                    style={styles.cyberwareName}
+                    value={cyber.name}
+                    onChangeText={value => {
+                      const newCyberware = [...(form.cyberware || [])];
+                      newCyberware[index] = { ...cyber, name: value };
+                      handleChange('cyberware', newCyberware);
+                    }}
+                    placeholder="Cyberware name"
+                  />
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => {
+                      const newCyberware = (form.cyberware || []).filter(
+                        (_, i) => i !== index
+                      );
+                      handleChange('cyberware', newCyberware);
+                    }}
+                  >
+                    <Text style={styles.removeButtonText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput
+                  style={styles.cyberwareDescription}
+                  value={cyber.description}
+                  onChangeText={value => {
+                    const newCyberware = [...(form.cyberware || [])];
+                    newCyberware[index] = { ...cyber, description: value };
+                    handleChange('cyberware', newCyberware);
+                  }}
+                  placeholder="Description"
+                  multiline
+                />
+                <View style={styles.cyberwareModifiersSection}>
+                  <Text style={styles.cyberwareModifiersLabel}>
+                    Stat Modifiers (optional):
+                  </Text>
+                  <View style={styles.modifierRow}>
+                    <View style={styles.modifierInput}>
+                      <Text style={styles.modifierLabel}>Health:</Text>
+                      <TextInput
+                        style={styles.modifierField}
+                        value={
+                          cyber.statModifiers?.healthModifier?.toString() || ''
+                        }
+                        onChangeText={value => {
+                          const newCyberware = [...(form.cyberware || [])];
+                          const numValue =
+                            value === '' ? undefined : parseInt(value) || 0;
+                          newCyberware[index] = {
+                            ...cyber,
+                            statModifiers: {
+                              ...cyber.statModifiers,
+                              healthModifier: numValue,
+                            },
+                          };
+                          handleChange('cyberware', newCyberware);
+                        }}
+                        placeholder="0"
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <View style={styles.modifierInput}>
+                      <Text style={styles.modifierLabel}>Limit:</Text>
+                      <TextInput
+                        style={styles.modifierField}
+                        value={
+                          cyber.statModifiers?.limitModifier?.toString() || ''
+                        }
+                        onChangeText={value => {
+                          const newCyberware = [...(form.cyberware || [])];
+                          const numValue =
+                            value === '' ? undefined : parseInt(value) || 0;
+                          newCyberware[index] = {
+                            ...cyber,
+                            statModifiers: {
+                              ...cyber.statModifiers,
+                              limitModifier: numValue,
+                            },
+                          };
+                          handleChange('cyberware', newCyberware);
+                        }}
+                        placeholder="0"
+                        keyboardType="numeric"
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.modifierRow}>
+                    <View style={styles.modifierInput}>
+                      <Text style={styles.modifierLabel}>Health Cap:</Text>
+                      <TextInput
+                        style={styles.modifierField}
+                        value={
+                          cyber.statModifiers?.healthCapModifier?.toString() ||
+                          ''
+                        }
+                        onChangeText={value => {
+                          const newCyberware = [...(form.cyberware || [])];
+                          const numValue =
+                            value === '' ? undefined : parseInt(value) || 0;
+                          newCyberware[index] = {
+                            ...cyber,
+                            statModifiers: {
+                              ...cyber.statModifiers,
+                              healthCapModifier: numValue,
+                            },
+                          };
+                          handleChange('cyberware', newCyberware);
+                        }}
+                        placeholder="0"
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <View style={styles.modifierInput}>
+                      <Text style={styles.modifierLabel}>Limit Cap:</Text>
+                      <TextInput
+                        style={styles.modifierField}
+                        value={
+                          cyber.statModifiers?.limitCapModifier?.toString() ||
+                          ''
+                        }
+                        onChangeText={value => {
+                          const newCyberware = [...(form.cyberware || [])];
+                          const numValue =
+                            value === '' ? undefined : parseInt(value) || 0;
+                          newCyberware[index] = {
+                            ...cyber,
+                            statModifiers: {
+                              ...cyber.statModifiers,
+                              limitCapModifier: numValue,
+                            },
+                          };
+                          handleChange('cyberware', newCyberware);
+                        }}
+                        placeholder="0"
+                        keyboardType="numeric"
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.tagModifiersSection}>
+                    <Text style={styles.tagModifiersLabel}>
+                      Tag Score Modifiers (optional):
+                    </Text>
+                    <View style={styles.tagModifiersList}>
+                      {Object.values(PerkTag).map(tag => {
+                        const currentValue =
+                          cyber.statModifiers?.tagModifiers?.[tag];
+                        if (currentValue === undefined && !cyber.statModifiers)
+                          return null;
+
+                        return (
+                          <View key={tag} style={styles.tagModifierRow}>
+                            <Text style={styles.tagModifierName}>{tag}:</Text>
+                            <TextInput
+                              style={styles.tagModifierField}
+                              value={currentValue?.toString() || ''}
+                              onChangeText={value => {
+                                const newCyberware = [
+                                  ...(form.cyberware || []),
+                                ];
+                                const numValue =
+                                  value === ''
+                                    ? undefined
+                                    : parseInt(value) || 0;
+
+                                const currentTagModifiers = {
+                                  ...(cyber.statModifiers?.tagModifiers || {}),
+                                };
+
+                                if (numValue === undefined) {
+                                  delete currentTagModifiers[tag];
+                                } else {
+                                  currentTagModifiers[tag] = numValue;
+                                }
+
+                                newCyberware[index] = {
+                                  ...cyber,
+                                  statModifiers: {
+                                    ...cyber.statModifiers,
+                                    tagModifiers:
+                                      Object.keys(currentTagModifiers).length >
+                                      0
+                                        ? (currentTagModifiers as Record<
+                                            PerkTag,
+                                            number
+                                          >)
+                                        : undefined,
+                                  },
+                                };
+                                handleChange('cyberware', newCyberware);
+                              }}
+                              placeholder="0"
+                              keyboardType="numeric"
+                            />
+                            {currentValue !== undefined && (
+                              <TouchableOpacity
+                                style={styles.tagModifierRemove}
+                                onPress={() => {
+                                  const newCyberware = [
+                                    ...(form.cyberware || []),
+                                  ];
+                                  const currentTagModifiers = {
+                                    ...(cyber.statModifiers?.tagModifiers ||
+                                      {}),
+                                  };
+                                  delete currentTagModifiers[tag];
+
+                                  newCyberware[index] = {
+                                    ...cyber,
+                                    statModifiers: {
+                                      ...cyber.statModifiers,
+                                      tagModifiers:
+                                        Object.keys(currentTagModifiers)
+                                          .length > 0
+                                          ? (currentTagModifiers as Record<
+                                              PerkTag,
+                                              number
+                                            >)
+                                          : undefined,
+                                    },
+                                  };
+                                  handleChange('cyberware', newCyberware);
+                                }}
+                              >
+                                <Text style={styles.tagModifierRemoveText}>
+                                  ×
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.addTagModifierButton}
+                      onPress={() => {
+                        // Find first tag that doesn't have a modifier
+                        const currentTagModifiers =
+                          cyber.statModifiers?.tagModifiers || {};
+                        const availableTags = Object.values(PerkTag).filter(
+                          tag => !(tag in currentTagModifiers)
+                        );
+
+                        if (availableTags.length > 0) {
+                          const newCyberware = [...(form.cyberware || [])];
+                          const newTagModifiers = {
+                            ...currentTagModifiers,
+                            [availableTags[0]]: 1,
+                          } as Record<PerkTag, number>;
+
+                          newCyberware[index] = {
+                            ...cyber,
+                            statModifiers: {
+                              ...cyber.statModifiers,
+                              tagModifiers: newTagModifiers,
+                            },
+                          };
+                          handleChange('cyberware', newCyberware);
+                        } else {
+                          Alert.alert(
+                            'All Tags Added',
+                            'All available tags already have modifiers.'
+                          );
+                        }
+                      }}
+                    >
+                      <Text style={styles.addTagModifierButtonText}>
+                        + Add Tag Modifier
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              handleChange('cyberware', [
+                ...(form.cyberware || []),
+                {
+                  name: '',
+                  description: '',
+                  statModifiers: {},
+                },
+              ]);
+            }}
+          >
+            <Text style={styles.addButtonText}>Add Cyberware</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.formSection}>
@@ -931,5 +1234,139 @@ const styles = StyleSheet.create({
     color: themeColors.text.secondary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  cyberwareContainer: {
+    backgroundColor: themeColors.elevated,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  cyberwareHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  cyberwareName: {
+    ...commonStyles.input.base,
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    fontWeight: '600',
+  },
+  cyberwareDescription: {
+    ...commonStyles.input.base,
+    padding: 12,
+    borderRadius: 8,
+    minHeight: 60,
+    textAlignVertical: 'top',
+    marginBottom: 12,
+  },
+  cyberwareModifiersSection: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: themeColors.border,
+  },
+  cyberwareModifiersLabel: {
+    ...commonStyles.text.label,
+    fontSize: 14,
+    marginBottom: 12,
+    color: themeColors.accent.primary,
+  },
+  modifierRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  modifierInput: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modifierLabel: {
+    ...commonStyles.text.label,
+    fontSize: 13,
+    marginBottom: 0,
+    minWidth: 80,
+  },
+  modifierField: {
+    ...commonStyles.input.base,
+    flex: 1,
+    padding: 8,
+    borderRadius: 6,
+    textAlign: 'center',
+  },
+  tagModifiersSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: themeColors.border,
+  },
+  tagModifiersLabel: {
+    ...commonStyles.text.label,
+    fontSize: 14,
+    marginBottom: 12,
+    color: themeColors.accent.secondary,
+  },
+  tagModifiersList: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  tagModifierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: themeColors.surface,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  tagModifierName: {
+    ...commonStyles.text.label,
+    fontSize: 13,
+    marginBottom: 0,
+    minWidth: 90,
+    color: themeColors.text.primary,
+  },
+  tagModifierField: {
+    ...commonStyles.input.base,
+    flex: 1,
+    padding: 8,
+    borderRadius: 6,
+    textAlign: 'center',
+    minWidth: 60,
+  },
+  tagModifierRemove: {
+    backgroundColor: themeColors.status.error,
+    borderRadius: 4,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tagModifierRemoveText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  addTagModifierButton: {
+    backgroundColor: themeColors.surface,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.accent.secondary,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  addTagModifierButtonText: {
+    ...commonStyles.text.label,
+    fontSize: 13,
+    marginBottom: 0,
+    color: themeColors.accent.secondary,
   },
 });
