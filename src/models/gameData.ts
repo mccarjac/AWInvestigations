@@ -1741,7 +1741,7 @@ export const AVAILABLE_DISTINCTIONS: Distinction[] = [
   },
   {
     id: 'd23',
-    name: 'Loss Prevention.exe',
+    name: 'Loss Prevention.EXE',
     description:
       'You have lingering programs to stop property damage. You cannot cause damage to bot faction members.',
     allowedSpecies: [...ROBOTIC_SPECIES],

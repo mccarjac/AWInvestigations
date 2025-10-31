@@ -69,7 +69,10 @@ const exportCharacterDataWeb = async (): Promise<void> => {
     const jsonData = await exportDataset();
 
     // Create a filename with timestamp
-    const timestamp = new Date().toISOString().split('T')[0];
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/:/g, '-')
+      .replace(/\..+/, '');
     const filename = `character-faction-data-${timestamp}.json`;
 
     // Create blob and download link for web
@@ -109,7 +112,10 @@ const exportCharacterDataNative = async (): Promise<void> => {
     const jsonData = await exportDataset();
 
     // Create a filename with timestamp
-    const timestamp = new Date().toISOString().split('T')[0];
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/:/g, '-')
+      .replace(/\..+/, '');
     const filename = `character-faction-data-${timestamp}.json`;
 
     // Write to a temporary file using legacy API

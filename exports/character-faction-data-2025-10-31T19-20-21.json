@@ -1,0 +1,2176 @@
+{
+  "characters": [
+    {
+      "id": "csv_1761871486600_we42fhraj",
+      "name": "Pendleton Nash",
+      "species": "Android",
+      "perkIds": [
+        "charisma_4",
+        "charisma_6",
+        "charisma_11",
+        "charisma_14",
+        "defense_5",
+        "defense_23",
+        "defense_24",
+        "grit_14",
+        "smarts_5",
+        "smarts_9",
+        "smarts_14"
+      ],
+      "distinctionIds": ["d15", "d17", "d23"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T19:16:25.438Z",
+      "location": "Hospital",
+      "occupation": "Chief Investigator",
+      "notes": "That's you! You are Mifune Corporation Type 15 Yojimbo Security Android! Your primary directives are: To serve the interests of the community and investigate that which is requested of you. Obey all orders of figures of authority with local jurisdiction such that they do not conflict with other programming restrictions.",
+      "retired": false,
+      "cyberware": []
+    },
+    {
+      "id": "csv_1761871486600_jt52a0u3p",
+      "name": "Asher",
+      "species": "Perfect Mutant",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Caravan Master (Former)",
+      "notes": "Potentially corrupt. Sent first aid packages to the commonwealth. Potentially stole the guild contract. New garden is gift from guild as a thanks to Asher",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_tjtbq5edz",
+      "name": "Ashlin Codawell",
+      "species": "Drone",
+      "perkIds": ["grit_20"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:47:14.785Z",
+      "location": "Grimerust Heights",
+      "occupation": "Dog",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_m4edaakwa",
+      "name": "Baker",
+      "species": "Unturned",
+      "perkIds": [
+        "agility_6",
+        "agility_12",
+        "agility_13",
+        "charisma_1",
+        "charisma_2",
+        "charisma_10",
+        "defense_1",
+        "defense_5",
+        "defense_7",
+        "defense_12",
+        "defense_19",
+        "endurance_29",
+        "endurance_34",
+        "endurance_36",
+        "finesse_1",
+        "grit_27",
+        "grit_28"
+      ],
+      "distinctionIds": ["d11", "d13"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "F.O.O.D.",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Ice Cream Vendor and Head Chairperson of FOOD",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_wm7d71ga7",
+      "name": "Canary",
+      "species": "Drone",
+      "perkIds": [
+        "finesse_4",
+        "grit_3",
+        "grit_15",
+        "grit_16",
+        "grit_17",
+        "medical_2",
+        "smarts_17",
+        "teamwork_14",
+        "teamwork_16"
+      ],
+      "distinctionIds": ["d5", "d15", "d25"],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:54:13.152Z",
+      "location": "Grimerust Heights",
+      "occupation": "",
+      "retired": false,
+      "notes": "Cannot fight"
+    },
+    {
+      "id": "csv_1761871486600_1ptxlqbyi",
+      "name": "Cedric",
+      "species": "Android",
+      "perkIds": ["medical_8", "smarts_6", "technical_4", "technical_9"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Garage",
+      "occupation": "Mechanic",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_t3k4sc5jm",
+      "name": "Curtle",
+      "species": "Stray",
+      "perkIds": [
+        "agility_5",
+        "agility_17",
+        "defense_29",
+        "defense_30",
+        "endurance_9",
+        "endurance_11",
+        "teamwork_17"
+      ],
+      "distinctionIds": ["d18", "d21", "d24"],
+      "relationships": [
+        {
+          "characterName": "Finn",
+          "relationshipType": "Friend",
+          "description": "Reciprocal: Curtle's friend"
+        },
+        {
+          "characterName": "Fiona",
+          "relationshipType": "Friend",
+          "description": "Reciprocal: Curtle's friend"
+        }
+      ],
+      "factions": [
+        {
+          "name": "Church of the Cog",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:00:32.051Z",
+      "location": "Grimerust Heights",
+      "occupation": "Assistant to the Dental Assistant/ Templar",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_fq2yg7ah7",
+      "name": "Chipper",
+      "species": "Android",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Phoebe",
+          "relationshipType": "Friend",
+          "description": ""
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:55:34.888Z",
+      "location": "Unknown",
+      "occupation": "Lumberjack",
+      "notes": "Shield-bearing",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_v09k4y128",
+      "name": "Cremini",
+      "species": "Mutant",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_emxbrvq88",
+      "name": "Dabblesforth Dabbie Montgomery III",
+      "species": "Perfect Mutant",
+      "perkIds": [
+        "charisma_3",
+        "charisma_4",
+        "charisma_8",
+        "charisma_9",
+        "endurance_14",
+        "smarts_9",
+        "teamwork_1",
+        "teamwork_5",
+        "teamwork_6",
+        "teamwork_8",
+        "teamwork_10",
+        "teamwork_11"
+      ],
+      "distinctionIds": ["d3", "d13", "d24"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Junktown Council",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Mayor/Politician",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_xpicewwv4",
+      "name": "Daté",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Hirç",
+          "relationshipType": "Friend",
+          "description": "Reciprocal: Daté's friend"
+        }
+      ],
+      "factions": [{ "name": "Junktown Militia", "standing": "Ally" }],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:07:08.363Z",
+      "location": "Unknown",
+      "occupation": "Deputy",
+      "notes": "Afflicted by a blue bite, no unusual symptoms yet",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_myzng8eh6",
+      "name": "Domina Xess Chorister",
+      "species": "Cyborg",
+      "perkIds": [],
+      "distinctionIds": ["d13"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Church of the Cog",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Domina to the Church of the Cog",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_2c6al4y55",
+      "name": "Flora",
+      "species": "Unturned",
+      "perkIds": ["smarts_1", "smarts_3", "smarts_8", "smarts_12"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Sanguine Springs",
+      "occupation": "Scavenger",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ym2076aao",
+      "name": "Frank",
+      "species": "Unturned",
+      "perkIds": [
+        "medical_2",
+        "medical_4",
+        "medical_5",
+        "medical_6",
+        "medical_8",
+        "medical_9",
+        "medical_14"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:01:32.066Z",
+      "location": "Hospital",
+      "occupation": "Dentist",
+      "retired": false,
+      "notes": "- colony dentist\n- died of dental sepsis and rose as unturned after\n- candidate for chief medic in 2054 but did not win"
+    },
+    {
+      "id": "csv_1761871486600_74ld7qr5k",
+      "name": "Garos",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Combat Medic",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_j6lpp1ahu",
+      "name": "Gnorman G. Scrambles",
+      "species": "Nomad",
+      "perkIds": [
+        "crafting_22",
+        "finesse_4",
+        "smarts_9",
+        "technical_9",
+        "technical_12"
+      ],
+      "distinctionIds": ["d5", "d6"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Crafting Guild",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Sanguine Springs",
+      "occupation": "Mechanic",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_s4ypujxjt",
+      "name": "Goldstein",
+      "species": "Mook",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [{ "name": "Junktown Militia", "standing": "Enemy" }],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:05:20.063Z",
+      "location": "Unknown",
+      "notes": "The Goldstein organization has made it's presence known in town through a series of Thefts and a plot to assassinate Interim Caravan Master Xander.",
+      "retired": false,
+      "occupation": ""
+    },
+    {
+      "id": "csv_1761871486600_8nf2eg8wc",
+      "name": "Garbagul",
+      "species": "Tech-Mutant",
+      "perkIds": ["defense_22", "technical_1", "technical_9"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Church of the Cog",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Former Chiurgeon/Engine Seer",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ipgz3fcba",
+      "name": "Harper",
+      "species": "Perfect Mutant",
+      "perkIds": [
+        "medical_2",
+        "medical_3",
+        "medical_6",
+        "medical_7",
+        "medical_8",
+        "medical_9",
+        "medical_14"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Junktown Council (Formerly)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Surgeon",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_4y5tk6b8a",
+      "name": "Hirç",
+      "species": "Perfect Mutant",
+      "perkIds": [
+        "defense_16",
+        "defense_18",
+        "defense_27",
+        "defense_28",
+        "endurance_2",
+        "endurance_6",
+        "endurance_14",
+        "endurance_20",
+        "grit_8",
+        "strength_2",
+        "strength_3",
+        "strength_8",
+        "strength_9",
+        "strength_13",
+        "strength_14"
+      ],
+      "distinctionIds": ["d4", "d12", "d17"],
+      "relationships": [
+        {
+          "characterName": "Daté",
+          "relationshipType": "Friend",
+          "description": "Daté's friend"
+        },
+        {
+          "characterName": "Mar",
+          "relationshipType": "Friend",
+          "description": "Mar's friend"
+        }
+      ],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Junktown Council",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        { "name": "Church of the Cog", "standing": "Friend" }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:23:35.852Z",
+      "location": "Sanguine Springs",
+      "occupation": "Sheriff",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_p91e10rzh",
+      "name": "Jack Longstone",
+      "species": "Mutant",
+      "perkIds": [
+        "defense_27",
+        "endurance_22",
+        "smarts_1",
+        "smarts_5",
+        "smarts_7",
+        "smarts_8",
+        "smarts_9",
+        "smarts_11",
+        "smarts_12",
+        "smarts_13"
+      ],
+      "distinctionIds": ["d11", "d13"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Junktown Council (Formerly)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:07:47.813Z",
+      "location": "Crafting Hall",
+      "occupation": "Former Pathfinder, Scavenger",
+      "retired": false,
+      "notes": "- Original member of clover lines colonies\n- Used as a flesh sack by the rich in the colonies for some time\n- Absorbs nearby DNA and incorporates into self\n- scaver, strong\n- spaghetti guts\n- chief prospector 2024"
+    },
+    {
+      "id": "csv_1761871486600_pv3utjc8w",
+      "name": "Jaeger",
+      "species": "Rad-Titan",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_3k7f1gdde",
+      "name": "Jasper",
+      "species": "Cyborg",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_uhmjs4q75",
+      "name": "Jackson 2Fist Magill",
+      "species": "Perfect Mutant",
+      "perkIds": [
+        "endurance_4",
+        "endurance_5",
+        "endurance_9",
+        "finesse_4",
+        "finesse_5",
+        "finesse_6",
+        "smarts_1",
+        "smarts_9",
+        "smarts_10",
+        "smarts_12"
+      ],
+      "distinctionIds": ["d3", "d5", "d24"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        { "name": "Junktown Council", "standing": "Ally" },
+        { "name": "Junktown Council (Formerly)", "standing": "Ally" }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:08:58.943Z",
+      "location": "Downtown",
+      "occupation": "Anaesthesiologist/Pathfinder",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_xrw7x4hrd",
+      "name": "Jebediah",
+      "species": "Human",
+      "perkIds": [
+        "agility_1",
+        "agility_7",
+        "agility_12",
+        "agility_14",
+        "crafting_5",
+        "finesse_4",
+        "grit_5",
+        "grit_15"
+      ],
+      "distinctionIds": ["d1"],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:09:43.142Z",
+      "location": "Sanguine Springs",
+      "occupation": "Trappa Slappa",
+      "retired": false,
+      "notes": "- has a young crocodilw son. Cletus\n- hails from Florida and a monster hunter"
+    },
+    {
+      "id": "csv_1761871486600_vm21zkwd8",
+      "name": "Jimmy The Bjorg Mezzotoni",
+      "species": "Cyborg",
+      "perkIds": [
+        "charisma_11",
+        "crafting_11",
+        "defense_16",
+        "grit_2",
+        "grit_3",
+        "grit_5",
+        "grit_8",
+        "grit_10",
+        "grit_12",
+        "grit_15",
+        "grit_16"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Gardener, Exterminator",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ig6ed3f84",
+      "name": "Johnny Mans",
+      "species": "Human",
+      "perkIds": [
+        "crafting_9",
+        "crafting_14",
+        "crafting_17",
+        "crafting_18",
+        "crafting_19",
+        "crafting_20"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Crafting Hall",
+      "occupation": "Crafter",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_9pk0w62c7",
+      "name": "Iona",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_6dutkflzo",
+      "name": "Kaya",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Laras",
+          "relationshipType": "Friend",
+          "description": ""
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:11:16.687Z",
+      "location": "Unknown",
+      "retired": false,
+      "notes": "",
+      "occupation": ""
+    },
+    {
+      "id": "csv_1761871486600_n55d9ultn",
+      "name": "Kevin",
+      "species": "Nomad",
+      "perkIds": ["strength_17"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Miner",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_60b6b9g6z",
+      "name": "Kite",
+      "species": "Human",
+      "perkIds": ["crafting_12", "crafting_18"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:12:20.566Z",
+      "location": "Unknown",
+      "occupation": "Bulletsmith",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_8by18wtdx",
+      "name": "Klatter, Child of Echo",
+      "species": "Nomad",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Miner, Courier, Attorney",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_di010qbdo",
+      "name": "Laras",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Kaya",
+          "relationshipType": "Friend",
+          "description": "Kaya's friend"
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:11:16.695Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_nhnxzftvb",
+      "name": "Magos Lector Haldane Ohmsson",
+      "species": "Cyborg",
+      "perkIds": [
+        "teamwork_5",
+        "teamwork_8",
+        "teamwork_10",
+        "technical_1",
+        "technical_4",
+        "technical_6",
+        "technical_12"
+      ],
+      "distinctionIds": ["d24", "d27"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Junktown Council",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Church of the Cog",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Garage",
+      "occupation": "Magos Lector/Tech Priest/Chief Mechanic",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_3pu44k2ir",
+      "name": "Mar",
+      "species": "Perfect Mutant",
+      "perkIds": ["crafting_1"],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Hirç",
+          "relationshipType": "Friend",
+          "description": ""
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:23:35.845Z",
+      "location": "Sanguine Springs",
+      "retired": false,
+      "notes": "",
+      "occupation": "Deputy"
+    },
+    {
+      "id": "csv_1761871486600_f6zu3nyja",
+      "name": "Mathias Ravenholm",
+      "species": "Unturned",
+      "perkIds": ["endurance_10", "grit_8", "grit_16"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Undertaker",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_tnvdlkp45",
+      "name": "Miriael",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_t6zs8402q",
+      "name": "Murpy",
+      "species": "Nomad",
+      "perkIds": [
+        "crafting_1",
+        "crafting_2",
+        "crafting_4",
+        "crafting_6",
+        "crafting_8",
+        "crafting_12",
+        "crafting_15",
+        "crafting_21",
+        "endurance_14",
+        "endurance_15",
+        "endurance_24",
+        "smarts_2",
+        "teamwork_10"
+      ],
+      "distinctionIds": ["d8"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Pharmacist",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ax2085j7j",
+      "name": "Phaedra Tau",
+      "species": "Perfect Mutant",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Archifist",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_qak56tm8g",
+      "name": "Phantom",
+      "species": "Unturned",
+      "perkIds": [
+        "agility_5",
+        "crafting_11",
+        "crafting_15",
+        "endurance_14",
+        "endurance_36",
+        "grit_8",
+        "grit_10",
+        "grit_16",
+        "grit_27",
+        "medical_2",
+        "smarts_9",
+        "smarts_11"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Assistant Chemist Assistant Physician",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_oldzkspya",
+      "name": "Phoebe",
+      "species": "Nomad",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Chipper",
+          "relationshipType": "Friend",
+          "description": "Chipper's friend"
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:55:34.899Z",
+      "location": "Unknown",
+      "occupation": "Hunter",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_y7m84nu4c",
+      "name": "Piper",
+      "species": "Stray",
+      "perkIds": ["crafting_14"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Junktown Council (Formerly)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Garage",
+      "occupation": "Mechanic/Former Chief Mechanic",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_2z8sbk7gp",
+      "name": "Rho-Eta 84",
+      "species": "Android",
+      "perkIds": [
+        "defense_6",
+        "defense_23",
+        "technical_9",
+        "technical_12",
+        "technical_15"
+      ],
+      "distinctionIds": ["d27", "d23"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Church of the Cog",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T19:17:36.820Z",
+      "location": "Unknown",
+      "occupation": "Protector/Mechanic",
+      "retired": false,
+      "notes": "",
+      "cyberware": []
+    },
+    {
+      "id": "csv_1761871486600_loxcik8ra",
+      "name": "Sir Otis, the Earl of Squirrel",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_oggtzvftl",
+      "name": "Sterling",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_0hppmba7f",
+      "name": "Trash",
+      "species": "Rad-Titan",
+      "perkIds": [
+        "crafting_5",
+        "crafting_15",
+        "crafting_20",
+        "endurance_1",
+        "endurance_2",
+        "endurance_10"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Junktown Militia",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Scavenger/Mercenary",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_virfmvo1f",
+      "name": "Truffle",
+      "species": "Mutant",
+      "perkIds": [
+        "defense_25",
+        "endurance_15",
+        "endurance_19",
+        "endurance_20",
+        "endurance_23",
+        "smarts_11"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Bodyguard",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_r0z9i9cpx",
+      "name": "Twig",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ihwpq2snv",
+      "name": "Asyn",
+      "species": "Android",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:47:35.514Z",
+      "location": "Sanguine Springs",
+      "retired": false,
+      "notes": "",
+      "occupation": ""
+    },
+    {
+      "id": "csv_1761871486600_l4mryflrj",
+      "name": "Valen",
+      "species": "Roadkill",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Undertaker",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_alcqnuxss",
+      "name": "Victor lief Paisley",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Engie",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_plkc5j33w",
+      "name": "Xander",
+      "species": "Perfect Mutant",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "JIF(Junktown Independence Front)",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Junktown Council",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Caravan Master",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_2l9rtq33q",
+      "name": "Yarrow",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_hmz9oj8tx",
+      "name": "Brand",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [{ "name": "The Barony of Fanghold", "standing": "Ally" }],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:53:00.944Z",
+      "location": "Unknown",
+      "occupation": "Representative",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_wxd1c66k5",
+      "name": "Bug",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:53:39.748Z",
+      "location": "Sanguine Springs",
+      "retired": false,
+      "notes": "",
+      "occupation": ""
+    },
+    {
+      "id": "csv_1761871486600_n2hknlxrj",
+      "name": "Ethan",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Bulletsmith",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_swfefuqq1",
+      "name": "Finn",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Curtle",
+          "relationshipType": "Friend",
+          "description": "Curtle's friend"
+        },
+        {
+          "characterName": "Fiona",
+          "relationshipType": "Friend",
+          "description": "Reciprocal: Finn's friend"
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:00:32.051Z",
+      "location": "Grimerust Heights",
+      "retired": false,
+      "notes": "",
+      "occupation": ""
+    },
+    {
+      "id": "csv_1761871486600_brh4lizob",
+      "name": "Fiona",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [
+        {
+          "characterName": "Curtle",
+          "relationshipType": "Friend",
+          "description": "Curtle's friend"
+        },
+        {
+          "characterName": "Finn",
+          "relationshipType": "Friend",
+          "description": "Finn's friend"
+        }
+      ],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:00:32.042Z",
+      "location": "Grimerust Heights",
+      "retired": false,
+      "notes": "",
+      "occupation": "Medic"
+    },
+    {
+      "id": "csv_1761871486600_czlto705c",
+      "name": "John Jones",
+      "species": "Tech-Mutant",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:10:16.750Z",
+      "location": "Sanguine Springs",
+      "retired": false,
+      "notes": "",
+      "occupation": ""
+    },
+    {
+      "id": "csv_1761871486600_uz0o9rcq5",
+      "name": "Kell",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [{ "name": "The Guild", "standing": "Ally" }],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:11:46.612Z",
+      "location": "Unknown",
+      "occupation": "Guild Representative",
+      "retired": false,
+      "notes": "represented rhe guild at the 2054 spring opening day \n"
+    },
+    {
+      "id": "csv_1761871486600_yapqc4anv",
+      "name": "Kobold-5",
+      "species": "Tech-Mutant",
+      "perkIds": [
+        "medical_2",
+        "medical_5",
+        "medical_8",
+        "medical_9",
+        "medical_12",
+        "medical_14",
+        "technical_12"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Surgeon/CMO/Combatant",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_emkhkang4",
+      "name": "Linda",
+      "species": "Unturned",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Retired",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_61ww8fz05",
+      "name": "Mayor Concord",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Deceased",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_2xc39xabm",
+      "name": "Mouse",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_iva9x3kyb",
+      "name": "Victor O",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Caravaneer",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_uzy7gdixv",
+      "name": "Tajiro - Lord of Knights",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Kingdom of Columbia",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Kingdom of Columbia Representative",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_lm5vbgif2",
+      "name": "Vespera",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_hratkb0lt",
+      "name": "Ranger Hawthorne",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [{ "name": "The Cascadia Commonwealth", "standing": "Ally" }],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:32:03.375Z",
+      "location": "Unknown",
+      "occupation": "Commonwealth Representative",
+      "retired": false,
+      "notes": ""
+    },
+    {
+      "id": "csv_1761871486600_10ewcllrd",
+      "name": "Hector Hannibal",
+      "species": "Unturned",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:05:50.809Z",
+      "location": "Unknown",
+      "occupation": "Trader",
+      "retired": false,
+      "notes": "Sells Zombitol"
+    },
+    {
+      "id": "csv_1761871486600_alxxyieq4",
+      "name": "Legion",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Church of the Cog",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Skittari Vanguard",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ibm7niqih",
+      "name": "Tumbles",
+      "species": "Mutoid",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Genthree",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:34:54.610Z",
+      "location": "Unknown",
+      "occupation": "Adventurer",
+      "retired": false,
+      "notes": "Sent to the guild"
+    },
+    {
+      "id": "csv_1761871486600_e81h8cwx7",
+      "name": "Kuro Isha",
+      "species": "Human",
+      "perkIds": [
+        "crafting_5",
+        "smarts_1",
+        "smarts_3",
+        "smarts_8",
+        "smarts_9",
+        "smarts_10",
+        "smarts_11",
+        "smarts_12",
+        "smarts_13",
+        "teamwork_10"
+      ],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Sanguine Springs",
+      "occupation": "Scavenger",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_8tfio8t1j",
+      "name": "Klank Rustbowl",
+      "species": "Nomad",
+      "perkIds": ["endurance_25", "finesse_4", "strength_17"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_u0f8faidx",
+      "name": "Neuro",
+      "species": "Human",
+      "perkIds": ["crafting_19"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Scavenger",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_uwuf8a6ti",
+      "name": "Stryke",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Terrorist",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_bha55nstk",
+      "name": "Purple",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Shadow Traders",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T01:14:14.872Z",
+      "location": "Unknown",
+      "occupation": "Trader (possible agent of Shadow Traders",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_ey74qvny9",
+      "name": "The Peashooter",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Unknown, Likely Mercenary",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_roe2pkv64",
+      "name": "Snickels",
+      "species": "Mutoid",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Genthree",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        },
+        {
+          "name": "Junktown Council",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Grimerust Heights",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_yli08kubw",
+      "name": "Princess",
+      "species": "Mutoid",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Genthree",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Princess",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_m88i13zmm",
+      "name": "Goober",
+      "species": "Mutoid",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Genthree",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Warrior",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_5f3i0iqni",
+      "name": "Dr. Jass",
+      "species": "Mutoid",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Genthree",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Doctor",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_0easldk6g",
+      "name": "Jackson",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Mercenary",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_0bpvmmjyc",
+      "name": "Flappy",
+      "species": "Mutoid",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Genthree",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_u0v8dgy39",
+      "name": "James Laramie Schultz",
+      "species": "Human",
+      "perkIds": ["charisma_2", "crafting_20"],
+      "distinctionIds": ["d8", "d25"],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Tailor",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_00fmmiycp",
+      "name": "Smith",
+      "species": "Human",
+      "perkIds": [
+        "agility_2",
+        "agility_7",
+        "agility_11",
+        "charisma_4",
+        "crafting_21",
+        "finesse_4",
+        "teamwork_10"
+      ],
+      "distinctionIds": ["d5", "d11"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Junktown Militia",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Sanguine Springs",
+      "occupation": "Monk",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_w35owyggz",
+      "name": "Everforth",
+      "species": "Mutant",
+      "perkIds": ["endurance_15", "grit_3", "smarts_22"],
+      "distinctionIds": ["d6", "d13", "d17"],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "Hospital Team",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Hospital",
+      "occupation": "Errant",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_fqmw23gr6",
+      "name": "Echo-Med 3000",
+      "species": "Android",
+      "perkIds": ["defense_16", "technical_9"],
+      "distinctionIds": ["d15"],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Sanguine Springs",
+      "occupation": "Defense Bot",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_a38afu0q2",
+      "name": "Adelaide",
+      "species": "Human",
+      "perkIds": ["agility_12", "agility_14"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Unemployed",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_jqlclsghb",
+      "name": "Ren",
+      "species": "Human",
+      "perkIds": [],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Scavenger",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_rr6zxzl1k",
+      "name": "Silas Greer",
+      "species": "Human",
+      "perkIds": ["charisma_1", "charisma_3", "charisma_10", "charisma_13"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Guild",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Guild Representative",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_h5cieu4vu",
+      "name": "Mara Vess",
+      "species": "Human",
+      "perkIds": ["charisma_3", "charisma_7", "charisma_10", "charisma_13"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Barony of Fanghold",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Barony Representative",
+      "retired": false
+    },
+    {
+      "id": "csv_1761871486600_5zikj3q3z",
+      "name": "Ranger Rowan Hale",
+      "species": "Human",
+      "perkIds": ["charisma_1", "charisma_9", "charisma_10", "charisma_13"],
+      "distinctionIds": [],
+      "relationships": [],
+      "factions": [
+        {
+          "name": "The Cascadia Commonwealth",
+          "standing": "Ally",
+          "description": "Imported from CSV as ally"
+        }
+      ],
+      "present": false,
+      "createdAt": "2025-10-31T00:44:46.600Z",
+      "updatedAt": "2025-10-31T00:44:46.600Z",
+      "location": "Unknown",
+      "occupation": "Commonwealth Representative",
+      "retired": false
+    },
+    {
+      "name": "Arthur Knight",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "factions": [{ "name": "The Kingdom of Columbia", "standing": "Ally" }],
+      "relationships": [],
+      "notes": "Former CEO of Knight Industries, who developed power armor to fight off alien invaders.\n\nNow his kingdom uses technology to secure the wastelands.",
+      "occupation": "King",
+      "location": "Unknown",
+      "retired": false,
+      "id": "cae22b01-619c-4507-8bb2-c5622fad39a2",
+      "present": false,
+      "createdAt": "2025-10-31T00:49:43.558Z",
+      "updatedAt": "2025-10-31T00:49:43.558Z"
+    },
+    {
+      "name": "Baron Teeth",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "factions": [{ "name": "The Barony of Fanghold", "standing": "Ally" }],
+      "relationships": [
+        {
+          "characterName": "General Dreg",
+          "relationshipType": "Ally",
+          "description": "Reciprocal: Right hand man"
+        }
+      ],
+      "notes": "",
+      "occupation": "",
+      "location": "Unknown",
+      "retired": false,
+      "id": "7fb82121-ad0e-483b-9c39-e3900cf5e759",
+      "present": false,
+      "createdAt": "2025-10-31T00:52:08.744Z",
+      "updatedAt": "2025-10-31T01:03:47.666Z"
+    },
+    {
+      "name": "Big Sister",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "factions": [],
+      "relationships": [],
+      "notes": "",
+      "occupation": "",
+      "location": "Unknown",
+      "retired": false,
+      "id": "b918d766-55d4-45a6-93ea-f84f6bd3075c",
+      "present": false,
+      "createdAt": "2025-10-31T00:52:26.448Z",
+      "updatedAt": "2025-10-31T00:52:26.448Z"
+    },
+    {
+      "name": "Creep",
+      "species": "Stray",
+      "perkIds": [],
+      "distinctionIds": [],
+      "factions": [],
+      "relationships": [],
+      "notes": "",
+      "occupation": "",
+      "location": "Downtown",
+      "retired": false,
+      "id": "a9dd25eb-cf0e-45e0-a957-776f005b00fc",
+      "present": false,
+      "createdAt": "2025-10-31T00:56:32.044Z",
+      "updatedAt": "2025-10-31T00:56:32.044Z"
+    },
+    {
+      "name": "General Dreg",
+      "species": "Unknown",
+      "perkIds": [],
+      "distinctionIds": [],
+      "factions": [{ "name": "The Barony of Fanghold", "standing": "Ally" }],
+      "relationships": [
+        {
+          "characterName": "Baron Teeth",
+          "relationshipType": "Ally",
+          "description": "Right hand man"
+        }
+      ],
+      "notes": "Participated in the founding of Fort Crow",
+      "occupation": "",
+      "location": "Downtown",
+      "retired": false,
+      "id": "1075c18c-965e-4c6e-9d9a-9e2a03706a8b",
+      "present": false,
+      "createdAt": "2025-10-31T01:03:47.658Z",
+      "updatedAt": "2025-10-31T01:03:47.658Z"
+    },
+    {
+      "name": "Junkyard",
+      "species": "Roadkill",
+      "perkIds": [],
+      "distinctionIds": [],
+      "factions": [],
+      "relationships": [],
+      "notes": "",
+      "occupation": "",
+      "location": "Fringe",
+      "retired": false,
+      "id": "d02c3d53-46a6-402d-b469-88f17a9270ae",
+      "present": false,
+      "createdAt": "2025-10-31T01:10:48.633Z",
+      "updatedAt": "2025-10-31T01:10:48.633Z"
+    }
+  ],
+  "factions": [
+    {
+      "name": "JIF(Junktown Independence Front)",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "F.O.O.D.",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "Church of the Cog",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "Hospital Team",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "Junktown Council",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "Crafting Guild",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "Junktown Council (Formerly)",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "Junktown Militia",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "The Kingdom of Columbia",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "The Genthree",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "The Shadow Traders",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "The Guild",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "The Barony of Fanghold",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    },
+    {
+      "name": "The Cascadia Commonwealth",
+      "description": "Imported from CSV as ally",
+      "createdAt": "2025-10-31T00:51:45.198Z",
+      "updatedAt": "2025-10-31T00:51:45.198Z"
+    }
+  ],
+  "version": "1.0",
+  "lastUpdated": "2025-10-31T19:20:21.164Z"
+}
