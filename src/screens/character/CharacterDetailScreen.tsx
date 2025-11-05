@@ -21,8 +21,8 @@ import {
   AVAILABLE_RECIPES,
 } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
-import { GameCharacter } from '@/models/types';
-import { loadCharacters } from '@/utils/characterStorage';
+import { GameCharacter, GameLocation } from '@/models/types';
+import { loadCharacters, loadLocations } from '@/utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
@@ -37,11 +37,14 @@ export const CharacterDetailScreen: React.FC = () => {
   const navigation = useNavigation<CharacterDetailNavigationProp>();
   const { character } = route.params;
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
+  const [locations, setLocations] = useState<GameLocation[]>([]);
 
   const loadAllCharacters = useCallback(async () => {
     try {
       const characters = await loadCharacters();
+      const locs = await loadLocations();
       setAllCharacters(characters);
+      setLocations(locs);
 
       // Update the current character with the latest data
       const updatedCurrentChar = characters.find(
@@ -68,6 +71,12 @@ export const CharacterDetailScreen: React.FC = () => {
 
   const findCharacterByName = (name: string): GameCharacter | undefined => {
     return allCharacters.find(char => char.name === name);
+  };
+
+  const getLocationName = (locationId: string | undefined): string => {
+    if (!locationId) return 'Unknown';
+    const location = locations.find(l => l.id === locationId);
+    return location ? location.name : 'Unknown';
   };
 
   const handleRelationshipPress = (characterName: string) => {
@@ -322,7 +331,8 @@ export const CharacterDetailScreen: React.FC = () => {
           <Text style={styles.name}>{character.name}</Text>
           <View style={styles.headerInfo}>
             <Text style={styles.subheader}>
-              Species: {character.species} / Location: {character.location}
+              Species: {character.species} / Location:{' '}
+              {getLocationName(character.locationId)}
             </Text>
             {character.occupation && (
               <Text style={styles.subheader}>
