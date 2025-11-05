@@ -24,7 +24,7 @@ import {
   GameCharacter,
   Species,
   SPECIES_BASE_STATS,
-  Location,
+  GameLocation,
   Relationship,
   RelationshipStanding,
 } from '@models/types';
@@ -34,6 +34,7 @@ import {
   loadCharacters,
   saveCharacters,
   loadFactions,
+  loadLocations,
 } from '@utils/characterStorage';
 import {
   AVAILABLE_PERKS,
@@ -52,6 +53,9 @@ export const CharacterFormScreen: React.FC = () => {
   const [selectedPerkTag, setSelectedPerkTag] = useState<string>('');
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
   const [availableFactions, setAvailableFactions] = useState<string[]>([]);
+  const [availableLocations, setAvailableLocations] = useState<GameLocation[]>(
+    []
+  );
   const [showCustomFactionInput, setShowCustomFactionInput] = useState<{
     [key: number]: boolean;
   }>({});
@@ -71,7 +75,7 @@ export const CharacterFormScreen: React.FC = () => {
           notes: editingCharacter.notes || '',
           occupation: editingCharacter.occupation || '',
           imageUri: editingCharacter.imageUri,
-          location: editingCharacter.location,
+          locationId: editingCharacter.locationId,
           retired: editingCharacter.retired,
           cyberware: [...(editingCharacter.cyberware || [])],
         }
@@ -85,7 +89,7 @@ export const CharacterFormScreen: React.FC = () => {
           notes: '',
           occupation: '',
           imageUri: undefined,
-          location: Location.Downtown,
+          locationId: undefined,
           retired: false,
           cyberware: [],
         }
@@ -111,6 +115,12 @@ export const CharacterFormScreen: React.FC = () => {
       });
 
       setAvailableFactions(Array.from(factionNames).sort());
+
+      // Load available locations
+      const locations = await loadLocations();
+      setAvailableLocations(
+        locations.sort((a, b) => a.name.localeCompare(b.name))
+      );
     } catch (error) {
       console.error('Failed to load characters:', error);
     }
@@ -318,12 +328,19 @@ export const CharacterFormScreen: React.FC = () => {
         <View style={styles.formSection}>
           <Text style={styles.label}>Location</Text>
           <Picker
-            selectedValue={form.location}
+            selectedValue={form.locationId}
             style={[styles.picker, { flex: 1 }]}
-            onValueChange={(value: Location) => handleChange('location', value)}
+            onValueChange={(value: string) =>
+              handleChange('locationId', value || undefined)
+            }
           >
-            {Object.values(Location).map(location => (
-              <Picker.Item key={location} label={location} value={location} />
+            <Picker.Item label="(No Location)" value="" />
+            {availableLocations.map(location => (
+              <Picker.Item
+                key={location.id}
+                label={location.name}
+                value={location.id}
+              />
             ))}
           </Picker>
         </View>

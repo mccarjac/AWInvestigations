@@ -11,12 +11,7 @@ import {
   updateCharacter,
   saveCharacters,
 } from './characterStorage';
-import {
-  GameCharacter,
-  Species,
-  Location,
-  RelationshipStanding,
-} from '../models/types';
+import { GameCharacter, Species, RelationshipStanding } from '../models/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '../models/gameData';
 
 /**
@@ -558,29 +553,6 @@ const showAlert = (title: string, message: string): void => {
 };
 
 /**
- * Map location string to Location enum value
- */
-const mapLocationString = (locationStr: string): Location => {
-  const normalizedStr = locationStr.toLowerCase().trim();
-
-  // Handle common location mappings
-  if (normalizedStr.includes('hospital')) return Location.Hospital;
-  if (normalizedStr.includes('garage') || normalizedStr.includes('repair hall'))
-    return Location.Garage;
-  if (normalizedStr.includes('craft') || normalizedStr.includes('crafting'))
-    return Location.CraftingHall;
-  if (normalizedStr.includes('downtown') || normalizedStr.includes('sprawl'))
-    return Location.Downtown;
-  if (normalizedStr.includes('sanguine') || normalizedStr.includes('spring'))
-    return Location.SanguineSprings;
-  if (normalizedStr.includes('grimerust') || normalizedStr.includes('grimer'))
-    return Location.GrimerustHeights;
-
-  // Default to Unknown for unrecognized locations
-  return Location.Unknown;
-};
-
-/**
  * Parse a CSV line properly handling quoted fields with commas
  */
 const parseCSVLine = (line: string): string[] => {
@@ -668,13 +640,12 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
       propertyName.toLowerCase() === 'location' ||
       propertyName.toLowerCase() === 'frequently located'
     ) {
-      // Set location for each character
-      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-        const locationValue = values[j];
-        if (locationValue && locationValue !== '') {
-          characters[j - 1].location = mapLocationString(locationValue);
-        }
-      }
+      // Note: CSV import for locations is not currently supported in the new location system
+      // Locations should be created separately and then assigned to characters
+      // This section is kept for backwards compatibility but will be skipped
+      console.log(
+        'Location field found in CSV but will be skipped. Please create locations separately and assign them to characters.'
+      );
     } else if (propertyName.toLowerCase() === 'notes') {
       // Set notes for each character
       for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
@@ -793,7 +764,7 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
       name: c.name,
       factions: c.factions,
       species: c.species,
-      location: c.location,
+      locationId: c.locationId,
     }))
   );
 

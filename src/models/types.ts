@@ -3,15 +3,18 @@ import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS, PerkTag } from './gameData';
 export type PerkId = (typeof AVAILABLE_PERKS)[number]['id'];
 export type DistinctionId = (typeof AVAILABLE_DISTINCTIONS)[number]['id'];
 
-export enum Location {
-  Hospital = 'Hospital',
-  Garage = 'Garage',
-  CraftingHall = 'Crafting Hall',
-  Downtown = 'Downtown',
-  SanguineSprings = 'Sanguine Springs',
-  GrimerustHeights = 'Grimerust Heights',
-  Fringe = 'Fringe',
-  Unknown = 'Unknown',
+export interface GameLocation {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LocationDataset {
+  locations: GameLocation[];
+  version: string;
+  lastUpdated: string;
 }
 
 export enum RelationshipStanding {
@@ -230,7 +233,7 @@ export interface GameCharacter {
   relationships: Relationship[];
   imageUri?: string;
   notes?: string;
-  location?: Location;
+  locationId?: string; // Reference to GameLocation.id
   occupation?: string;
   cyberware?: Cyberware[];
   present?: boolean;

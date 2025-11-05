@@ -1,5 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CharacterDataset, GameCharacter } from '@models/types';
+import {
+  CharacterDataset,
+  GameCharacter,
+  GameLocation,
+  LocationDataset,
+} from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface StoredFaction {
@@ -17,6 +22,7 @@ interface FactionDataset {
 
 const STORAGE_KEY = 'gameCharacterManager';
 const FACTION_STORAGE_KEY = 'gameCharacterManager_factions';
+const LOCATION_STORAGE_KEY = 'gameCharacterManager_locations';
 
 export const saveCharacters = async (
   characters: GameCharacter[]
@@ -94,6 +100,7 @@ export const deleteCharacter = async (id: string): Promise<boolean> => {
 export const exportDataset = async (): Promise<string> => {
   const characterData = await AsyncStorage.getItem(STORAGE_KEY);
   const factionData = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
+  const locationData = await AsyncStorage.getItem(LOCATION_STORAGE_KEY);
 
   const characters = characterData
     ? JSON.parse(characterData)
@@ -101,10 +108,14 @@ export const exportDataset = async (): Promise<string> => {
   const factions = factionData
     ? JSON.parse(factionData)
     : { factions: [], version: '1.0', lastUpdated: '' };
+  const locations = locationData
+    ? JSON.parse(locationData)
+    : { locations: [], version: '1.0', lastUpdated: '' };
 
   const combinedDataset = {
     characters: characters.characters || [],
     factions: factions.factions || [],
+    locations: locations.locations || [],
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
@@ -112,9 +123,183 @@ export const exportDataset = async (): Promise<string> => {
   return JSON.stringify(combinedDataset);
 };
 
+// Migration helper to convert old location enum to location ID
+const migrateOldLocationData = async (
+  characters: GameCharacter[]
+): Promise<void> => {
+  const existingLocations = await loadLocations();
+  const locationNameToId = new Map<string, string>();
+
+  // Build a map of location names to IDs
+  existingLocations.forEach(loc => {
+    locationNameToId.set(loc.name.toLowerCase(), loc.id);
+  });
+
+  const locationsToCreate = new Map<string, GameLocation>();
+
+  // Process each character
+  for (const char of characters) {
+    const oldLocation = (char as any).location;
+
+    // If character has old location field but no locationId
+    if (oldLocation && !char.locationId) {
+      console.log(
+        `Migrating old location "${oldLocation}" for character ${char.name}`
+      );
+
+      // Check if we already have a location with this name
+      let locationId = locationNameToId.get(oldLocation.toLowerCase());
+
+      if (!locationId) {
+        // Check if we're already creating this location
+        if (locationsToCreate.has(oldLocation)) {
+          locationId = locationsToCreate.get(oldLocation)!.id;
+        } else {
+          // Create a new location
+          const now = new Date().toISOString();
+          locationId = uuidv4();
+          const newLocation: GameLocation = {
+            id: locationId,
+            name: oldLocation,
+            description: `Migrated from old location data: ${oldLocation}`,
+            createdAt: now,
+            updatedAt: now,
+          };
+          locationsToCreate.set(oldLocation, newLocation);
+          locationNameToId.set(oldLocation.toLowerCase(), locationId);
+          console.log(
+            `Creating new location for "${oldLocation}" with ID ${locationId}`
+          );
+        }
+      }
+
+      // Set the locationId on the character
+      char.locationId = locationId;
+      // Remove the old location field
+      delete (char as any).location;
+    }
+  }
+
+  // Save any new locations we created
+  if (locationsToCreate.size > 0) {
+    const newLocationArray = Array.from(locationsToCreate.values());
+    const allLocations = [...existingLocations, ...newLocationArray];
+    await saveLocations(allLocations);
+    console.log(
+      `Migrated and created ${newLocationArray.length} location(s) from old data`
+    );
+  }
+};
+
+// Helper function to ensure all locations referenced by characters exist
+const ensureLocationsExist = async (
+  characters: GameCharacter[]
+): Promise<void> => {
+  const existingLocations = await loadLocations();
+  const existingLocationIds = new Set(existingLocations.map(l => l.id));
+  const newLocations: GameLocation[] = [];
+
+  // Collect all unique location IDs from characters
+  const referencedLocationIds = new Set<string>();
+  characters.forEach((char, index) => {
+    console.log(`Character ${index} (${char.name}):`, {
+      hasLocationId: !!char.locationId,
+      locationId: char.locationId,
+      hasOldLocation: !!(char as any).location,
+      oldLocation: (char as any).location,
+    });
+
+    if (char.locationId) {
+      referencedLocationIds.add(char.locationId);
+    }
+  });
+
+  console.log(
+    `Found ${referencedLocationIds.size} unique location IDs referenced by ${characters.length} characters`
+  );
+  console.log('Referenced location IDs:', Array.from(referencedLocationIds));
+  console.log('Existing location IDs:', Array.from(existingLocationIds));
+
+  // Create placeholder locations for any missing location IDs
+  for (const locationId of referencedLocationIds) {
+    if (!existingLocationIds.has(locationId)) {
+      const now = new Date().toISOString();
+      const newLocation: GameLocation = {
+        id: locationId,
+        name: `Imported Location (${locationId.substring(0, 8)})`,
+        description:
+          'This location was automatically created during import. Please update the name and description.',
+        createdAt: now,
+        updatedAt: now,
+      };
+      newLocations.push(newLocation);
+      console.log(
+        `Creating new location: ${newLocation.name} with ID: ${locationId}`
+      );
+    }
+  }
+
+  // Save new locations if any were created
+  if (newLocations.length > 0) {
+    const allLocations = [...existingLocations, ...newLocations];
+    await saveLocations(allLocations);
+    console.log(
+      `Auto-created ${newLocations.length} missing location(s) during import`
+    );
+    console.log('Total locations after import:', allLocations.length);
+  } else {
+    console.log('No new locations needed to be created');
+  }
+};
+
 export const importDataset = async (jsonData: string): Promise<boolean> => {
   try {
     const dataset = JSON.parse(jsonData);
+    console.log('Starting import. Dataset contains:', {
+      characters: dataset.characters?.length || 0,
+      factions: dataset.factions?.length || 0,
+      locations: dataset.locations?.length || 0,
+    });
+
+    // Handle location data first (merge with existing, don't replace)
+    if (dataset.locations && Array.isArray(dataset.locations)) {
+      console.log('Importing locations from dataset...');
+      const existingLocations = await loadLocations();
+      const mergedLocations = [...existingLocations];
+
+      // Add or update locations from import
+      for (const importedLocation of dataset.locations) {
+        const existingIndex = mergedLocations.findIndex(
+          l => l.id === importedLocation.id
+        );
+        if (existingIndex >= 0) {
+          // Update existing location if imported one is newer
+          if (
+            importedLocation.updatedAt >
+            mergedLocations[existingIndex].updatedAt
+          ) {
+            mergedLocations[existingIndex] = importedLocation;
+            console.log(`Updated location: ${importedLocation.name}`);
+          }
+        } else {
+          // Add new location
+          mergedLocations.push(importedLocation);
+          console.log(`Added new location: ${importedLocation.name}`);
+        }
+      }
+
+      await saveLocations(mergedLocations);
+      console.log(`Saved ${mergedLocations.length} total locations`);
+    }
+
+    // Auto-create any missing locations referenced by characters
+    if (dataset.characters) {
+      console.log('Checking for old location data to migrate...');
+      await migrateOldLocationData(dataset.characters);
+
+      console.log('Checking for missing locations referenced by characters...');
+      await ensureLocationsExist(dataset.characters);
+    }
 
     // Handle character data
     const characterDataset: CharacterDataset = {
@@ -244,7 +429,7 @@ const mergeCharacterProperties = (
   const simpleProperties: (keyof GameCharacter)[] = [
     'name',
     'species',
-    'location',
+    'locationId',
     'imageUri',
     'notes',
   ];
@@ -277,6 +462,12 @@ export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
     const mergedCharacters = [...currentData];
     const addedCharacters: GameCharacter[] = [];
     const conflicts: MergeConflict[] = [];
+
+    // Auto-create any missing locations referenced by imported characters
+    if (importedData.characters) {
+      await migrateOldLocationData(importedData.characters);
+      await ensureLocationsExist(importedData.characters);
+    }
 
     // Merge characters
     for (const importedChar of importedData.characters || []) {
@@ -337,6 +528,33 @@ export const mergeDatasets = async (jsonData: string): Promise<boolean> => {
       await saveFactions(mergedFactions);
     }
 
+    // Merge locations
+    if (importedData.locations) {
+      const currentLocations = await loadLocations();
+      const mergedLocations = [...currentLocations];
+      const existingLocationIds = new Set(currentLocations.map(l => l.id));
+
+      for (const importedLocation of importedData.locations) {
+        if (!existingLocationIds.has(importedLocation.id)) {
+          mergedLocations.push(importedLocation);
+        } else {
+          // Update existing location if imported one has more recent update
+          const existingIndex = mergedLocations.findIndex(
+            l => l.id === importedLocation.id
+          );
+          if (
+            existingIndex >= 0 &&
+            importedLocation.updatedAt >
+              mergedLocations[existingIndex].updatedAt
+          ) {
+            mergedLocations[existingIndex] = importedLocation;
+          }
+        }
+      }
+
+      await saveLocations(mergedLocations);
+    }
+
     return true;
   } catch (error) {
     console.error('Error merging datasets:', error);
@@ -356,6 +574,12 @@ export const mergeDatasetWithConflictResolution = async (
     const mergedCharacters = [...currentData];
     const addedCharacters: GameCharacter[] = [];
     const conflicts: MergeConflict[] = [];
+
+    // Auto-create any missing locations referenced by imported characters
+    if (importedData.characters) {
+      await migrateOldLocationData(importedData.characters);
+      await ensureLocationsExist(importedData.characters);
+    }
 
     // Merge characters
     for (const importedChar of importedData.characters || []) {
@@ -416,6 +640,33 @@ export const mergeDatasetWithConflictResolution = async (
       await saveFactions(mergedFactions);
     }
 
+    // Merge locations
+    if (importedData.locations) {
+      const currentLocations = await loadLocations();
+      const mergedLocations = [...currentLocations];
+      const existingLocationIds = new Set(currentLocations.map(l => l.id));
+
+      for (const importedLocation of importedData.locations) {
+        if (!existingLocationIds.has(importedLocation.id)) {
+          mergedLocations.push(importedLocation);
+        } else {
+          // Update existing location if imported one has more recent update
+          const existingIndex = mergedLocations.findIndex(
+            l => l.id === importedLocation.id
+          );
+          if (
+            existingIndex >= 0 &&
+            importedLocation.updatedAt >
+              mergedLocations[existingIndex].updatedAt
+          ) {
+            mergedLocations[existingIndex] = importedLocation;
+          }
+        }
+      }
+
+      await saveLocations(mergedLocations);
+    }
+
     return {
       success: true,
       conflicts,
@@ -466,6 +717,7 @@ export const resetAllPresentStatus = async (): Promise<void> => {
 export const clearStorage = async (): Promise<void> => {
   await AsyncStorage.removeItem(STORAGE_KEY);
   await AsyncStorage.removeItem(FACTION_STORAGE_KEY);
+  await AsyncStorage.removeItem(LOCATION_STORAGE_KEY);
 };
 
 // Faction management functions
@@ -663,5 +915,130 @@ export const migrateFactionDescriptions = async (): Promise<void> => {
     await saveFactions(updatedFactions);
   } catch (error) {
     console.error('Error migrating faction descriptions:', error);
+  }
+};
+
+// Location management functions
+export const saveLocations = async (
+  locations: GameLocation[]
+): Promise<void> => {
+  const dataset: LocationDataset = {
+    locations,
+    version: '1.0',
+    lastUpdated: new Date().toISOString(),
+  };
+  await AsyncStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(dataset));
+};
+
+export const loadLocations = async (): Promise<GameLocation[]> => {
+  const data = await AsyncStorage.getItem(LOCATION_STORAGE_KEY);
+  if (!data) return [];
+
+  const dataset: LocationDataset = JSON.parse(data);
+  return dataset.locations || [];
+};
+
+export const getLocation = async (
+  locationId: string
+): Promise<GameLocation | null> => {
+  const locations = await loadLocations();
+  return locations.find(l => l.id === locationId) || null;
+};
+
+export const createLocation = async (locationData: {
+  name: string;
+  description: string;
+}): Promise<GameLocation | null> => {
+  const existingLocations = await loadLocations();
+
+  // Check if location with this name already exists
+  const existingLocation = existingLocations.find(
+    l => l.name.toLowerCase() === locationData.name.toLowerCase()
+  );
+  if (existingLocation) {
+    return null; // Location already exists
+  }
+
+  const now = new Date().toISOString();
+  const newLocation: GameLocation = {
+    id: uuidv4(),
+    name: locationData.name,
+    description: locationData.description,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await saveLocations([...existingLocations, newLocation]);
+  return newLocation;
+};
+
+export const updateLocation = async (
+  locationId: string,
+  updates: Partial<Omit<GameLocation, 'id' | 'createdAt'>>
+): Promise<GameLocation | null> => {
+  const locations = await loadLocations();
+  const index = locations.findIndex(l => l.id === locationId);
+
+  if (index === -1) return null;
+
+  const updatedLocation: GameLocation = {
+    ...locations[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  locations[index] = updatedLocation;
+  await saveLocations(locations);
+  return updatedLocation;
+};
+
+export const deleteLocation = async (locationId: string): Promise<boolean> => {
+  const locations = await loadLocations();
+  const filtered = locations.filter(l => l.id !== locationId);
+
+  if (filtered.length === locations.length) return false;
+
+  await saveLocations(filtered);
+  return true;
+};
+
+export const deleteLocationCompletely = async (
+  locationId: string
+): Promise<{ success: boolean; charactersUpdated: number }> => {
+  try {
+    // First, remove the location reference from all characters
+    const characters = await loadCharacters();
+    let charactersUpdated = 0;
+
+    const updatedCharacters = characters.map(character => {
+      if (character.locationId === locationId) {
+        charactersUpdated++;
+        return {
+          ...character,
+          locationId: undefined,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      return character;
+    });
+
+    // Save updated characters if any were modified
+    if (charactersUpdated > 0) {
+      await saveCharacters(updatedCharacters);
+    }
+
+    // Then remove the location from centralized storage
+    await deleteLocation(locationId);
+
+    return {
+      success: true,
+      charactersUpdated,
+    };
+  } catch (error) {
+    console.error('Error deleting location completely:', error);
+    return {
+      success: false,
+      charactersUpdated: 0,
+    };
   }
 };

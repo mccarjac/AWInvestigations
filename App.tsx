@@ -15,6 +15,9 @@ import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { FactionScreen } from './src/screens/faction/FactionScreen';
 import { FactionDetailsScreen } from './src/screens/faction/FactionDetailsScreen';
 import { FactionFormScreen } from './src/screens/faction/FactionFormScreen';
+import { LocationListScreen } from './src/screens/location/LocationListScreen';
+import { LocationDetailsScreen } from './src/screens/location/LocationDetailsScreen';
+import { LocationFormScreen } from './src/screens/location/LocationFormScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation
@@ -79,6 +82,14 @@ function MainDrawer() {
         options={{
           title: 'Factions',
           drawerLabel: 'Factions',
+        }}
+      />
+      <Drawer.Screen
+        name="Locations"
+        component={LocationListScreen}
+        options={{
+          title: 'Locations',
+          drawerLabel: 'Locations',
         }}
       />
       <Drawer.Screen
@@ -157,6 +168,16 @@ export default function App() {
             name="FactionForm"
             component={FactionFormScreen}
             options={{ title: 'Create Faction' }}
+          />
+          <Stack.Screen
+            name="LocationDetails"
+            component={LocationDetailsScreen}
+            options={{ title: 'Location Details' }}
+          />
+          <Stack.Screen
+            name="LocationForm"
+            component={LocationFormScreen}
+            options={{ title: 'Create Location' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
