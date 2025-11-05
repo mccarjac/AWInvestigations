@@ -18,6 +18,7 @@ import { FactionFormScreen } from './src/screens/faction/FactionFormScreen';
 import { LocationListScreen } from './src/screens/location/LocationListScreen';
 import { LocationDetailsScreen } from './src/screens/location/LocationDetailsScreen';
 import { LocationFormScreen } from './src/screens/location/LocationFormScreen';
+import { LocationMapScreen } from './src/screens/location/LocationMapScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation
@@ -178,6 +179,11 @@ export default function App() {
             name="LocationForm"
             component={LocationFormScreen}
             options={{ title: 'Create Location' }}
+          />
+          <Stack.Screen
+            name="LocationMap"
+            component={LocationMapScreen}
+            options={{ title: 'Junktown Map' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

@@ -15,6 +15,7 @@ export type RootStackParamList = {
   FactionForm: undefined;
   LocationDetails: { locationId: string };
   LocationForm: undefined;
+  LocationMap: undefined;
   CharacterForm: {
     character?: GameCharacter;
     onSubmit?: (character: GameCharacter) => void;

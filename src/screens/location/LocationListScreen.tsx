@@ -113,12 +113,20 @@ export const LocationListScreen: React.FC = () => {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerAddButton}
-          onPress={handleCreateLocation}
-        >
-          <Text style={styles.headerAddButtonText}>+</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity
+            style={styles.headerMapButton}
+            onPress={handleViewMap}
+          >
+            <Text style={styles.headerMapButtonText}>🗺️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerAddButton}
+            onPress={handleCreateLocation}
+          >
+            <Text style={styles.headerAddButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [navigation]);
@@ -131,6 +139,10 @@ export const LocationListScreen: React.FC = () => {
 
   const handleCreateLocation = () => {
     navigation.navigate('LocationForm');
+  };
+
+  const handleViewMap = () => {
+    navigation.navigate('LocationMap');
   };
 
   const handleDeleteLocation = async (
@@ -296,6 +308,14 @@ const styles = StyleSheet.create({
   },
   headerAddButton: commonStyles.headerButton.add,
   headerAddButtonText: commonStyles.headerButton.addText,
+  headerMapButton: {
+    ...commonStyles.headerButton.add,
+    marginRight: 4,
+  },
+  headerMapButtonText: {
+    ...commonStyles.headerButton.addText,
+    fontSize: 20,
+  },
   deleteButton: {
     ...commonStyles.button.small,
     ...commonStyles.button.danger,
