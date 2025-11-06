@@ -1,19 +1,82 @@
-import React, { useState } from 'react';
-import { View, Image, StyleSheet, Dimensions, Text } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Image,
+  StyleSheet,
+  Dimensions,
+  Text,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  Alert,
+} from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  SharedValue,
 } from 'react-native-reanimated';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import mapImage from '../../../assets/JunktownMap.png';
+import { GameLocation } from '@models/types';
+import { loadLocations, updateLocation } from '@utils/characterStorage';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+interface LocationPinProps {
+  location: GameLocation;
+  imageSize: { width: number; height: number };
+  scale: SharedValue<number>;
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+}
+
+const LocationPin: React.FC<LocationPinProps> = ({
+  location,
+  imageSize,
+  scale,
+  translateX,
+  translateY,
+}) => {
+  const { x, y } = location.mapCoordinates || { x: 0, y: 0 };
+
+  // Convert normalized coordinates (0-1) to pixel position on the image
+  const pixelX = x * imageSize.width - imageSize.width / 2;
+  const pixelY = y * imageSize.height - imageSize.height / 2;
+
+  const pinAnimatedStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: pixelX - 12, // Center the pin (pin is 24px wide)
+    top: pixelY - 24, // Position so pin point is at the coordinate
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
+  if (!location.mapCoordinates) return null;
+
+  return (
+    <Animated.View style={pinAnimatedStyle}>
+      <View style={styles.pin}>
+        <Text style={styles.pinIcon}>📍</Text>
+      </View>
+    </Animated.View>
+  );
+};
+
 export const LocationMapScreen: React.FC = () => {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [locations, setLocations] = useState<GameLocation[]>([]);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [pendingCoordinates, setPendingCoordinates] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -40,6 +103,18 @@ export const LocationMapScreen: React.FC = () => {
       });
     }
   }, []);
+
+  // Load locations when screen is focused
+  const loadLocationsData = useCallback(async () => {
+    const loadedLocations = await loadLocations();
+    setLocations(loadedLocations);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadLocationsData();
+    }, [loadLocationsData])
+  );
 
   const pinchGesture = Gesture.Pinch()
     .onUpdate(e => {
@@ -83,9 +158,52 @@ export const LocationMapScreen: React.FC = () => {
       }
     });
 
-  const composedGesture = Gesture.Simultaneous(
+  const singleTap = Gesture.Tap()
+    .numberOfTaps(1)
+    .maxDuration(250)
+    .onEnd(e => {
+      if (imageSize.width === 0 || imageSize.height === 0) return;
+
+      // Calculate the tap position relative to the image
+      // Account for container centering
+      const containerCenterX = screenWidth / 2;
+      const containerCenterY = screenHeight / 2;
+
+      // Calculate image position (centered in container, then transformed)
+      const imageOffsetX = translateX.value;
+      const imageOffsetY = translateY.value;
+
+      // Tap position relative to container center
+      const tapX = e.x - containerCenterX;
+      const tapY = e.y - containerCenterY;
+
+      // Adjust for current scale and translation to get position on original image
+      const relativeX = (tapX - imageOffsetX) / scale.value;
+      const relativeY = (tapY - imageOffsetY) / scale.value;
+
+      // Convert to normalized coordinates (0-1)
+      const normalizedX = (relativeX + imageSize.width / 2) / imageSize.width;
+      const normalizedY = (relativeY + imageSize.height / 2) / imageSize.height;
+
+      // Only process taps within the image bounds
+      if (
+        normalizedX >= 0 &&
+        normalizedX <= 1 &&
+        normalizedY >= 0 &&
+        normalizedY <= 1
+      ) {
+        setPendingCoordinates({
+          x: normalizedX,
+          y: normalizedY,
+        });
+        setShowLocationPicker(true);
+      }
+    });
+
+  const composedGesture = Gesture.Race(
     doubleTap,
-    Gesture.Simultaneous(pinchGesture, panGesture)
+    Gesture.Simultaneous(pinchGesture, panGesture),
+    singleTap
   );
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -96,22 +214,67 @@ export const LocationMapScreen: React.FC = () => {
     ],
   }));
 
+  const handleLocationSelect = async (location: GameLocation) => {
+    if (!pendingCoordinates) return;
+
+    try {
+      await updateLocation(location.id, {
+        mapCoordinates: pendingCoordinates,
+      });
+
+      // Reload locations to reflect the update
+      await loadLocationsData();
+
+      // Close picker and clear pending coordinates
+      setShowLocationPicker(false);
+      setPendingCoordinates(null);
+
+      Alert.alert('Success', `Pin placed for "${location.name}" on the map.`, [
+        { text: 'OK' },
+      ]);
+    } catch {
+      Alert.alert('Error', 'Failed to save pin location. Please try again.', [
+        { text: 'OK' },
+      ]);
+    }
+  };
+
+  const handleCancelPicker = () => {
+    setShowLocationPicker(false);
+    setPendingCoordinates(null);
+  };
+
+  // Get locations without map coordinates (available for placement)
+  const unplacedLocations = locations.filter(loc => !loc.mapCoordinates);
+
   return (
     <View style={styles.container}>
       <GestureDetector gesture={composedGesture}>
         <Animated.View style={styles.imageContainer}>
           {imageSize.width > 0 ? (
-            <Animated.Image
-              source={mapImage}
-              style={[
-                {
-                  width: imageSize.width,
-                  height: imageSize.height,
-                },
-                animatedStyle,
-              ]}
-              resizeMode="contain"
-            />
+            <>
+              <Animated.Image
+                source={mapImage}
+                style={[
+                  {
+                    width: imageSize.width,
+                    height: imageSize.height,
+                  },
+                  animatedStyle,
+                ]}
+                resizeMode="contain"
+              />
+              {locations.map(location => (
+                <LocationPin
+                  key={location.id}
+                  location={location}
+                  imageSize={imageSize}
+                  scale={scale}
+                  translateX={translateX}
+                  translateY={translateY}
+                />
+              ))}
+            </>
           ) : (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading map...</Text>
@@ -119,6 +282,60 @@ export const LocationMapScreen: React.FC = () => {
           )}
         </Animated.View>
       </GestureDetector>
+
+      {/* Location Picker Modal */}
+      <Modal
+        visible={showLocationPicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCancelPicker}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Location for Pin</Text>
+            <Text style={styles.modalSubtitle}>
+              Choose a location to place at this position
+            </Text>
+
+            {unplacedLocations.length > 0 ? (
+              <FlatList
+                data={unplacedLocations}
+                keyExtractor={item => item.id}
+                style={styles.locationList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.locationItem}
+                    onPress={() => handleLocationSelect(item)}
+                  >
+                    <Text style={styles.locationName}>{item.name}</Text>
+                    {item.description && (
+                      <Text
+                        style={styles.locationDescription}
+                        numberOfLines={2}
+                      >
+                        {item.description}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  All locations have been placed on the map
+                </Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancelPicker}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -141,4 +358,65 @@ const styles = StyleSheet.create({
     ...commonStyles.text.body,
     color: themeColors.text.secondary,
   },
+  pin: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pinIcon: {
+    fontSize: 24,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: themeColors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    ...commonStyles.text.h2,
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+    marginBottom: 16,
+  },
+  locationList: {
+    maxHeight: 400,
+  },
+  locationItem: {
+    padding: 16,
+    backgroundColor: themeColors.primary,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  locationName: {
+    ...commonStyles.text.h3,
+    marginBottom: 4,
+  },
+  locationDescription: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+    textAlign: 'center',
+  },
+  cancelButton: {
+    ...commonStyles.button.primary,
+    marginTop: 16,
+  },
+  cancelButtonText: commonStyles.button.text,
 });
