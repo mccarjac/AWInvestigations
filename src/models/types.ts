@@ -7,6 +7,7 @@ export interface GameLocation {
   id: string;
   name: string;
   description: string;
+  imageUri?: string;
   mapCoordinates?: {
     x: number; // Normalized coordinate (0-1) representing position on map
     y: number; // Normalized coordinate (0-1) representing position on map

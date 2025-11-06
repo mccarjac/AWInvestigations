@@ -7,6 +7,7 @@ import {
   Alert,
   TextInput,
   Text,
+  Image,
 } from 'react-native';
 import { GameCharacter, GameLocation } from '@models/types';
 import {
@@ -160,6 +161,17 @@ export const LocationDetailsScreen: React.FC = () => {
         {/* Location Header */}
         <View style={styles.locationHeader}>
           <Text style={styles.locationName}>{location.name}</Text>
+
+          {/* Location Image */}
+          {location.imageUri && (
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: location.imageUri }}
+                style={styles.locationImage}
+                resizeMode="cover"
+              />
+            </View>
+          )}
 
           <View style={styles.descriptionSection}>
             <View style={styles.descriptionHeader}>
@@ -377,6 +389,16 @@ const styles = StyleSheet.create({
     ...commonStyles.text.h1,
     textAlign: 'center',
     marginBottom: 16,
+  },
+  imageContainer: {
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  locationImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: themeColors.surface,
   },
 
   // Description Styles

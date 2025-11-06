@@ -9,7 +9,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -25,6 +27,7 @@ type LocationFormNavigationProp = StackNavigationProp<
 interface LocationFormData {
   name: string;
   description: string;
+  imageUri?: string;
 }
 
 export const LocationFormScreen: React.FC = () => {
@@ -33,10 +36,40 @@ export const LocationFormScreen: React.FC = () => {
   const [formData, setFormData] = useState<LocationFormData>({
     name: '',
     description: '',
+    imageUri: undefined,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const pickImage = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        'Permission Required',
+        'Permission to access camera roll is required!',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setFormData({ ...formData, imageUri: result.assets[0].uri });
+    }
+  };
+
+  const removeImage = () => {
+    setFormData({ ...formData, imageUri: undefined });
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -62,6 +95,7 @@ export const LocationFormScreen: React.FC = () => {
       const newLocation = await createLocation({
         name: formData.name.trim(),
         description: formData.description.trim(),
+        imageUri: formData.imageUri,
       });
 
       if (newLocation) {
@@ -116,6 +150,34 @@ export const LocationFormScreen: React.FC = () => {
       >
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Location Information</Text>
+
+          {/* Image Picker */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Location Image</Text>
+            {formData.imageUri ? (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: formData.imageUri }}
+                  style={styles.locationImage}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={removeImage}
+                >
+                  <Text style={styles.removeImageButtonText}>Remove Image</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.imagePickerButton}
+                onPress={pickImage}
+              >
+                <Text style={styles.imagePickerIcon}>📷</Text>
+                <Text style={styles.imagePickerText}>Add Location Image</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>
@@ -235,6 +297,46 @@ const styles = StyleSheet.create({
     color: themeColors.text.muted,
     textAlign: 'right',
     marginTop: 6,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  locationImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    backgroundColor: themeColors.surface,
+  },
+  imagePickerButton: {
+    backgroundColor: themeColors.surface,
+    borderWidth: 2,
+    borderColor: themeColors.border,
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  imagePickerIcon: {
+    fontSize: 48,
+  },
+  imagePickerText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+  },
+  removeImageButton: {
+    backgroundColor: themeColors.accent.danger,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  removeImageButtonText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.primary,
+    fontWeight: '600',
   },
   buttonContainer: {
     flexDirection: 'row',

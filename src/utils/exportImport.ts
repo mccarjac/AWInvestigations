@@ -3,6 +3,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Alert, Platform } from 'react-native';
+import JSZip from 'jszip';
 import {
   exportDataset,
   importDataset,
@@ -13,6 +14,29 @@ import {
 } from './characterStorage';
 import { GameCharacter, Species, RelationshipStanding } from '../models/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '../models/gameData';
+
+/**
+ * Extract image data from a data URI
+ */
+const extractImageData = (
+  dataUri: string
+): { mimeType: string; base64Data: string; extension: string } | null => {
+  const matches = dataUri.match(/^data:([^;]+);base64,(.+)$/);
+  if (!matches) return null;
+
+  const mimeType = matches[1];
+  const base64Data = matches[2];
+  const extension = mimeType.split('/')[1] || 'jpg';
+
+  return { mimeType, base64Data, extension };
+};
+
+/**
+ * Create a data URI from image data
+ */
+const createDataUri = (mimeType: string, base64Data: string): string => {
+  return `data:${mimeType};base64,${base64Data}`;
+};
 
 /**
  * Handle conflicts by asking the user for each conflicting property
@@ -56,25 +80,68 @@ const handleMergeConflicts = async (
 };
 
 /**
- * Export character data for web platform (downloads file directly)
+ * Export character data for web platform (downloads zip file with images)
  */
 const exportCharacterDataWeb = async (): Promise<void> => {
   try {
     // Get the character data as JSON string
     const jsonData = await exportDataset();
+    const dataset = JSON.parse(jsonData);
+
+    // Create a new ZIP file
+    const zip = new JSZip();
+
+    // Track image references and replace URIs with file paths
+    const imageMap = new Map<string, string>();
+    let imageCounter = 0;
+
+    // Process character images
+    if (dataset.characters) {
+      for (const character of dataset.characters) {
+        if (character.imageUri && character.imageUri.startsWith('data:')) {
+          const imageData = extractImageData(character.imageUri);
+          if (imageData) {
+            const filename = `images/characters/${character.id}.${imageData.extension}`;
+            zip.file(filename, imageData.base64Data, { base64: true });
+            imageMap.set(character.imageUri, filename);
+            character.imageUri = filename; // Replace URI with relative path
+            imageCounter++;
+          }
+        }
+      }
+    }
+
+    // Process location images
+    if (dataset.locations) {
+      for (const location of dataset.locations) {
+        if (location.imageUri && location.imageUri.startsWith('data:')) {
+          const imageData = extractImageData(location.imageUri);
+          if (imageData) {
+            const filename = `images/locations/${location.id}.${imageData.extension}`;
+            zip.file(filename, imageData.base64Data, { base64: true });
+            imageMap.set(location.imageUri, filename);
+            location.imageUri = filename; // Replace URI with relative path
+            imageCounter++;
+          }
+        }
+      }
+    }
+
+    // Add the modified JSON to the zip
+    zip.file('data.json', JSON.stringify(dataset, null, 2));
+
+    // Generate the zip file
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
 
     // Create a filename with timestamp
     const timestamp = new Date()
       .toISOString()
       .replace(/:/g, '-')
       .replace(/\..+/, '');
-    const filename = `character-faction-data-${timestamp}.json`;
+    const filename = `character-faction-data-${timestamp}.zip`;
 
-    // Create blob and download link for web
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    // Create temporary download link
+    // Create download link for web
+    const url = URL.createObjectURL(zipBlob);
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
@@ -85,7 +152,7 @@ const exportCharacterDataWeb = async (): Promise<void> => {
 
     Alert.alert(
       'Export Complete',
-      `Character and faction data has been downloaded as ${filename}`,
+      `Character and faction data has been downloaded as ${filename}${imageCounter > 0 ? ` (includes ${imageCounter} images)` : ''}`,
       [{ text: 'OK' }]
     );
   } catch (error) {
@@ -99,36 +166,81 @@ const exportCharacterDataWeb = async (): Promise<void> => {
 };
 
 /**
- * Export character and faction data for native platforms
+ * Export character and faction data for native platforms (creates zip with images)
  */
 const exportCharacterDataNative = async (): Promise<void> => {
   try {
     // Get the character data as JSON string
     const jsonData = await exportDataset();
+    const dataset = JSON.parse(jsonData);
+
+    // Create a new ZIP file
+    const zip = new JSZip();
+
+    // Track image references and replace URIs with file paths
+    let imageCounter = 0;
+
+    // Process character images
+    if (dataset.characters) {
+      for (const character of dataset.characters) {
+        if (character.imageUri && character.imageUri.startsWith('data:')) {
+          const imageData = extractImageData(character.imageUri);
+          if (imageData) {
+            const filename = `images/characters/${character.id}.${imageData.extension}`;
+            zip.file(filename, imageData.base64Data, { base64: true });
+            character.imageUri = filename; // Replace URI with relative path
+            imageCounter++;
+          }
+        }
+      }
+    }
+
+    // Process location images
+    if (dataset.locations) {
+      for (const location of dataset.locations) {
+        if (location.imageUri && location.imageUri.startsWith('data:')) {
+          const imageData = extractImageData(location.imageUri);
+          if (imageData) {
+            const filename = `images/locations/${location.id}.${imageData.extension}`;
+            zip.file(filename, imageData.base64Data, { base64: true });
+            location.imageUri = filename; // Replace URI with relative path
+            imageCounter++;
+          }
+        }
+      }
+    }
+
+    // Add the modified JSON to the zip
+    zip.file('data.json', JSON.stringify(dataset, null, 2));
+
+    // Generate the zip file as base64
+    const zipBase64 = await zip.generateAsync({ type: 'base64' });
 
     // Create a filename with timestamp
     const timestamp = new Date()
       .toISOString()
       .replace(/:/g, '-')
       .replace(/\..+/, '');
-    const filename = `character-faction-data-${timestamp}.json`;
+    const filename = `character-faction-data-${timestamp}.zip`;
 
-    // Write to a temporary file using legacy API
+    // Write to a temporary file
     const fileUri =
       (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') +
       filename;
-    await FileSystem.writeAsStringAsync(fileUri, jsonData);
+    await FileSystem.writeAsStringAsync(fileUri, zipBase64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
 
     // Check if sharing is available
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(fileUri, {
-        mimeType: 'application/json',
+        mimeType: 'application/zip',
         dialogTitle: 'Export Character Data',
       });
     } else {
       Alert.alert(
         'Export Complete',
-        `Character and faction data exported to: ${fileUri}`,
+        `Character and faction data exported to: ${fileUri}${imageCounter > 0 ? ` (includes ${imageCounter} images)` : ''}`,
         [{ text: 'OK' }]
       );
     }
@@ -154,7 +266,7 @@ export const exportCharacterData = async (): Promise<void> => {
 };
 
 /**
- * Import character data for web platform
+ * Import character data for web platform (supports both JSON and ZIP files)
  */
 const importCharacterDataWeb = async (): Promise<boolean> => {
   console.log('importCharacterDataWeb called');
@@ -163,7 +275,7 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
       console.log('Creating file input element');
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json,application/json';
+      input.accept = '.json,.zip,application/json,application/zip';
 
       input.onchange = async (event: any) => {
         console.log('File selected', event);
@@ -176,38 +288,135 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
             return;
           }
 
-          const reader = new FileReader();
-          reader.onload = async e => {
-            try {
-              const fileContent = e.target?.result as string;
-              const success = await importDataset(fileContent);
+          const isZip = file.name.endsWith('.zip');
 
-              if (success) {
-                Alert.alert(
-                  'Import Successful',
-                  'Character and faction data has been imported successfully. All existing data has been replaced.',
-                  [{ text: 'OK' }]
-                );
-                resolve(true);
-              } else {
-                Alert.alert(
-                  'Import Failed',
-                  'The selected file is not a valid character and faction data file.',
-                  [{ text: 'OK' }]
-                );
-                resolve(false);
-              }
-            } catch (error) {
-              console.error('Import error:', error);
+          if (isZip) {
+            // Handle ZIP file
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = new JSZip();
+            const zipContent = await zip.loadAsync(arrayBuffer);
+
+            // Extract data.json
+            const dataFile = zipContent.file('data.json');
+            if (!dataFile) {
               Alert.alert(
                 'Import Failed',
-                'Failed to import character data. Please check the file format and try again.',
+                'Invalid zip file: data.json not found.',
+                [{ text: 'OK' }]
+              );
+              resolve(false);
+              return;
+            }
+
+            const jsonContent = await dataFile.async('text');
+            const dataset = JSON.parse(jsonContent);
+
+            // Extract and restore images
+            const imageFiles = zipContent.folder('images');
+            if (imageFiles) {
+              const allFiles = Object.keys(zipContent.files);
+
+              for (const filePath of allFiles) {
+                if (filePath.startsWith('images/')) {
+                  const file = zipContent.file(filePath);
+                  if (file) {
+                    const base64Data = await file.async('base64');
+
+                    // Determine mime type from extension
+                    const extension = filePath.split('.').pop()?.toLowerCase();
+                    const mimeType =
+                      extension === 'png'
+                        ? 'image/png'
+                        : extension === 'jpg' || extension === 'jpeg'
+                          ? 'image/jpeg'
+                          : extension === 'gif'
+                            ? 'image/gif'
+                            : 'image/jpeg';
+
+                    const dataUri = createDataUri(mimeType, base64Data);
+
+                    // Find and update the corresponding character or location
+                    if (filePath.startsWith('images/characters/')) {
+                      const characterId = filePath
+                        .split('/')
+                        .pop()
+                        ?.split('.')[0];
+                      const character = dataset.characters?.find(
+                        (c: any) => c.id === characterId
+                      );
+                      if (character) {
+                        character.imageUri = dataUri;
+                      }
+                    } else if (filePath.startsWith('images/locations/')) {
+                      const locationId = filePath
+                        .split('/')
+                        .pop()
+                        ?.split('.')[0];
+                      const location = dataset.locations?.find(
+                        (l: any) => l.id === locationId
+                      );
+                      if (location) {
+                        location.imageUri = dataUri;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            // Import the dataset
+            const success = await importDataset(JSON.stringify(dataset));
+
+            if (success) {
+              Alert.alert(
+                'Import Successful',
+                'Character and faction data has been imported successfully. All existing data has been replaced.',
+                [{ text: 'OK' }]
+              );
+              resolve(true);
+            } else {
+              Alert.alert(
+                'Import Failed',
+                'The selected file is not a valid character and faction data file.',
                 [{ text: 'OK' }]
               );
               resolve(false);
             }
-          };
-          reader.readAsText(file);
+          } else {
+            // Handle JSON file (legacy support)
+            const reader = new FileReader();
+            reader.onload = async e => {
+              try {
+                const fileContent = e.target?.result as string;
+                const success = await importDataset(fileContent);
+
+                if (success) {
+                  Alert.alert(
+                    'Import Successful',
+                    'Character and faction data has been imported successfully. All existing data has been replaced.',
+                    [{ text: 'OK' }]
+                  );
+                  resolve(true);
+                } else {
+                  Alert.alert(
+                    'Import Failed',
+                    'The selected file is not a valid character and faction data file.',
+                    [{ text: 'OK' }]
+                  );
+                  resolve(false);
+                }
+              } catch (error) {
+                console.error('Import error:', error);
+                Alert.alert(
+                  'Import Failed',
+                  'Failed to import character data. Please check the file format and try again.',
+                  [{ text: 'OK' }]
+                );
+                resolve(false);
+              }
+            };
+            reader.readAsText(file);
+          }
         } catch (error) {
           console.error('Import error:', error);
           Alert.alert(
@@ -243,13 +452,13 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
 };
 
 /**
- * Import character data for native platforms
+ * Import character data for native platforms (supports both JSON and ZIP files)
  */
 const importCharacterDataNative = async (): Promise<boolean> => {
   try {
     // Pick a document
     const result = await DocumentPicker.getDocumentAsync({
-      type: 'application/json',
+      type: ['application/json', 'application/zip'],
       copyToCacheDirectory: true,
     });
 
@@ -257,28 +466,113 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       return false;
     }
 
-    // Read the file content
-    const fileContent = await FileSystem.readAsStringAsync(
-      result.assets[0].uri
-    );
+    const fileUri = result.assets[0].uri;
+    const fileName = result.assets[0].name;
+    const isZip = fileName.endsWith('.zip');
 
-    // Import the data (this will replace existing data)
-    const success = await importDataset(fileContent);
+    if (isZip) {
+      // Handle ZIP file
+      const base64Content = await FileSystem.readAsStringAsync(fileUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
-    if (success) {
-      Alert.alert(
-        'Import Successful',
-        'Character and faction data has been imported successfully. All existing data has been replaced.',
-        [{ text: 'OK' }]
-      );
-      return true;
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(base64Content, { base64: true });
+
+      // Extract data.json
+      const dataFile = zipContent.file('data.json');
+      if (!dataFile) {
+        Alert.alert('Import Failed', 'Invalid zip file: data.json not found.', [
+          { text: 'OK' },
+        ]);
+        return false;
+      }
+
+      const jsonContent = await dataFile.async('text');
+      const dataset = JSON.parse(jsonContent);
+
+      // Extract and restore images
+      const allFiles = Object.keys(zipContent.files);
+
+      for (const filePath of allFiles) {
+        if (filePath.startsWith('images/')) {
+          const file = zipContent.file(filePath);
+          if (file) {
+            const base64Data = await file.async('base64');
+
+            // Determine mime type from extension
+            const extension = filePath.split('.').pop()?.toLowerCase();
+            const mimeType =
+              extension === 'png'
+                ? 'image/png'
+                : extension === 'jpg' || extension === 'jpeg'
+                  ? 'image/jpeg'
+                  : extension === 'gif'
+                    ? 'image/gif'
+                    : 'image/jpeg';
+
+            const dataUri = createDataUri(mimeType, base64Data);
+
+            // Find and update the corresponding character or location
+            if (filePath.startsWith('images/characters/')) {
+              const characterId = filePath.split('/').pop()?.split('.')[0];
+              const character = dataset.characters?.find(
+                (c: any) => c.id === characterId
+              );
+              if (character) {
+                character.imageUri = dataUri;
+              }
+            } else if (filePath.startsWith('images/locations/')) {
+              const locationId = filePath.split('/').pop()?.split('.')[0];
+              const location = dataset.locations?.find(
+                (l: any) => l.id === locationId
+              );
+              if (location) {
+                location.imageUri = dataUri;
+              }
+            }
+          }
+        }
+      }
+
+      // Import the dataset
+      const success = await importDataset(JSON.stringify(dataset));
+
+      if (success) {
+        Alert.alert(
+          'Import Successful',
+          'Character and faction data has been imported successfully. All existing data has been replaced.',
+          [{ text: 'OK' }]
+        );
+        return true;
+      } else {
+        Alert.alert(
+          'Import Failed',
+          'The selected file is not a valid character and faction data file.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
     } else {
-      Alert.alert(
-        'Import Failed',
-        'The selected file is not a valid character and faction data file.',
-        [{ text: 'OK' }]
-      );
-      return false;
+      // Handle JSON file (legacy support)
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
+      const success = await importDataset(fileContent);
+
+      if (success) {
+        Alert.alert(
+          'Import Successful',
+          'Character and faction data has been imported successfully. All existing data has been replaced.',
+          [{ text: 'OK' }]
+        );
+        return true;
+      } else {
+        Alert.alert(
+          'Import Failed',
+          'The selected file is not a valid character and faction data file.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
     }
   } catch (error) {
     console.error('Import error:', error);
@@ -303,14 +597,14 @@ export const importCharacterData = async (): Promise<boolean> => {
 };
 
 /**
- * Merge character and faction data for web platform
+ * Merge character and faction data for web platform (supports both JSON and ZIP files)
  */
 const mergeCharacterDataWeb = async (): Promise<boolean> => {
   return new Promise(resolve => {
     try {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.json,application/json';
+      input.accept = '.json,.zip,application/json,application/zip';
 
       input.onchange = async (event: any) => {
         try {
@@ -320,70 +614,137 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
             return;
           }
 
-          const reader = new FileReader();
-          reader.onload = async e => {
-            try {
-              const fileContent = e.target?.result as string;
-              const result =
-                await mergeDatasetWithConflictResolution(fileContent);
+          const isZip = file.name.endsWith('.zip');
+          let fileContent: string;
 
-              if (result.success) {
-                if (result.conflicts.length > 0) {
-                  Alert.alert(
-                    'Conflicts Found',
-                    `Found ${result.conflicts.length} character(s) with conflicts. You'll be asked to resolve each conflict.`,
-                    [
-                      {
-                        text: 'Resolve Conflicts',
-                        onPress: async () => {
-                          await handleMergeConflicts(result.conflicts);
-                          Alert.alert(
-                            'Merge Complete',
-                            `Successfully merged ${result.added.length} new characters and factions, and resolved conflicts for ${result.conflicts.length} existing characters.`,
-                            [{ text: 'OK' }]
-                          );
-                        },
-                      },
-                      {
-                        text: 'Skip Conflicts',
-                        style: 'cancel',
-                        onPress: () => {
-                          Alert.alert(
-                            'Merge Complete',
-                            `Successfully merged ${result.added.length} new characters and factions. Conflicts were resolved automatically by merging compatible properties.`,
-                            [{ text: 'OK' }]
-                          );
-                        },
-                      },
-                    ]
-                  );
-                } else {
-                  Alert.alert(
-                    'Merge Successful',
-                    `Successfully merged ${result.added.length} new characters and factions with no conflicts.`,
-                    [{ text: 'OK' }]
-                  );
-                }
-                resolve(true);
-              } else {
-                Alert.alert(
-                  'Merge Failed',
-                  'The selected file is not a valid character data file.',
-                  [{ text: 'OK' }]
-                );
-                resolve(false);
-              }
-            } catch (error) {
-              console.error('Merge error:', error);
+          if (isZip) {
+            // Handle ZIP file
+            const arrayBuffer = await file.arrayBuffer();
+            const zip = new JSZip();
+            const zipContent = await zip.loadAsync(arrayBuffer);
+
+            // Extract data.json
+            const dataFile = zipContent.file('data.json');
+            if (!dataFile) {
               Alert.alert(
                 'Merge Failed',
-                'Failed to merge character and faction data. Please check the file format and try again.',
+                'Invalid zip file: data.json not found.',
                 [{ text: 'OK' }]
               );
               resolve(false);
+              return;
             }
-          };
-          reader.readAsText(file);
+
+            const jsonContent = await dataFile.async('text');
+            const dataset = JSON.parse(jsonContent);
+
+            // Extract and restore images
+            const allFiles = Object.keys(zipContent.files);
+
+            for (const filePath of allFiles) {
+              if (filePath.startsWith('images/')) {
+                const file = zipContent.file(filePath);
+                if (file) {
+                  const base64Data = await file.async('base64');
+
+                  // Determine mime type from extension
+                  const extension = filePath.split('.').pop()?.toLowerCase();
+                  const mimeType =
+                    extension === 'png'
+                      ? 'image/png'
+                      : extension === 'jpg' || extension === 'jpeg'
+                        ? 'image/jpeg'
+                        : extension === 'gif'
+                          ? 'image/gif'
+                          : 'image/jpeg';
+
+                  const dataUri = createDataUri(mimeType, base64Data);
+
+                  // Find and update the corresponding character or location
+                  if (filePath.startsWith('images/characters/')) {
+                    const characterId = filePath
+                      .split('/')
+                      .pop()
+                      ?.split('.')[0];
+                    const character = dataset.characters?.find(
+                      (c: any) => c.id === characterId
+                    );
+                    if (character) {
+                      character.imageUri = dataUri;
+                    }
+                  } else if (filePath.startsWith('images/locations/')) {
+                    const locationId = filePath.split('/').pop()?.split('.')[0];
+                    const location = dataset.locations?.find(
+                      (l: any) => l.id === locationId
+                    );
+                    if (location) {
+                      location.imageUri = dataUri;
+                    }
+                  }
+                }
+              }
+            }
+
+            fileContent = JSON.stringify(dataset);
+          } else {
+            // Handle JSON file (legacy support)
+            const reader = new FileReader();
+            const readerPromise = new Promise<string>((res, rej) => {
+              reader.onload = e => res(e.target?.result as string);
+              reader.onerror = () => rej(new Error('Failed to read file'));
+            });
+            reader.readAsText(file);
+            fileContent = await readerPromise;
+          }
+
+          const result = await mergeDatasetWithConflictResolution(fileContent);
+
+          if (result.success) {
+            if (result.conflicts.length > 0) {
+              Alert.alert(
+                'Conflicts Found',
+                `Found ${result.conflicts.length} character(s) with conflicts. You'll be asked to resolve each conflict.`,
+                [
+                  {
+                    text: 'Resolve Conflicts',
+                    onPress: async () => {
+                      await handleMergeConflicts(result.conflicts);
+                      Alert.alert(
+                        'Merge Complete',
+                        `Successfully merged ${result.added.length} new characters and factions, and resolved conflicts for ${result.conflicts.length} existing characters.`,
+                        [{ text: 'OK' }]
+                      );
+                    },
+                  },
+                  {
+                    text: 'Skip Conflicts',
+                    style: 'cancel',
+                    onPress: () => {
+                      Alert.alert(
+                        'Merge Complete',
+                        `Successfully merged ${result.added.length} new characters and factions. Conflicts were resolved automatically by merging compatible properties.`,
+                        [{ text: 'OK' }]
+                      );
+                    },
+                  },
+                ]
+              );
+            } else {
+              Alert.alert(
+                'Merge Successful',
+                `Successfully merged ${result.added.length} new characters and factions with no conflicts.`,
+                [{ text: 'OK' }]
+              );
+            }
+            resolve(true);
+          } else {
+            Alert.alert(
+              'Merge Failed',
+              'The selected file is not a valid character data file.',
+              [{ text: 'OK' }]
+            );
+            resolve(false);
+          }
         } catch (error) {
           console.error('Merge error:', error);
           Alert.alert(
@@ -418,13 +779,13 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
 };
 
 /**
- * Merge character and faction data for native platforms
+ * Merge character and faction data for native platforms (supports both JSON and ZIP files)
  */
 const mergeCharacterDataNative = async (): Promise<boolean> => {
   try {
     // Pick a document
     const result = await DocumentPicker.getDocumentAsync({
-      type: 'application/json',
+      type: ['application/json', 'application/zip'],
       copyToCacheDirectory: true,
     });
 
@@ -432,10 +793,82 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       return false;
     }
 
-    // Read the file content
-    const fileContent = await FileSystem.readAsStringAsync(
-      result.assets[0].uri
-    );
+    const fileUri = result.assets[0].uri;
+    const fileName = result.assets[0].name;
+    const isZip = fileName.endsWith('.zip');
+
+    let fileContent: string;
+
+    if (isZip) {
+      // Handle ZIP file
+      const base64Content = await FileSystem.readAsStringAsync(fileUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(base64Content, { base64: true });
+
+      // Extract data.json
+      const dataFile = zipContent.file('data.json');
+      if (!dataFile) {
+        Alert.alert('Merge Failed', 'Invalid zip file: data.json not found.', [
+          { text: 'OK' },
+        ]);
+        return false;
+      }
+
+      const jsonContent = await dataFile.async('text');
+      const dataset = JSON.parse(jsonContent);
+
+      // Extract and restore images
+      const allFiles = Object.keys(zipContent.files);
+
+      for (const filePath of allFiles) {
+        if (filePath.startsWith('images/')) {
+          const file = zipContent.file(filePath);
+          if (file) {
+            const base64Data = await file.async('base64');
+
+            // Determine mime type from extension
+            const extension = filePath.split('.').pop()?.toLowerCase();
+            const mimeType =
+              extension === 'png'
+                ? 'image/png'
+                : extension === 'jpg' || extension === 'jpeg'
+                  ? 'image/jpeg'
+                  : extension === 'gif'
+                    ? 'image/gif'
+                    : 'image/jpeg';
+
+            const dataUri = createDataUri(mimeType, base64Data);
+
+            // Find and update the corresponding character or location
+            if (filePath.startsWith('images/characters/')) {
+              const characterId = filePath.split('/').pop()?.split('.')[0];
+              const character = dataset.characters?.find(
+                (c: any) => c.id === characterId
+              );
+              if (character) {
+                character.imageUri = dataUri;
+              }
+            } else if (filePath.startsWith('images/locations/')) {
+              const locationId = filePath.split('/').pop()?.split('.')[0];
+              const location = dataset.locations?.find(
+                (l: any) => l.id === locationId
+              );
+              if (location) {
+                location.imageUri = dataUri;
+              }
+            }
+          }
+        }
+      }
+
+      fileContent = JSON.stringify(dataset);
+    } else {
+      // Handle JSON file (legacy support)
+      fileContent = await FileSystem.readAsStringAsync(fileUri);
+    }
 
     // Merge the data with conflict resolution
     const result_merge = await mergeDatasetWithConflictResolution(fileContent);

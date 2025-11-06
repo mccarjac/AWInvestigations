@@ -7,6 +7,7 @@ import {
   Alert,
   TextInput,
   Text,
+  Image,
 } from 'react-native';
 import { GameCharacter, GameLocation } from '@models/types';
 import {
@@ -201,21 +202,32 @@ export const LocationListScreen: React.FC = () => {
         style={styles.locationContent}
         onPress={() => handleLocationSelect(item)}
       >
-        <View style={styles.locationHeader}>
-          <Text style={styles.locationName}>{item.location.name}</Text>
-          <View style={styles.locationCounts}>
-            <Text style={styles.countText}>
-              {item.totalCount} character{item.totalCount !== 1 ? 's' : ''}
-            </Text>
-            <Text style={styles.presentText}>{item.presentCount} present</Text>
-          </View>
-        </View>
-
-        {item.location.description && (
-          <Text style={styles.locationDescription} numberOfLines={2}>
-            {item.location.description}
-          </Text>
+        {item.location.imageUri && (
+          <Image
+            source={{ uri: item.location.imageUri }}
+            style={styles.locationThumbnail}
+            resizeMode="cover"
+          />
         )}
+        <View style={styles.locationTextContent}>
+          <View style={styles.locationHeader}>
+            <Text style={styles.locationName}>{item.location.name}</Text>
+            <View style={styles.locationCounts}>
+              <Text style={styles.countText}>
+                {item.totalCount} character{item.totalCount !== 1 ? 's' : ''}
+              </Text>
+              <Text style={styles.presentText}>
+                {item.presentCount} present
+              </Text>
+            </View>
+          </View>
+
+          {item.location.description && (
+            <Text style={styles.locationDescription} numberOfLines={2}>
+              {item.location.description}
+            </Text>
+          )}
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -281,6 +293,17 @@ const styles = StyleSheet.create({
   },
   locationCard: commonStyles.card.base,
   locationContent: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  locationThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: themeColors.surface,
+  },
+  locationTextContent: {
     flex: 1,
   },
   locationHeader: {
