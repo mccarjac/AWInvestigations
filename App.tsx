@@ -19,6 +19,9 @@ import { LocationListScreen } from './src/screens/location/LocationListScreen';
 import { LocationDetailsScreen } from './src/screens/location/LocationDetailsScreen';
 import { LocationFormScreen } from './src/screens/location/LocationFormScreen';
 import { LocationMapScreen } from './src/screens/location/LocationMapScreen';
+import { EventsTimelineScreen } from './src/screens/events/EventsTimelineScreen';
+import { EventsFormScreen } from './src/screens/events/EventsFormScreen';
+import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Dark theme for navigation
@@ -91,6 +94,14 @@ function MainDrawer() {
         options={{
           title: 'Locations',
           drawerLabel: 'Locations',
+        }}
+      />
+      <Drawer.Screen
+        name="Events"
+        component={EventsTimelineScreen}
+        options={{
+          title: 'Events',
+          drawerLabel: 'Events',
         }}
       />
       <Drawer.Screen
@@ -184,6 +195,21 @@ export default function App() {
             name="LocationMap"
             component={LocationMapScreen}
             options={{ title: 'Junktown Map' }}
+          />
+          <Stack.Screen
+            name="EventsTimeline"
+            component={EventsTimelineScreen}
+            options={{ title: 'Events Timeline' }}
+          />
+          <Stack.Screen
+            name="EventsForm"
+            component={EventsFormScreen}
+            options={{ title: 'Event Form' }}
+          />
+          <Stack.Screen
+            name="EventsDetail"
+            component={EventsDetailScreen}
+            options={{ title: 'Event Details' }}
           />
         </Stack.Navigator>
       </NavigationContainer>

@@ -127,6 +127,22 @@ const exportCharacterDataWeb = async (): Promise<void> => {
       }
     }
 
+    // Process event images
+    if (dataset.events) {
+      for (const event of dataset.events) {
+        if (event.imageUri && event.imageUri.startsWith('data:')) {
+          const imageData = extractImageData(event.imageUri);
+          if (imageData) {
+            const filename = `images/events/${event.id}.${imageData.extension}`;
+            zip.file(filename, imageData.base64Data, { base64: true });
+            imageMap.set(event.imageUri, filename);
+            event.imageUri = filename; // Replace URI with relative path
+            imageCounter++;
+          }
+        }
+      }
+    }
+
     // Add the modified JSON to the zip
     zip.file('data.json', JSON.stringify(dataset, null, 2));
 
@@ -204,6 +220,21 @@ const exportCharacterDataNative = async (): Promise<void> => {
             const filename = `images/locations/${location.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
             location.imageUri = filename; // Replace URI with relative path
+            imageCounter++;
+          }
+        }
+      }
+    }
+
+    // Process event images
+    if (dataset.events) {
+      for (const event of dataset.events) {
+        if (event.imageUri && event.imageUri.startsWith('data:')) {
+          const imageData = extractImageData(event.imageUri);
+          if (imageData) {
+            const filename = `images/events/${event.id}.${imageData.extension}`;
+            zip.file(filename, imageData.base64Data, { base64: true });
+            event.imageUri = filename; // Replace URI with relative path
             imageCounter++;
           }
         }
@@ -335,7 +366,7 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
 
                     const dataUri = createDataUri(mimeType, base64Data);
 
-                    // Find and update the corresponding character or location
+                    // Find and update the corresponding character, location, or event
                     if (filePath.startsWith('images/characters/')) {
                       const characterId = filePath
                         .split('/')
@@ -357,6 +388,14 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
                       );
                       if (location) {
                         location.imageUri = dataUri;
+                      }
+                    } else if (filePath.startsWith('images/events/')) {
+                      const eventId = filePath.split('/').pop()?.split('.')[0];
+                      const event = dataset.events?.find(
+                        (e: any) => e.id === eventId
+                      );
+                      if (event) {
+                        event.imageUri = dataUri;
                       }
                     }
                   }
@@ -529,7 +568,7 @@ const importCharacterDataNative = async (): Promise<boolean> => {
 
             const dataUri = createDataUri(mimeType, base64Data);
 
-            // Find and update the corresponding character or location
+            // Find and update the corresponding character, location, or event
             if (filePath.startsWith('images/characters/')) {
               const characterId = filePath.split('/').pop()?.split('.')[0];
               const character = dataset.characters?.find(
@@ -545,6 +584,12 @@ const importCharacterDataNative = async (): Promise<boolean> => {
               );
               if (location) {
                 location.imageUri = dataUri;
+              }
+            } else if (filePath.startsWith('images/events/')) {
+              const eventId = filePath.split('/').pop()?.split('.')[0];
+              const event = dataset.events?.find((e: any) => e.id === eventId);
+              if (event) {
+                event.imageUri = dataUri;
               }
             }
           }
@@ -692,7 +737,7 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
 
                   const dataUri = createDataUri(mimeType, base64Data);
 
-                  // Find and update the corresponding character or location
+                  // Find and update the corresponding character, location, or event
                   if (filePath.startsWith('images/characters/')) {
                     const characterId = filePath
                       .split('/')
@@ -711,6 +756,14 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
                     );
                     if (location) {
                       location.imageUri = dataUri;
+                    }
+                  } else if (filePath.startsWith('images/events/')) {
+                    const eventId = filePath.split('/').pop()?.split('.')[0];
+                    const event = dataset.events?.find(
+                      (e: any) => e.id === eventId
+                    );
+                    if (event) {
+                      event.imageUri = dataUri;
                     }
                   }
                 }
@@ -907,6 +960,12 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
               );
               if (location) {
                 location.imageUri = dataUri;
+              }
+            } else if (filePath.startsWith('images/events/')) {
+              const eventId = filePath.split('/').pop()?.split('.')[0];
+              const event = dataset.events?.find((e: any) => e.id === eventId);
+              if (event) {
+                event.imageUri = dataUri;
               }
             }
           }

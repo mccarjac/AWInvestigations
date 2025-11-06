@@ -4,6 +4,8 @@ import {
   GameCharacter,
   GameLocation,
   LocationDataset,
+  GameEvent,
+  EventDataset,
 } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -23,6 +25,7 @@ interface FactionDataset {
 const STORAGE_KEY = 'gameCharacterManager';
 const FACTION_STORAGE_KEY = 'gameCharacterManager_factions';
 const LOCATION_STORAGE_KEY = 'gameCharacterManager_locations';
+const EVENT_STORAGE_KEY = 'gameCharacterManager_events';
 
 export const saveCharacters = async (
   characters: GameCharacter[]
@@ -101,6 +104,7 @@ export const exportDataset = async (): Promise<string> => {
   const characterData = await AsyncStorage.getItem(STORAGE_KEY);
   const factionData = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
   const locationData = await AsyncStorage.getItem(LOCATION_STORAGE_KEY);
+  const eventData = await AsyncStorage.getItem(EVENT_STORAGE_KEY);
 
   const characters = characterData
     ? JSON.parse(characterData)
@@ -111,11 +115,15 @@ export const exportDataset = async (): Promise<string> => {
   const locations = locationData
     ? JSON.parse(locationData)
     : { locations: [], version: '1.0', lastUpdated: '' };
+  const events = eventData
+    ? JSON.parse(eventData)
+    : { events: [], version: '1.0', lastUpdated: '' };
 
   const combinedDataset = {
     characters: characters.characters || [],
     factions: factions.factions || [],
     locations: locations.locations || [],
+    events: events.events || [],
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
@@ -259,6 +267,7 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
       characters: dataset.characters?.length || 0,
       factions: dataset.factions?.length || 0,
       locations: dataset.locations?.length || 0,
+      events: dataset.events?.length || 0,
     });
 
     // Handle location data first (merge with existing, don't replace)
@@ -320,6 +329,20 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
         FACTION_STORAGE_KEY,
         JSON.stringify(factionDataset)
       );
+    }
+
+    // Handle event data if present
+    if (dataset.events) {
+      const eventDataset: EventDataset = {
+        events: dataset.events,
+        version: dataset.version || '1.0',
+        lastUpdated: dataset.lastUpdated || new Date().toISOString(),
+      };
+      await AsyncStorage.setItem(
+        EVENT_STORAGE_KEY,
+        JSON.stringify(eventDataset)
+      );
+      console.log(`Imported ${dataset.events.length} events`);
     }
 
     return true;
@@ -1043,4 +1066,76 @@ export const deleteLocationCompletely = async (
       charactersUpdated: 0,
     };
   }
+};
+
+// ============================================
+// Event Storage Functions
+// ============================================
+
+export const saveEvents = async (events: GameEvent[]): Promise<void> => {
+  const dataset: EventDataset = {
+    events,
+    version: '1.0',
+    lastUpdated: new Date().toISOString(),
+  };
+  await AsyncStorage.setItem(EVENT_STORAGE_KEY, JSON.stringify(dataset));
+};
+
+export const loadEvents = async (): Promise<GameEvent[]> => {
+  const data = await AsyncStorage.getItem(EVENT_STORAGE_KEY);
+  if (!data) return [];
+
+  const dataset: EventDataset = JSON.parse(data);
+  return dataset.events;
+};
+
+export const createEvent = async (
+  event: Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<GameEvent> => {
+  return await addEvent(event);
+};
+
+export const addEvent = async (
+  event: Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<GameEvent> => {
+  const events = await loadEvents();
+  const newEvent: GameEvent = {
+    ...event,
+    id: uuidv4(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveEvents([...events, newEvent]);
+  return newEvent;
+};
+
+export const updateEvent = async (
+  id: string,
+  updates: Partial<GameEvent>
+): Promise<GameEvent | null> => {
+  const events = await loadEvents();
+  const index = events.findIndex(e => e.id === id);
+
+  if (index === -1) return null;
+
+  const updatedEvent: GameEvent = {
+    ...events[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  events[index] = updatedEvent;
+  await saveEvents(events);
+  return updatedEvent;
+};
+
+export const deleteEvent = async (id: string): Promise<boolean> => {
+  const events = await loadEvents();
+  const filtered = events.filter(e => e.id !== id);
+
+  if (filtered.length === events.length) return false;
+
+  await saveEvents(filtered);
+  return true;
 };
