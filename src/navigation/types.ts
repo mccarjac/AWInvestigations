@@ -1,4 +1,4 @@
-import { GameCharacter } from '@models/types';
+import { GameCharacter, GameLocation } from '@models/types';
 
 export type RootDrawerParamList = {
   CharacterList: undefined;
@@ -14,7 +14,7 @@ export type RootStackParamList = {
   FactionDetails: { factionName: string };
   FactionForm: undefined;
   LocationDetails: { locationId: string };
-  LocationForm: undefined;
+  LocationForm: { location?: GameLocation };
   LocationMap: undefined;
   CharacterForm: {
     character?: GameCharacter;

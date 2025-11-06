@@ -139,7 +139,7 @@ export const LocationListScreen: React.FC = () => {
   };
 
   const handleCreateLocation = () => {
-    navigation.navigate('LocationForm');
+    navigation.navigate('LocationForm', {});
   };
 
   const handleViewMap = () => {

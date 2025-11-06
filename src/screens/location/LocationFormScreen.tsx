@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,10 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
-import { createLocation } from '@utils/characterStorage';
+import { createLocation, updateLocation } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
@@ -23,6 +23,8 @@ type LocationFormNavigationProp = StackNavigationProp<
   RootStackParamList,
   'LocationForm'
 >;
+
+type LocationFormRouteProp = RouteProp<RootStackParamList, 'LocationForm'>;
 
 interface LocationFormData {
   name: string;
@@ -32,6 +34,8 @@ interface LocationFormData {
 
 export const LocationFormScreen: React.FC = () => {
   const navigation = useNavigation<LocationFormNavigationProp>();
+  const route = useRoute<LocationFormRouteProp>();
+  const { location } = route.params || {};
 
   const [formData, setFormData] = useState<LocationFormData>({
     name: '',
@@ -41,6 +45,17 @@ export const LocationFormScreen: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load existing location data if editing
+  useEffect(() => {
+    if (location) {
+      setFormData({
+        name: location.name,
+        description: location.description,
+        imageUri: location.imageUri,
+      });
+    }
+  }, [location]);
 
   const pickImage = async () => {
     const permissionResult =
@@ -92,30 +107,53 @@ export const LocationFormScreen: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const newLocation = await createLocation({
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        imageUri: formData.imageUri,
-      });
+      if (location) {
+        // Update existing location
+        const updated = await updateLocation(location.id, {
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          imageUri: formData.imageUri,
+        });
 
-      if (newLocation) {
-        Alert.alert('Success', 'Location created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        if (updated) {
+          Alert.alert('Success', 'Location updated successfully!', [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        } else {
+          Alert.alert('Error', 'Failed to update location.', [{ text: 'OK' }]);
+        }
       } else {
-        Alert.alert(
-          'Error',
-          'A location with this name already exists. Please choose a different name.',
-          [{ text: 'OK' }]
-        );
+        // Create new location
+        const newLocation = await createLocation({
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          imageUri: formData.imageUri,
+        });
+
+        if (newLocation) {
+          Alert.alert('Success', 'Location created successfully!', [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        } else {
+          Alert.alert(
+            'Error',
+            'A location with this name already exists. Please choose a different name.',
+            [{ text: 'OK' }]
+          );
+        }
       }
     } catch {
-      Alert.alert('Error', 'Failed to create location. Please try again.', [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        'Error',
+        `Failed to ${location ? 'update' : 'create'} location. Please try again.`,
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -149,7 +187,9 @@ export const LocationFormScreen: React.FC = () => {
         contentContainerStyle={styles.contentContainer}
       >
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location Information</Text>
+          <Text style={styles.sectionTitle}>
+            {location ? 'Edit Location' : 'Location Information'}
+          </Text>
 
           {/* Image Picker */}
           <View style={styles.inputGroup}>
@@ -240,7 +280,13 @@ export const LocationFormScreen: React.FC = () => {
           disabled={isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {isSubmitting ? 'Creating...' : 'Create Location'}
+            {isSubmitting
+              ? location
+                ? 'Updating...'
+                : 'Creating...'
+              : location
+                ? 'Update Location'
+                : 'Create Location'}
           </Text>
         </TouchableOpacity>
       </View>

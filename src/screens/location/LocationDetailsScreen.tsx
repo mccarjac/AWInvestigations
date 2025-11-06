@@ -1,20 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useLayoutEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
-  TextInput,
   Text,
   Image,
 } from 'react-native';
 import { GameCharacter, GameLocation } from '@models/types';
-import {
-  loadCharacters,
-  getLocation,
-  updateLocation,
-} from '@utils/characterStorage';
+import { loadCharacters, getLocation } from '@utils/characterStorage';
 import {
   useNavigation,
   useRoute,
@@ -39,8 +34,6 @@ export const LocationDetailsScreen: React.FC = () => {
 
   const [location, setLocation] = useState<GameLocation | null>(null);
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
-  const [editingDescription, setEditingDescription] = useState(false);
-  const [tempDescription, setTempDescription] = useState<string>('');
 
   const loadData = useCallback(async () => {
     const locationData = await getLocation(locationId);
@@ -71,36 +64,22 @@ export const LocationDetailsScreen: React.FC = () => {
     }, [loadData])
   );
 
-  const handleEditDescription = () => {
-    setTempDescription(location?.description || '');
-    setEditingDescription(true);
-  };
-
-  const handleSaveDescription = async () => {
-    if (!location) return;
-
-    try {
-      const updated = await updateLocation(location.id, {
-        description: tempDescription,
-      });
-
-      if (updated) {
-        setLocation(updated);
-        setEditingDescription(false);
-      }
-    } catch (error) {
-      console.error('Failed to update location description:', error);
-      Alert.alert(
-        'Error',
-        'Failed to save location description. Please try again.'
-      );
-    }
-  };
-
-  const handleCancelEditDescription = () => {
-    setTempDescription('');
-    setEditingDescription(false);
-  };
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() =>
+            navigation.navigate('LocationForm', {
+              location: location || undefined,
+            })
+          }
+        >
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, location]);
 
   const getStats = () => {
     const totalCharacters = characters.length;
@@ -173,52 +152,17 @@ export const LocationDetailsScreen: React.FC = () => {
             </View>
           )}
 
-          <View style={styles.descriptionSection}>
-            <View style={styles.descriptionHeader}>
+          {/* Description Section */}
+          {location.description && (
+            <View style={styles.descriptionSection}>
               <Text style={styles.descriptionLabel}>Description</Text>
-              {!editingDescription && (
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={handleEditDescription}
-                >
-                  <Text style={styles.editButtonText}>Edit</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {editingDescription ? (
-              <View style={styles.descriptionEditContainer}>
-                <TextInput
-                  style={styles.descriptionInput}
-                  value={tempDescription}
-                  onChangeText={setTempDescription}
-                  placeholder="Enter location description..."
-                  multiline
-                  numberOfLines={4}
-                />
-                <View style={styles.descriptionActions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.cancelButton]}
-                    onPress={handleCancelEditDescription}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.saveButton]}
-                    onPress={handleSaveDescription}
-                  >
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
               <View style={styles.descriptionDisplay}>
                 <Text style={styles.descriptionText}>
-                  {location.description || 'No description provided'}
+                  {location.description}
                 </Text>
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </View>
 
         {/* Location Statistics */}
@@ -405,14 +349,21 @@ const styles = StyleSheet.create({
   descriptionSection: {
     marginTop: 8,
   },
-  descriptionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   descriptionLabel: {
     ...commonStyles.text.label,
+    marginBottom: 12,
+  },
+  descriptionDisplay: {
+    backgroundColor: themeColors.elevated,
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: themeColors.text.primary,
+    lineHeight: 20,
   },
   editButton: {
     ...commonStyles.button.primary,
@@ -421,55 +372,6 @@ const styles = StyleSheet.create({
   },
   editButtonText: {
     color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  descriptionDisplay: {
-    backgroundColor: themeColors.elevated,
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    minHeight: 80,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: themeColors.text.primary,
-    lineHeight: 20,
-  },
-  descriptionEditContainer: {
-    gap: 12,
-  },
-  descriptionInput: {
-    ...commonStyles.input.base,
-    textAlignVertical: 'top',
-    minHeight: 100,
-  },
-  descriptionActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-  },
-  actionButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  saveButton: {
-    backgroundColor: themeColors.accent.primary,
-  },
-  cancelButton: {
-    ...commonStyles.button.secondary,
-  },
-  saveButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  cancelButtonText: {
-    color: themeColors.text.muted,
     fontSize: 14,
     fontWeight: '600',
   },
