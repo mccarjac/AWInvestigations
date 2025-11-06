@@ -1089,6 +1089,12 @@ export const loadEvents = async (): Promise<GameEvent[]> => {
   return dataset.events;
 };
 
+export const createEvent = async (
+  event: Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<GameEvent> => {
+  return await addEvent(event);
+};
+
 export const addEvent = async (
   event: Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<GameEvent> => {

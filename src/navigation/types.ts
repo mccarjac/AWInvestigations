@@ -1,4 +1,4 @@
-import { GameCharacter, GameLocation } from '@models/types';
+import { GameCharacter, GameLocation, GameEvent } from '@models/types';
 
 export type RootDrawerParamList = {
   CharacterList: undefined;
@@ -7,6 +7,7 @@ export type RootDrawerParamList = {
   DataManagement: undefined;
   Factions: undefined;
   Locations: undefined;
+  Events: undefined;
 };
 
 export type RootStackParamList = {
@@ -21,4 +22,7 @@ export type RootStackParamList = {
     onSubmit?: (character: GameCharacter) => void;
   };
   CharacterDetail: { character: GameCharacter };
+  EventsTimeline: undefined;
+  EventsForm: { event?: GameEvent };
+  EventsDetail: { eventId: string };
 };
