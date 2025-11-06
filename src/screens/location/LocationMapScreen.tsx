@@ -176,7 +176,7 @@ export const LocationMapScreen: React.FC = () => {
       const containerCenterX = screenWidth / 2;
       const containerCenterY = screenHeight / 2;
 
-      // Calculate image position (centered in container, then transformed)
+      // Reading SharedValue.value is safe here because gesture handlers run as worklets on UI thread
       const imageOffsetX = translateX.value;
       const imageOffsetY = translateY.value;
 
@@ -208,9 +208,8 @@ export const LocationMapScreen: React.FC = () => {
     });
 
   // Compose gestures with proper priority to avoid conflicts
-  // Double tap has priority over single tap
-  // Single tap should not fire during pan gestures
-  const composedGesture = Gesture.Exclusive(
+  // Double tap should take precedence, then allow pan/pinch and single tap simultaneously
+  const composedGesture = Gesture.Race(
     doubleTap,
     Gesture.Simultaneous(pinchGesture, panGesture),
     singleTap
@@ -242,7 +241,8 @@ export const LocationMapScreen: React.FC = () => {
       Alert.alert('Success', `Pin placed for "${location.name}" on the map.`, [
         { text: 'OK' },
       ]);
-    } catch {
+    } catch (error) {
+      console.error('Failed to save pin location:', error);
       Alert.alert('Error', 'Failed to save pin location. Please try again.', [
         { text: 'OK' },
       ]);
