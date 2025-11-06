@@ -207,7 +207,10 @@ export const LocationMapScreen: React.FC = () => {
       }
     });
 
-  const composedGesture = Gesture.Race(
+  // Compose gestures with proper priority to avoid conflicts
+  // Double tap has priority over single tap
+  // Single tap should not fire during pan gestures
+  const composedGesture = Gesture.Exclusive(
     doubleTap,
     Gesture.Simultaneous(pinchGesture, panGesture),
     singleTap
