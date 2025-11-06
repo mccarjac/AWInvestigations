@@ -257,3 +257,26 @@ export type CharacterFormData = Omit<
   GameCharacter,
   'id' | 'createdAt' | 'updatedAt'
 >;
+
+export interface GameEvent {
+  id: string;
+  title: string;
+  description?: string;
+  date: string; // ISO date string
+  time?: string; // Optional time in HH:MM format
+  locationId?: string; // Reference to GameLocation.id
+  characterIds?: string[]; // References to GameCharacter.id
+  factionNames?: string[]; // Faction names involved in the event
+  notes?: string;
+  imageUri?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventDataset {
+  events: GameEvent[];
+  version: string;
+  lastUpdated: string;
+}
+
+export type EventFormData = Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>;
