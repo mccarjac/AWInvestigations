@@ -383,17 +383,33 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
               resolve(false);
             }
           } else {
-            // Handle JSON file (legacy support)
+            // Handle JSON file (without images - strip imageUri fields)
             const reader = new FileReader();
             reader.onload = async e => {
               try {
                 const fileContent = e.target?.result as string;
-                const success = await importDataset(fileContent);
+                const dataset = JSON.parse(fileContent);
+
+                // Strip imageUri from all characters
+                if (dataset.characters) {
+                  dataset.characters.forEach((character: any) => {
+                    delete character.imageUri;
+                  });
+                }
+
+                // Strip imageUri from all locations
+                if (dataset.locations) {
+                  dataset.locations.forEach((location: any) => {
+                    delete location.imageUri;
+                  });
+                }
+
+                const success = await importDataset(JSON.stringify(dataset));
 
                 if (success) {
                   Alert.alert(
                     'Import Successful',
-                    'Character and faction data has been imported successfully. All existing data has been replaced.',
+                    'Character and faction data has been imported successfully (without images). All existing data has been replaced.',
                     [{ text: 'OK' }]
                   );
                   resolve(true);
@@ -554,14 +570,30 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         return false;
       }
     } else {
-      // Handle JSON file (legacy support)
+      // Handle JSON file (without images - strip imageUri fields)
       const fileContent = await FileSystem.readAsStringAsync(fileUri);
-      const success = await importDataset(fileContent);
+      const dataset = JSON.parse(fileContent);
+
+      // Strip imageUri from all characters
+      if (dataset.characters) {
+        dataset.characters.forEach((character: any) => {
+          delete character.imageUri;
+        });
+      }
+
+      // Strip imageUri from all locations
+      if (dataset.locations) {
+        dataset.locations.forEach((location: any) => {
+          delete location.imageUri;
+        });
+      }
+
+      const success = await importDataset(JSON.stringify(dataset));
 
       if (success) {
         Alert.alert(
           'Import Successful',
-          'Character and faction data has been imported successfully. All existing data has been replaced.',
+          'Character and faction data has been imported successfully (without images). All existing data has been replaced.',
           [{ text: 'OK' }]
         );
         return true;
@@ -687,14 +719,31 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
 
             fileContent = JSON.stringify(dataset);
           } else {
-            // Handle JSON file (legacy support)
+            // Handle JSON file (without images - strip imageUri fields)
             const reader = new FileReader();
             const readerPromise = new Promise<string>((res, rej) => {
               reader.onload = e => res(e.target?.result as string);
               reader.onerror = () => rej(new Error('Failed to read file'));
             });
             reader.readAsText(file);
-            fileContent = await readerPromise;
+            const jsonContent = await readerPromise;
+            const dataset = JSON.parse(jsonContent);
+
+            // Strip imageUri from all characters
+            if (dataset.characters) {
+              dataset.characters.forEach((character: any) => {
+                delete character.imageUri;
+              });
+            }
+
+            // Strip imageUri from all locations
+            if (dataset.locations) {
+              dataset.locations.forEach((location: any) => {
+                delete location.imageUri;
+              });
+            }
+
+            fileContent = JSON.stringify(dataset);
           }
 
           const result = await mergeDatasetWithConflictResolution(fileContent);
@@ -866,8 +915,25 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
 
       fileContent = JSON.stringify(dataset);
     } else {
-      // Handle JSON file (legacy support)
-      fileContent = await FileSystem.readAsStringAsync(fileUri);
+      // Handle JSON file (without images - strip imageUri fields)
+      const jsonContent = await FileSystem.readAsStringAsync(fileUri);
+      const dataset = JSON.parse(jsonContent);
+
+      // Strip imageUri from all characters
+      if (dataset.characters) {
+        dataset.characters.forEach((character: any) => {
+          delete character.imageUri;
+        });
+      }
+
+      // Strip imageUri from all locations
+      if (dataset.locations) {
+        dataset.locations.forEach((location: any) => {
+          delete location.imageUri;
+        });
+      }
+
+      fileContent = JSON.stringify(dataset);
     }
 
     // Merge the data with conflict resolution
