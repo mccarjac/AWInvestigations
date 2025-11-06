@@ -20,6 +20,7 @@ import {
   updateEvent,
   loadCharacters,
   loadLocations,
+  loadFactions,
 } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -50,11 +51,18 @@ export const EventsFormScreen: React.FC = () => {
   const route = useRoute<EventsFormRouteProp>();
   const { event } = route.params || {};
 
+  // Calculate default date (30 years in the future)
+  const getDefaultDate = () => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 30);
+    return date.toISOString().split('T')[0]; // YYYY-MM-DD
+  };
+
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
-    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-    time: '',
+    date: getDefaultDate(),
+    time: '12:00',
     locationId: '',
     characterIds: [],
     factionNames: [],
@@ -66,17 +74,16 @@ export const EventsFormScreen: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
   const [locations, setLocations] = useState<GameLocation[]>([]);
-  const [factionInput, setFactionInput] = useState<string>('');
+  const [factions, setFactions] = useState<string[]>([]);
 
-  // Load characters and locations
+  // Load characters, locations, and factions
   useEffect(() => {
     const loadData = async () => {
-      const [loadedCharacters, loadedLocations] = await Promise.all([
-        loadCharacters(),
-        loadLocations(),
-      ]);
+      const [loadedCharacters, loadedLocations, loadedFactions] =
+        await Promise.all([loadCharacters(), loadLocations(), loadFactions()]);
       setCharacters(loadedCharacters);
       setLocations(loadedLocations);
+      setFactions(loadedFactions.map(f => f.name).sort());
     };
     loadData();
   }, []);
@@ -127,23 +134,28 @@ export const EventsFormScreen: React.FC = () => {
     setFormData({ ...formData, imageUri: undefined });
   };
 
-  const toggleCharacter = (characterId: string) => {
-    const newCharacterIds = formData.characterIds.includes(characterId)
-      ? formData.characterIds.filter(id => id !== characterId)
-      : [...formData.characterIds, characterId];
-    setFormData({ ...formData, characterIds: newCharacterIds });
-  };
-
-  const addFaction = () => {
-    if (
-      factionInput.trim() &&
-      !formData.factionNames.includes(factionInput.trim())
-    ) {
+  const addCharacter = (characterId: string) => {
+    if (characterId && !formData.characterIds.includes(characterId)) {
       setFormData({
         ...formData,
-        factionNames: [...formData.factionNames, factionInput.trim()],
+        characterIds: [...formData.characterIds, characterId],
       });
-      setFactionInput('');
+    }
+  };
+
+  const removeCharacter = (characterId: string) => {
+    setFormData({
+      ...formData,
+      characterIds: formData.characterIds.filter(id => id !== characterId),
+    });
+  };
+
+  const addFaction = (factionName: string) => {
+    if (factionName && !formData.factionNames.includes(factionName)) {
+      setFormData({
+        ...formData,
+        factionNames: [...formData.factionNames, factionName],
+      });
     }
   };
 
@@ -253,9 +265,7 @@ export const EventsFormScreen: React.FC = () => {
           />
           {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
 
-          <Text style={[styles.label, styles.labelMargin]}>
-            Time (optional)
-          </Text>
+          <Text style={[styles.label, styles.labelMargin]}>Time *</Text>
           <TextInput
             style={styles.input}
             placeholder="HH:MM (e.g., 14:30)"
@@ -292,51 +302,64 @@ export const EventsFormScreen: React.FC = () => {
         {/* Characters */}
         <View style={styles.section}>
           <Text style={styles.label}>Characters Involved</Text>
-          <View style={styles.characterList}>
-            {characters.map(character => (
-              <TouchableOpacity
-                key={character.id}
-                style={[
-                  styles.characterChip,
-                  formData.characterIds.includes(character.id) &&
-                    styles.characterChipSelected,
-                ]}
-                onPress={() => toggleCharacter(character.id)}
-              >
-                <Text
-                  style={[
-                    styles.characterChipText,
-                    formData.characterIds.includes(character.id) &&
-                      styles.characterChipTextSelected,
-                  ]}
-                >
-                  {character.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue=""
+              onValueChange={addCharacter}
+              style={styles.picker}
+              dropdownIconColor={themeColors.text.secondary}
+            >
+              <Picker.Item label="Select character to add..." value="" />
+              {characters
+                .filter(c => !formData.characterIds.includes(c.id))
+                .map(character => (
+                  <Picker.Item
+                    key={character.id}
+                    label={character.name}
+                    value={character.id}
+                  />
+                ))}
+            </Picker>
+          </View>
+          <View style={styles.selectedList}>
+            {formData.characterIds.map(characterId => {
+              const character = characters.find(c => c.id === characterId);
+              return character ? (
+                <View key={characterId} style={styles.selectedChip}>
+                  <Text style={styles.selectedChipText}>{character.name}</Text>
+                  <TouchableOpacity
+                    onPress={() => removeCharacter(characterId)}
+                  >
+                    <Text style={styles.removeButton}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null;
+            })}
           </View>
         </View>
 
         {/* Factions */}
         <View style={styles.section}>
           <Text style={styles.label}>Factions Involved</Text>
-          <View style={styles.factionInputContainer}>
-            <TextInput
-              style={[styles.input, styles.factionInput]}
-              placeholder="Add faction name"
-              placeholderTextColor={themeColors.text.muted}
-              value={factionInput}
-              onChangeText={setFactionInput}
-              onSubmitEditing={addFaction}
-            />
-            <TouchableOpacity style={styles.addButton} onPress={addFaction}>
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue=""
+              onValueChange={addFaction}
+              style={styles.picker}
+              dropdownIconColor={themeColors.text.secondary}
+            >
+              <Picker.Item label="Select faction to add..." value="" />
+              {factions
+                .filter(f => !formData.factionNames.includes(f))
+                .map(faction => (
+                  <Picker.Item key={faction} label={faction} value={faction} />
+                ))}
+            </Picker>
           </View>
-          <View style={styles.factionList}>
+          <View style={styles.selectedList}>
             {formData.factionNames.map((faction, index) => (
-              <View key={index} style={styles.factionChip}>
-                <Text style={styles.factionChipText}>{faction}</Text>
+              <View key={index} style={styles.selectedChip}>
+                <Text style={styles.selectedChipText}>{faction}</Text>
                 <TouchableOpacity onPress={() => removeFaction(faction)}>
                   <Text style={styles.removeButton}>×</Text>
                 </TouchableOpacity>
@@ -451,56 +474,13 @@ const styles = StyleSheet.create({
   picker: {
     color: themeColors.text.primary,
   },
-  characterList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  characterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: themeColors.elevated,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: 16,
-  },
-  characterChipSelected: {
-    backgroundColor: themeColors.accent.primary,
-    borderColor: themeColors.accent.primary,
-  },
-  characterChipText: {
-    fontSize: 14,
-    color: themeColors.text.secondary,
-  },
-  characterChipTextSelected: {
-    color: themeColors.text.primary,
-    fontWeight: '600',
-  },
-  factionInputContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  factionInput: {
-    flex: 1,
-  },
-  addButton: {
-    backgroundColor: themeColors.accent.primary,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    justifyContent: 'center',
-  },
-  addButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  factionList: {
+  selectedList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,
   },
-  factionChip: {
+  selectedChip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingLeft: 12,
@@ -510,7 +490,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     gap: 6,
   },
-  factionChipText: {
+  selectedChipText: {
     fontSize: 14,
     color: themeColors.text.primary,
   },

@@ -13,6 +13,7 @@ import {
   loadEvents,
   loadCharacters,
   loadLocations,
+  loadFactions,
 } from '@utils/characterStorage';
 import {
   useNavigation,
@@ -24,6 +25,7 @@ import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { Picker } from '@react-native-picker/picker';
 
 type EventsNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Events'>,
@@ -41,16 +43,24 @@ export const EventsTimelineScreen: React.FC = () => {
   const [filterLocation, setFilterLocation] = useState<string>('');
   const [filterCharacter, setFilterCharacter] = useState<string>('');
   const [filterFaction, setFilterFaction] = useState<string>('');
+  const [characters, setCharacters] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [factions, setFactions] = useState<string[]>([]);
   const navigation = useNavigation<EventsNavigationProp>();
 
   const loadData = useCallback(async () => {
     const eventsData = await loadEvents();
-    const characters = await loadCharacters();
-    const locations = await loadLocations();
+    const charactersData = await loadCharacters();
+    const locationsData = await loadLocations();
+    const factionsData = await loadFactions();
 
     // Create lookup maps
-    const locationMap = new Map(locations.map(l => [l.id, l.name]));
-    const characterMap = new Map(characters.map(c => [c.id, c.name]));
+    const locationMap = new Map(locationsData.map(l => [l.id, l.name]));
+    const characterMap = new Map(charactersData.map(c => [c.id, c.name]));
 
     // Enhance events with location and character names
     const eventsWithDetails: EventWithDetails[] = eventsData.map(event => ({
@@ -68,6 +78,21 @@ export const EventsTimelineScreen: React.FC = () => {
     );
 
     setEvents(eventsWithDetails);
+
+    // Set filter options
+    setCharacters(
+      charactersData
+        .map(c => ({ id: c.id, name: c.name }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    );
+    setLocations(
+      locationsData
+        .map(l => ({ id: l.id, name: l.name }))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    );
+    setFactions(
+      factionsData.map(f => f.name).sort((a, b) => a.localeCompare(b))
+    );
   }, []);
 
   useFocusEffect(
@@ -103,31 +128,22 @@ export const EventsTimelineScreen: React.FC = () => {
       );
     }
 
-    // Filter by location
-    if (filterLocation.trim()) {
-      const locQuery = filterLocation.toLowerCase().trim();
+    // Filter by location ID
+    if (filterLocation) {
+      filtered = filtered.filter(event => event.locationId === filterLocation);
+    }
+
+    // Filter by character ID
+    if (filterCharacter) {
       filtered = filtered.filter(event =>
-        event.locationName?.toLowerCase().includes(locQuery)
+        event.characterIds?.includes(filterCharacter)
       );
     }
 
-    // Filter by character
-    if (filterCharacter.trim()) {
-      const charQuery = filterCharacter.toLowerCase().trim();
+    // Filter by faction name
+    if (filterFaction) {
       filtered = filtered.filter(event =>
-        event.characterNames.some(name =>
-          name.toLowerCase().includes(charQuery)
-        )
-      );
-    }
-
-    // Filter by faction
-    if (filterFaction.trim()) {
-      const factionQuery = filterFaction.toLowerCase().trim();
-      filtered = filtered.filter(event =>
-        event.factionNames?.some(name =>
-          name.toLowerCase().includes(factionQuery)
-        )
+        event.factionNames?.includes(filterFaction)
       );
     }
 
@@ -214,27 +230,55 @@ export const EventsTimelineScreen: React.FC = () => {
       </View>
 
       <View style={styles.filtersContainer}>
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter by location"
-          placeholderTextColor={themeColors.text.muted}
-          value={filterLocation}
-          onChangeText={setFilterLocation}
-        />
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter by character"
-          placeholderTextColor={themeColors.text.muted}
-          value={filterCharacter}
-          onChangeText={setFilterCharacter}
-        />
-        <TextInput
-          style={styles.filterInput}
-          placeholder="Filter by faction"
-          placeholderTextColor={themeColors.text.muted}
-          value={filterFaction}
-          onChangeText={setFilterFaction}
-        />
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={filterLocation}
+            onValueChange={setFilterLocation}
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="All Locations" value="" />
+            {locations.map(location => (
+              <Picker.Item
+                key={location.id}
+                label={location.name}
+                value={location.id}
+              />
+            ))}
+          </Picker>
+        </View>
+
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={filterCharacter}
+            onValueChange={setFilterCharacter}
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="All Characters" value="" />
+            {characters.map(character => (
+              <Picker.Item
+                key={character.id}
+                label={character.name}
+                value={character.id}
+              />
+            ))}
+          </Picker>
+        </View>
+
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={filterFaction}
+            onValueChange={setFilterFaction}
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="All Factions" value="" />
+            {factions.map(faction => (
+              <Picker.Item key={faction} label={faction} value={faction} />
+            ))}
+          </Picker>
+        </View>
       </View>
 
       <FlatList
@@ -291,14 +335,15 @@ const styles = StyleSheet.create({
     borderBottomColor: themeColors.border,
     gap: 8,
   },
-  filterInput: {
+  pickerContainer: {
     backgroundColor: themeColors.elevated,
     borderWidth: 1,
     borderColor: themeColors.border,
     borderRadius: 8,
-    padding: 10,
+    overflow: 'hidden',
+  },
+  picker: {
     color: themeColors.text.primary,
-    fontSize: 14,
   },
   listContent: {
     padding: 16,
