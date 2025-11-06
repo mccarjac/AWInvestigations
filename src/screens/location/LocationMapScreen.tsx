@@ -62,8 +62,15 @@ const LocationPin: React.FC<LocationPinProps> = ({
 
   return (
     <Animated.View style={pinAnimatedStyle}>
-      <View style={styles.pin}>
-        <Text style={styles.pinIcon}>📍</Text>
+      <View style={styles.pinContainer}>
+        <View style={styles.pin}>
+          <Text style={styles.pinIcon}>📍</Text>
+        </View>
+        <View style={styles.pinLabel}>
+          <Text style={styles.pinLabelText} numberOfLines={1}>
+            {location.name}
+          </Text>
+        </View>
       </View>
     </Animated.View>
   );
@@ -244,9 +251,6 @@ export const LocationMapScreen: React.FC = () => {
     setPendingCoordinates(null);
   };
 
-  // Get locations without map coordinates (available for placement)
-  const unplacedLocations = locations.filter(loc => !loc.mapCoordinates);
-
   return (
     <View style={styles.container}>
       <GestureDetector gesture={composedGesture}>
@@ -294,12 +298,12 @@ export const LocationMapScreen: React.FC = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select Location for Pin</Text>
             <Text style={styles.modalSubtitle}>
-              Choose a location to place at this position
+              Choose a location to place or move on the map
             </Text>
 
-            {unplacedLocations.length > 0 ? (
+            {locations.length > 0 ? (
               <FlatList
-                data={unplacedLocations}
+                data={locations}
                 keyExtractor={item => item.id}
                 style={styles.locationList}
                 renderItem={({ item }) => (
@@ -307,7 +311,12 @@ export const LocationMapScreen: React.FC = () => {
                     style={styles.locationItem}
                     onPress={() => handleLocationSelect(item)}
                   >
-                    <Text style={styles.locationName}>{item.name}</Text>
+                    <View style={styles.locationItemHeader}>
+                      <Text style={styles.locationName}>{item.name}</Text>
+                      {item.mapCoordinates && (
+                        <Text style={styles.placedBadge}>Placed</Text>
+                      )}
+                    </View>
                     {item.description && (
                       <Text
                         style={styles.locationDescription}
@@ -322,7 +331,7 @@ export const LocationMapScreen: React.FC = () => {
             ) : (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>
-                  All locations have been placed on the map
+                  No locations available. Create a location first.
                 </Text>
               </View>
             )}
@@ -358,6 +367,9 @@ const styles = StyleSheet.create({
     ...commonStyles.text.body,
     color: themeColors.text.secondary,
   },
+  pinContainer: {
+    alignItems: 'center',
+  },
   pin: {
     width: 24,
     height: 24,
@@ -366,6 +378,21 @@ const styles = StyleSheet.create({
   },
   pinIcon: {
     fontSize: 24,
+  },
+  pinLabel: {
+    backgroundColor: themeColors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 2,
+    maxWidth: 120,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  pinLabelText: {
+    ...commonStyles.text.caption,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -397,9 +424,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
+  locationItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   locationName: {
     ...commonStyles.text.h3,
-    marginBottom: 4,
+    flex: 1,
+  },
+  placedBadge: {
+    ...commonStyles.text.caption,
+    color: themeColors.accent.primary,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   locationDescription: {
     ...commonStyles.text.body,
