@@ -1,3 +1,13 @@
+// Polyfills for JSZip and other Node.js modules
+import { Buffer } from 'buffer';
+import process from 'process/browser';
+
+global.Buffer = Buffer;
+
+if (typeof global.process === 'undefined') {
+  global.process = process;
+}
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';
