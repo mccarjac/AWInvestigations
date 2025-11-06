@@ -11,6 +11,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -55,20 +56,24 @@ export const EventsFormScreen: React.FC = () => {
   const getDefaultDate = () => {
     const date = new Date();
     date.setFullYear(date.getFullYear() + 30);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD
+    date.setHours(12, 0, 0, 0); // Set to noon
+    return date;
   };
 
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
-    date: getDefaultDate(),
-    time: '12:00',
+    date: '',
+    time: '',
     locationId: '',
     characterIds: [],
     factionNames: [],
     notes: '',
     imageUri: undefined,
   });
+
+  const [dateTime, setDateTime] = useState<Date>(getDefaultDate());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -102,6 +107,14 @@ export const EventsFormScreen: React.FC = () => {
         notes: event.notes || '',
         imageUri: event.imageUri,
       });
+
+      // Parse existing date/time into Date object
+      if (event.date) {
+        const dateTimeStr = event.time
+          ? `${event.date}T${event.time}`
+          : `${event.date}T12:00`;
+        setDateTime(new Date(dateTimeStr));
+      }
     }
   }, [event]);
 
@@ -166,15 +179,31 @@ export const EventsFormScreen: React.FC = () => {
     });
   };
 
+  const onDateTimeChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDateTime(selectedDate);
+    }
+  };
+
+  const formatDateTime = (date: Date): string => {
+    const dateStr = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    return `${dateStr} at ${timeStr}`;
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
-    }
-
-    if (!formData.date) {
-      newErrors.date = 'Date is required';
     }
 
     setErrors(newErrors);
@@ -186,9 +215,19 @@ export const EventsFormScreen: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      // Convert Date object to date and time strings
+      const date = dateTime.toISOString().split('T')[0]; // YYYY-MM-DD
+      const time = dateTime.toTimeString().slice(0, 5); // HH:MM
+
+      const submitData = {
+        ...formData,
+        date,
+        time,
+      };
+
       if (event) {
         // Update existing event
-        await updateEvent(event.id, formData);
+        await updateEvent(event.id, submitData);
         Alert.alert('Success', 'Event updated successfully', [
           {
             text: 'OK',
@@ -197,7 +236,7 @@ export const EventsFormScreen: React.FC = () => {
         ]);
       } else {
         // Create new event
-        await createEvent(formData);
+        await createEvent(submitData);
         Alert.alert('Success', 'Event created successfully', [
           {
             text: 'OK',
@@ -255,24 +294,23 @@ export const EventsFormScreen: React.FC = () => {
 
         {/* Date and Time */}
         <View style={styles.section}>
-          <Text style={styles.label}>Date *</Text>
-          <TextInput
-            style={[styles.input, errors.date && styles.inputError]}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.date}
-            onChangeText={date => setFormData({ ...formData, date })}
-          />
-          {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
-
-          <Text style={[styles.label, styles.labelMargin]}>Time *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="HH:MM (e.g., 14:30)"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.time}
-            onChangeText={time => setFormData({ ...formData, time })}
-          />
+          <Text style={styles.label}>Date & Time *</Text>
+          <TouchableOpacity
+            style={styles.dateTimeButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateTimeButtonText}>
+              {formatDateTime(dateTime)}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={dateTime}
+              mode="datetime"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onDateTimeChange}
+            />
+          )}
         </View>
 
         {/* Location */}
@@ -440,9 +478,6 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
     marginBottom: 8,
   },
-  labelMargin: {
-    marginTop: 16,
-  },
   input: {
     backgroundColor: themeColors.elevated,
     borderWidth: 1,
@@ -473,6 +508,19 @@ const styles = StyleSheet.create({
   },
   picker: {
     color: themeColors.text.primary,
+  },
+  dateTimeButton: {
+    backgroundColor: themeColors.elevated,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  dateTimeButtonText: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '600',
   },
   selectedList: {
     flexDirection: 'row',
