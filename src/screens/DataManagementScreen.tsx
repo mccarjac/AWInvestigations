@@ -23,13 +23,13 @@ export const DataManagementScreen: React.FC = () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
         return window.confirm(
-          'Are you sure you want to delete all characters and factions? This action cannot be undone.'
+          'Are you sure you want to delete all data (characters, factions, locations, and events)? This action cannot be undone.'
         );
       } else {
         return new Promise<boolean>(resolve => {
           Alert.alert(
             'Clear All Data',
-            'Are you sure you want to delete all characters and factions? This action cannot be undone.',
+            'Are you sure you want to delete all data (characters, factions, locations, and events)? This action cannot be undone.',
             [
               {
                 text: 'Cancel',
@@ -50,9 +50,7 @@ export const DataManagementScreen: React.FC = () => {
     const shouldClear = await confirmClear();
     if (shouldClear) {
       await clearStorage();
-      Alert.alert('Success', 'All characters and factions have been deleted.', [
-        { text: 'OK' },
-      ]);
+      Alert.alert('Success', 'All data has been deleted.', [{ text: 'OK' }]);
     }
   };
 

@@ -741,6 +741,7 @@ export const clearStorage = async (): Promise<void> => {
   await AsyncStorage.removeItem(STORAGE_KEY);
   await AsyncStorage.removeItem(FACTION_STORAGE_KEY);
   await AsyncStorage.removeItem(LOCATION_STORAGE_KEY);
+  await AsyncStorage.removeItem(EVENT_STORAGE_KEY);
 };
 
 // Faction management functions
