@@ -75,6 +75,7 @@ export const CharacterFormScreen: React.FC = () => {
           notes: editingCharacter.notes || '',
           occupation: editingCharacter.occupation || '',
           imageUri: editingCharacter.imageUri,
+          imageUris: editingCharacter.imageUris || (editingCharacter.imageUri ? [editingCharacter.imageUri] : []),
           locationId: editingCharacter.locationId,
           retired: editingCharacter.retired,
           cyberware: [...(editingCharacter.cyberware || [])],
@@ -89,6 +90,7 @@ export const CharacterFormScreen: React.FC = () => {
           notes: '',
           occupation: '',
           imageUri: undefined,
+          imageUris: [],
           locationId: undefined,
           retired: false,
           cyberware: [],
@@ -219,8 +221,22 @@ export const CharacterFormScreen: React.FC = () => {
     });
 
     if (!result.canceled) {
-      handleChange('imageUri', result.assets[0].uri);
+      const newImageUri = result.assets[0].uri;
+      const currentImages = form.imageUris || [];
+      handleChange('imageUris', [...currentImages, newImageUri]);
+      // Keep imageUri for backward compatibility (first image)
+      if (currentImages.length === 0) {
+        handleChange('imageUri', newImageUri);
+      }
     }
+  };
+
+  const removeImage = (index: number) => {
+    const currentImages = form.imageUris || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
+    handleChange('imageUris', newImages);
+    // Update imageUri for backward compatibility
+    handleChange('imageUri', newImages.length > 0 ? newImages[0] : undefined);
   };
 
   const handleSubmit = async () => {
@@ -289,16 +305,28 @@ export const CharacterFormScreen: React.FC = () => {
         </View>
 
         <View style={styles.formSection}>
-          <Text style={styles.label}>Character Image</Text>
-          <View style={styles.imageContainer}>
-            {form.imageUri ? (
-              <Image
-                source={{ uri: form.imageUri }}
-                style={styles.characterImage}
-              />
+          <Text style={styles.label}>Character Images</Text>
+          <View style={styles.imageGalleryContainer}>
+            {form.imageUris && form.imageUris.length > 0 ? (
+              <View style={styles.imageGrid}>
+                {form.imageUris.map((uri, index) => (
+                  <View key={index} style={styles.imageItemContainer}>
+                    <Image
+                      source={{ uri }}
+                      style={styles.characterImageThumbnail}
+                    />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Text style={styles.removeImageButtonText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
             ) : (
               <View style={styles.placeholderImage}>
-                <Text style={styles.placeholderText}>No image selected</Text>
+                <Text style={styles.placeholderText}>No images selected</Text>
               </View>
             )}
             <TouchableOpacity
@@ -306,7 +334,7 @@ export const CharacterFormScreen: React.FC = () => {
               onPress={pickImage}
             >
               <Text style={styles.imagePickerButtonText}>
-                {form.imageUri ? 'Change Image' : 'Pick Image'}
+                {form.imageUris && form.imageUris.length > 0 ? 'Add Another Image' : 'Add Image'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1049,6 +1077,43 @@ export const CharacterFormScreen: React.FC = () => {
 const styles = StyleSheet.create({
   scrollView: commonStyles.layout.scrollView,
   imageContainer: commonStyles.image.container,
+  imageGalleryContainer: {
+    ...commonStyles.image.container,
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 12,
+  },
+  imageItemContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+  },
+  characterImageThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: themeColors.surface,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: themeColors.status.error,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
   characterImage: commonStyles.image.characterLarge,
   placeholderImage: commonStyles.image.placeholder,
   imagePickerButton: commonStyles.image.pickerButton,
