@@ -320,13 +320,27 @@ export const CharacterDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={true}
       >
         <View style={styles.header}>
-          {character.imageUri && (
-            <View style={styles.imageContainer}>
-              <Image
-                source={{ uri: character.imageUri }}
-                style={styles.characterImage}
-              />
-            </View>
+          {((character.imageUris && character.imageUris.length > 0) || character.imageUri) && (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageGallery}
+              contentContainerStyle={styles.imageGalleryContent}
+            >
+              {(character.imageUris && character.imageUris.length > 0 
+                ? character.imageUris 
+                : character.imageUri 
+                  ? [character.imageUri]
+                  : []
+              ).map((uri, index) => (
+                <View key={index} style={styles.imageContainer}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.characterImage}
+                  />
+                </View>
+              ))}
+            </ScrollView>
           )}
           <Text style={styles.name}>{character.name}</Text>
           <View style={styles.headerInfo}>
@@ -375,8 +389,23 @@ export const CharacterDetailScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   scrollView: commonStyles.layout.scrollView,
-  imageContainer: commonStyles.image.container,
-  characterImage: commonStyles.image.character,
+  imageGallery: {
+    marginBottom: 16,
+  },
+  imageGalleryContent: {
+    gap: 12,
+  },
+  imageContainer: {
+    width: 200,
+    height: 200,
+    marginRight: 12,
+  },
+  characterImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 12,
+    backgroundColor: themeColors.surface,
+  },
   recipesContainer: {
     marginTop: 16,
     paddingTop: 16,

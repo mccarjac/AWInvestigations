@@ -30,6 +30,7 @@ interface LocationFormData {
   name: string;
   description: string;
   imageUri?: string;
+  imageUris?: string[];
 }
 
 export const LocationFormScreen: React.FC = () => {
@@ -41,6 +42,7 @@ export const LocationFormScreen: React.FC = () => {
     name: '',
     description: '',
     imageUri: undefined,
+    imageUris: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +55,7 @@ export const LocationFormScreen: React.FC = () => {
         name: location.name,
         description: location.description,
         imageUri: location.imageUri,
+        imageUris: location.imageUris || (location.imageUri ? [location.imageUri] : []),
       });
     }
   }, [location]);
@@ -78,12 +81,25 @@ export const LocationFormScreen: React.FC = () => {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setFormData({ ...formData, imageUri: result.assets[0].uri });
+      const newImageUri = result.assets[0].uri;
+      const currentImages = formData.imageUris || [];
+      const newImages = [...currentImages, newImageUri];
+      setFormData({ 
+        ...formData, 
+        imageUris: newImages,
+        imageUri: newImages[0] // Keep first image for backward compatibility
+      });
     }
   };
 
-  const removeImage = () => {
-    setFormData({ ...formData, imageUri: undefined });
+  const removeImage = (index: number) => {
+    const currentImages = formData.imageUris || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
+    setFormData({ 
+      ...formData, 
+      imageUris: newImages,
+      imageUri: newImages.length > 0 ? newImages[0] : undefined
+    });
   };
 
   const validateForm = (): boolean => {
@@ -113,6 +129,7 @@ export const LocationFormScreen: React.FC = () => {
           name: formData.name.trim(),
           description: formData.description.trim(),
           imageUri: formData.imageUri,
+          imageUris: formData.imageUris,
         });
 
         if (updated) {
@@ -131,6 +148,7 @@ export const LocationFormScreen: React.FC = () => {
           name: formData.name.trim(),
           description: formData.description.trim(),
           imageUri: formData.imageUri,
+          imageUris: formData.imageUris,
         });
 
         if (newLocation) {
@@ -193,19 +211,31 @@ export const LocationFormScreen: React.FC = () => {
 
           {/* Image Picker */}
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Location Image</Text>
-            {formData.imageUri ? (
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: formData.imageUri }}
-                  style={styles.locationImage}
-                  resizeMode="cover"
-                />
+            <Text style={styles.inputLabel}>Location Images</Text>
+            {formData.imageUris && formData.imageUris.length > 0 ? (
+              <View style={styles.imageGalleryContainer}>
+                <View style={styles.imageGrid}>
+                  {formData.imageUris.map((uri, index) => (
+                    <View key={index} style={styles.imageItemContainer}>
+                      <Image
+                        source={{ uri }}
+                        style={styles.locationImageThumbnail}
+                        resizeMode="cover"
+                      />
+                      <TouchableOpacity
+                        style={styles.removeImageIconButton}
+                        onPress={() => removeImage(index)}
+                      >
+                        <Text style={styles.removeImageIconText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
                 <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={removeImage}
+                  style={styles.addImageButton}
+                  onPress={pickImage}
                 >
-                  <Text style={styles.removeImageButtonText}>Remove Image</Text>
+                  <Text style={styles.addImageButtonText}>Add Another Image</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -348,10 +378,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  imageGalleryContainer: {
+    gap: 12,
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  imageItemContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+  },
   locationImage: {
     width: '100%',
     height: 200,
     borderRadius: 12,
+    backgroundColor: themeColors.surface,
+  },
+  locationImageThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
     backgroundColor: themeColors.surface,
   },
   imagePickerButton: {
@@ -372,6 +421,21 @@ const styles = StyleSheet.create({
     ...commonStyles.text.body,
     color: themeColors.text.secondary,
   },
+  addImageButton: {
+    backgroundColor: themeColors.surface,
+    borderWidth: 2,
+    borderColor: themeColors.border,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addImageButtonText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+    fontWeight: '600',
+  },
   removeImageButton: {
     backgroundColor: themeColors.accent.danger,
     paddingVertical: 10,
@@ -383,6 +447,23 @@ const styles = StyleSheet.create({
     ...commonStyles.text.body,
     color: themeColors.text.primary,
     fontWeight: '600',
+  },
+  removeImageIconButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: themeColors.accent.danger,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageIconText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 20,
   },
   buttonContainer: {
     flexDirection: 'row',
