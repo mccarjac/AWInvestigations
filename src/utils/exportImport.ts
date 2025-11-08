@@ -102,30 +102,76 @@ const exportCharacterDataNative = async (): Promise<void> => {
           const processedUris: string[] = [];
           for (let i = 0; i < character.imageUris.length; i++) {
             const uri = character.imageUris[i];
-            if (uri && uri.startsWith('data:')) {
-              const imageData = extractImageData(uri);
-              if (imageData) {
-                const filename = `images/characters/${character.id}_${i}.${imageData.extension}`;
-                zip.file(filename, imageData.base64Data, { base64: true });
-                processedUris.push(filename);
-                imageCounter++;
+            if (uri) {
+              if (uri.startsWith('data:')) {
+                // Handle base64 data URI
+                const imageData = extractImageData(uri);
+                if (imageData) {
+                  const filename = `images/characters/${character.id}_${i}.${imageData.extension}`;
+                  zip.file(filename, imageData.base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                }
+              } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+                // Handle file URI - read and convert to base64
+                try {
+                  const base64Data = await FileSystem.readAsStringAsync(uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
+                  // Detect file extension from URI or default to jpg
+                  const extension =
+                    uri.split('.').pop()?.toLowerCase() || 'jpg';
+                  const filename = `images/characters/${character.id}_${i}.${extension}`;
+                  zip.file(filename, base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                } catch {
+                  // Image file not accessible, skip
+                }
+              } else {
+                processedUris.push(uri);
               }
-            } else {
-              processedUris.push(uri);
             }
           }
-          character.imageUris = processedUris;
-          character.imageUri = processedUris[0];
+          if (processedUris.length > 0) {
+            character.imageUris = processedUris;
+            character.imageUri = processedUris[0];
+          }
         }
         // Handle legacy single image
-        else if (character.imageUri && character.imageUri.startsWith('data:')) {
-          const imageData = extractImageData(character.imageUri);
-          if (imageData) {
-            const filename = `images/characters/${character.id}.${imageData.extension}`;
-            zip.file(filename, imageData.base64Data, { base64: true });
-            character.imageUri = filename;
-            character.imageUris = [filename];
-            imageCounter++;
+        else if (character.imageUri) {
+          if (character.imageUri.startsWith('data:')) {
+            const imageData = extractImageData(character.imageUri);
+            if (imageData) {
+              const filename = `images/characters/${character.id}.${imageData.extension}`;
+              zip.file(filename, imageData.base64Data, { base64: true });
+              character.imageUri = filename;
+              character.imageUris = [filename];
+              imageCounter++;
+            }
+          } else if (
+            character.imageUri.startsWith('file://') ||
+            character.imageUri.startsWith('/')
+          ) {
+            // Handle file URI - read and convert to base64
+            try {
+              const base64Data = await FileSystem.readAsStringAsync(
+                character.imageUri,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+              // Detect file extension from URI or default to jpg
+              const extension =
+                character.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+              const filename = `images/characters/${character.id}.${extension}`;
+              zip.file(filename, base64Data, { base64: true });
+              character.imageUri = filename;
+              character.imageUris = [filename];
+              imageCounter++;
+            } catch {
+              // Image file not accessible, skip
+            }
           }
         }
       }
@@ -139,30 +185,76 @@ const exportCharacterDataNative = async (): Promise<void> => {
           const processedUris: string[] = [];
           for (let i = 0; i < location.imageUris.length; i++) {
             const uri = location.imageUris[i];
-            if (uri && uri.startsWith('data:')) {
-              const imageData = extractImageData(uri);
-              if (imageData) {
-                const filename = `images/locations/${location.id}_${i}.${imageData.extension}`;
-                zip.file(filename, imageData.base64Data, { base64: true });
-                processedUris.push(filename);
-                imageCounter++;
+            if (uri) {
+              if (uri.startsWith('data:')) {
+                // Handle base64 data URI
+                const imageData = extractImageData(uri);
+                if (imageData) {
+                  const filename = `images/locations/${location.id}_${i}.${imageData.extension}`;
+                  zip.file(filename, imageData.base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                }
+              } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+                // Handle file URI - read and convert to base64
+                try {
+                  const base64Data = await FileSystem.readAsStringAsync(uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
+                  // Detect file extension from URI or default to jpg
+                  const extension =
+                    uri.split('.').pop()?.toLowerCase() || 'jpg';
+                  const filename = `images/locations/${location.id}_${i}.${extension}`;
+                  zip.file(filename, base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                } catch {
+                  // Image file not accessible, skip
+                }
+              } else {
+                processedUris.push(uri);
               }
-            } else {
-              processedUris.push(uri);
             }
           }
-          location.imageUris = processedUris;
-          location.imageUri = processedUris[0];
+          if (processedUris.length > 0) {
+            location.imageUris = processedUris;
+            location.imageUri = processedUris[0];
+          }
         }
         // Handle legacy single image
-        else if (location.imageUri && location.imageUri.startsWith('data:')) {
-          const imageData = extractImageData(location.imageUri);
-          if (imageData) {
-            const filename = `images/locations/${location.id}.${imageData.extension}`;
-            zip.file(filename, imageData.base64Data, { base64: true });
-            location.imageUri = filename;
-            location.imageUris = [filename];
-            imageCounter++;
+        else if (location.imageUri) {
+          if (location.imageUri.startsWith('data:')) {
+            const imageData = extractImageData(location.imageUri);
+            if (imageData) {
+              const filename = `images/locations/${location.id}.${imageData.extension}`;
+              zip.file(filename, imageData.base64Data, { base64: true });
+              location.imageUri = filename;
+              location.imageUris = [filename];
+              imageCounter++;
+            }
+          } else if (
+            location.imageUri.startsWith('file://') ||
+            location.imageUri.startsWith('/')
+          ) {
+            // Handle file URI - read and convert to base64
+            try {
+              const base64Data = await FileSystem.readAsStringAsync(
+                location.imageUri,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+              // Detect file extension from URI or default to jpg
+              const extension =
+                location.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+              const filename = `images/locations/${location.id}.${extension}`;
+              zip.file(filename, base64Data, { base64: true });
+              location.imageUri = filename;
+              location.imageUris = [filename];
+              imageCounter++;
+            } catch {
+              // Image file not accessible, skip
+            }
           }
         }
       }
@@ -176,30 +268,76 @@ const exportCharacterDataNative = async (): Promise<void> => {
           const processedUris: string[] = [];
           for (let i = 0; i < event.imageUris.length; i++) {
             const uri = event.imageUris[i];
-            if (uri && uri.startsWith('data:')) {
-              const imageData = extractImageData(uri);
-              if (imageData) {
-                const filename = `images/events/${event.id}_${i}.${imageData.extension}`;
-                zip.file(filename, imageData.base64Data, { base64: true });
-                processedUris.push(filename);
-                imageCounter++;
+            if (uri) {
+              if (uri.startsWith('data:')) {
+                // Handle base64 data URI
+                const imageData = extractImageData(uri);
+                if (imageData) {
+                  const filename = `images/events/${event.id}_${i}.${imageData.extension}`;
+                  zip.file(filename, imageData.base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                }
+              } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+                // Handle file URI - read and convert to base64
+                try {
+                  const base64Data = await FileSystem.readAsStringAsync(uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
+                  // Detect file extension from URI or default to jpg
+                  const extension =
+                    uri.split('.').pop()?.toLowerCase() || 'jpg';
+                  const filename = `images/events/${event.id}_${i}.${extension}`;
+                  zip.file(filename, base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                } catch {
+                  // Image file not accessible, skip
+                }
+              } else {
+                processedUris.push(uri);
               }
-            } else {
-              processedUris.push(uri);
             }
           }
-          event.imageUris = processedUris;
-          event.imageUri = processedUris[0];
+          if (processedUris.length > 0) {
+            event.imageUris = processedUris;
+            event.imageUri = processedUris[0];
+          }
         }
         // Handle legacy single image
-        else if (event.imageUri && event.imageUri.startsWith('data:')) {
-          const imageData = extractImageData(event.imageUri);
-          if (imageData) {
-            const filename = `images/events/${event.id}.${imageData.extension}`;
-            zip.file(filename, imageData.base64Data, { base64: true });
-            event.imageUri = filename;
-            event.imageUris = [filename];
-            imageCounter++;
+        else if (event.imageUri) {
+          if (event.imageUri.startsWith('data:')) {
+            const imageData = extractImageData(event.imageUri);
+            if (imageData) {
+              const filename = `images/events/${event.id}.${imageData.extension}`;
+              zip.file(filename, imageData.base64Data, { base64: true });
+              event.imageUri = filename;
+              event.imageUris = [filename];
+              imageCounter++;
+            }
+          } else if (
+            event.imageUri.startsWith('file://') ||
+            event.imageUri.startsWith('/')
+          ) {
+            // Handle file URI - read and convert to base64
+            try {
+              const base64Data = await FileSystem.readAsStringAsync(
+                event.imageUri,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+              // Detect file extension from URI or default to jpg
+              const extension =
+                event.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+              const filename = `images/events/${event.id}.${extension}`;
+              zip.file(filename, base64Data, { base64: true });
+              event.imageUri = filename;
+              event.imageUris = [filename];
+              imageCounter++;
+            } catch {
+              // Image file not accessible, skip
+            }
           }
         }
       }
