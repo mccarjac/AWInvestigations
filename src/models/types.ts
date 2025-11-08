@@ -7,7 +7,8 @@ export interface GameLocation {
   id: string;
   name: string;
   description: string;
-  imageUri?: string;
+  imageUri?: string; // Deprecated: Use imageUris instead
+  imageUris?: string[];
   mapCoordinates?: {
     x: number; // Normalized coordinate (0-1) representing position on map
     y: number; // Normalized coordinate (0-1) representing position on map
@@ -236,7 +237,8 @@ export interface GameCharacter {
   distinctionIds: DistinctionId[];
   factions: Faction[];
   relationships: Relationship[];
-  imageUri?: string;
+  imageUri?: string; // Deprecated: Use imageUris instead
+  imageUris?: string[];
   notes?: string;
   locationId?: string; // Reference to GameLocation.id
   occupation?: string;
@@ -268,7 +270,8 @@ export interface GameEvent {
   characterIds?: string[]; // References to GameCharacter.id
   factionNames?: string[]; // Faction names involved in the event
   notes?: string;
-  imageUri?: string;
+  imageUri?: string; // Deprecated: Use imageUris instead
+  imageUris?: string[];
   createdAt: string;
   updatedAt: string;
 }

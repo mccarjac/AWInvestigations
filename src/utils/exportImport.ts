@@ -98,13 +98,36 @@ const exportCharacterDataWeb = async (): Promise<void> => {
     // Process character images
     if (dataset.characters) {
       for (const character of dataset.characters) {
-        if (character.imageUri && character.imageUri.startsWith('data:')) {
+        // Handle multiple images
+        if (character.imageUris && character.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < character.imageUris.length; i++) {
+            const uri = character.imageUris[i];
+            if (uri && uri.startsWith('data:')) {
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/characters/${character.id}_${i}.${imageData.extension}`;
+                zip.file(filename, imageData.base64Data, { base64: true });
+                imageMap.set(uri, filename);
+                processedUris.push(filename);
+                imageCounter++;
+              }
+            } else {
+              processedUris.push(uri);
+            }
+          }
+          character.imageUris = processedUris;
+          character.imageUri = processedUris[0]; // Keep first for backward compatibility
+        }
+        // Handle legacy single image
+        else if (character.imageUri && character.imageUri.startsWith('data:')) {
           const imageData = extractImageData(character.imageUri);
           if (imageData) {
             const filename = `images/characters/${character.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
             imageMap.set(character.imageUri, filename);
             character.imageUri = filename; // Replace URI with relative path
+            character.imageUris = [filename]; // Also set as array
             imageCounter++;
           }
         }
@@ -114,13 +137,36 @@ const exportCharacterDataWeb = async (): Promise<void> => {
     // Process location images
     if (dataset.locations) {
       for (const location of dataset.locations) {
-        if (location.imageUri && location.imageUri.startsWith('data:')) {
+        // Handle multiple images
+        if (location.imageUris && location.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < location.imageUris.length; i++) {
+            const uri = location.imageUris[i];
+            if (uri && uri.startsWith('data:')) {
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/locations/${location.id}_${i}.${imageData.extension}`;
+                zip.file(filename, imageData.base64Data, { base64: true });
+                imageMap.set(uri, filename);
+                processedUris.push(filename);
+                imageCounter++;
+              }
+            } else {
+              processedUris.push(uri);
+            }
+          }
+          location.imageUris = processedUris;
+          location.imageUri = processedUris[0]; // Keep first for backward compatibility
+        }
+        // Handle legacy single image
+        else if (location.imageUri && location.imageUri.startsWith('data:')) {
           const imageData = extractImageData(location.imageUri);
           if (imageData) {
             const filename = `images/locations/${location.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
             imageMap.set(location.imageUri, filename);
             location.imageUri = filename; // Replace URI with relative path
+            location.imageUris = [filename]; // Also set as array
             imageCounter++;
           }
         }
@@ -130,13 +176,36 @@ const exportCharacterDataWeb = async (): Promise<void> => {
     // Process event images
     if (dataset.events) {
       for (const event of dataset.events) {
-        if (event.imageUri && event.imageUri.startsWith('data:')) {
+        // Handle multiple images
+        if (event.imageUris && event.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < event.imageUris.length; i++) {
+            const uri = event.imageUris[i];
+            if (uri && uri.startsWith('data:')) {
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/events/${event.id}_${i}.${imageData.extension}`;
+                zip.file(filename, imageData.base64Data, { base64: true });
+                imageMap.set(uri, filename);
+                processedUris.push(filename);
+                imageCounter++;
+              }
+            } else {
+              processedUris.push(uri);
+            }
+          }
+          event.imageUris = processedUris;
+          event.imageUri = processedUris[0]; // Keep first for backward compatibility
+        }
+        // Handle legacy single image
+        else if (event.imageUri && event.imageUri.startsWith('data:')) {
           const imageData = extractImageData(event.imageUri);
           if (imageData) {
             const filename = `images/events/${event.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
             imageMap.set(event.imageUri, filename);
             event.imageUri = filename; // Replace URI with relative path
+            event.imageUris = [filename]; // Also set as array
             imageCounter++;
           }
         }
@@ -199,12 +268,34 @@ const exportCharacterDataNative = async (): Promise<void> => {
     // Process character images
     if (dataset.characters) {
       for (const character of dataset.characters) {
-        if (character.imageUri && character.imageUri.startsWith('data:')) {
+        // Handle multiple images
+        if (character.imageUris && character.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < character.imageUris.length; i++) {
+            const uri = character.imageUris[i];
+            if (uri && uri.startsWith('data:')) {
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/characters/${character.id}_${i}.${imageData.extension}`;
+                zip.file(filename, imageData.base64Data, { base64: true });
+                processedUris.push(filename);
+                imageCounter++;
+              }
+            } else {
+              processedUris.push(uri);
+            }
+          }
+          character.imageUris = processedUris;
+          character.imageUri = processedUris[0];
+        }
+        // Handle legacy single image
+        else if (character.imageUri && character.imageUri.startsWith('data:')) {
           const imageData = extractImageData(character.imageUri);
           if (imageData) {
             const filename = `images/characters/${character.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
-            character.imageUri = filename; // Replace URI with relative path
+            character.imageUri = filename;
+            character.imageUris = [filename];
             imageCounter++;
           }
         }
@@ -214,12 +305,34 @@ const exportCharacterDataNative = async (): Promise<void> => {
     // Process location images
     if (dataset.locations) {
       for (const location of dataset.locations) {
-        if (location.imageUri && location.imageUri.startsWith('data:')) {
+        // Handle multiple images
+        if (location.imageUris && location.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < location.imageUris.length; i++) {
+            const uri = location.imageUris[i];
+            if (uri && uri.startsWith('data:')) {
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/locations/${location.id}_${i}.${imageData.extension}`;
+                zip.file(filename, imageData.base64Data, { base64: true });
+                processedUris.push(filename);
+                imageCounter++;
+              }
+            } else {
+              processedUris.push(uri);
+            }
+          }
+          location.imageUris = processedUris;
+          location.imageUri = processedUris[0];
+        }
+        // Handle legacy single image
+        else if (location.imageUri && location.imageUri.startsWith('data:')) {
           const imageData = extractImageData(location.imageUri);
           if (imageData) {
             const filename = `images/locations/${location.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
-            location.imageUri = filename; // Replace URI with relative path
+            location.imageUri = filename;
+            location.imageUris = [filename];
             imageCounter++;
           }
         }
@@ -229,12 +342,34 @@ const exportCharacterDataNative = async (): Promise<void> => {
     // Process event images
     if (dataset.events) {
       for (const event of dataset.events) {
-        if (event.imageUri && event.imageUri.startsWith('data:')) {
+        // Handle multiple images
+        if (event.imageUris && event.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < event.imageUris.length; i++) {
+            const uri = event.imageUris[i];
+            if (uri && uri.startsWith('data:')) {
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/events/${event.id}_${i}.${imageData.extension}`;
+                zip.file(filename, imageData.base64Data, { base64: true });
+                processedUris.push(filename);
+                imageCounter++;
+              }
+            } else {
+              processedUris.push(uri);
+            }
+          }
+          event.imageUris = processedUris;
+          event.imageUri = processedUris[0];
+        }
+        // Handle legacy single image
+        else if (event.imageUri && event.imageUri.startsWith('data:')) {
           const imageData = extractImageData(event.imageUri);
           if (imageData) {
             const filename = `images/events/${event.id}.${imageData.extension}`;
             zip.file(filename, imageData.base64Data, { base64: true });
-            event.imageUri = filename; // Replace URI with relative path
+            event.imageUri = filename;
+            event.imageUris = [filename];
             imageCounter++;
           }
         }
@@ -347,6 +482,9 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
             if (imageFiles) {
               const allFiles = Object.keys(zipContent.files);
 
+              // Group images by entity ID
+              const imagesByEntity: Record<string, Record<number, string>> = {};
+
               for (const filePath of allFiles) {
                 if (filePath.startsWith('images/')) {
                   const file = zipContent.file(filePath);
@@ -366,38 +504,65 @@ const importCharacterDataWeb = async (): Promise<boolean> => {
 
                     const dataUri = createDataUri(mimeType, base64Data);
 
-                    // Find and update the corresponding character, location, or event
-                    if (filePath.startsWith('images/characters/')) {
-                      const characterId = filePath
-                        .split('/')
-                        .pop()
-                        ?.split('.')[0];
-                      const character = dataset.characters?.find(
-                        (c: any) => c.id === characterId
-                      );
-                      if (character) {
-                        character.imageUri = dataUri;
-                      }
-                    } else if (filePath.startsWith('images/locations/')) {
-                      const locationId = filePath
-                        .split('/')
-                        .pop()
-                        ?.split('.')[0];
-                      const location = dataset.locations?.find(
-                        (l: any) => l.id === locationId
-                      );
-                      if (location) {
-                        location.imageUri = dataUri;
-                      }
-                    } else if (filePath.startsWith('images/events/')) {
-                      const eventId = filePath.split('/').pop()?.split('.')[0];
-                      const event = dataset.events?.find(
-                        (e: any) => e.id === eventId
-                      );
-                      if (event) {
-                        event.imageUri = dataUri;
+                    // Parse filename to get entity ID and image index
+                    const filename = filePath.split('/').pop();
+                    if (filename) {
+                      const match = filename.match(/^(.+?)(?:_(\d+))?\.[^.]+$/);
+                      if (match) {
+                        const entityId = match[1];
+                        const imageIndex = match[2] ? parseInt(match[2]) : 0;
+                        
+                        const entityKey = filePath.startsWith('images/characters/')
+                          ? `character_${entityId}`
+                          : filePath.startsWith('images/locations/')
+                            ? `location_${entityId}`
+                            : filePath.startsWith('images/events/')
+                              ? `event_${entityId}`
+                              : '';
+                        
+                        if (entityKey) {
+                          if (!imagesByEntity[entityKey]) {
+                            imagesByEntity[entityKey] = {};
+                          }
+                          imagesByEntity[entityKey][imageIndex] = dataUri;
+                        }
                       }
                     }
+                  }
+                }
+              }
+
+              // Apply grouped images to entities
+              for (const [entityKey, images] of Object.entries(imagesByEntity)) {
+                const [entityType, entityId] = entityKey.split('_');
+                const sortedImages = Object.keys(images)
+                  .map(k => parseInt(k))
+                  .sort((a, b) => a - b)
+                  .map(idx => images[idx]);
+
+                if (entityType === 'character') {
+                  const character = dataset.characters?.find(
+                    (c: any) => c.id === entityId
+                  );
+                  if (character) {
+                    character.imageUris = sortedImages;
+                    character.imageUri = sortedImages[0]; // Backward compatibility
+                  }
+                } else if (entityType === 'location') {
+                  const location = dataset.locations?.find(
+                    (l: any) => l.id === entityId
+                  );
+                  if (location) {
+                    location.imageUris = sortedImages;
+                    location.imageUri = sortedImages[0]; // Backward compatibility
+                  }
+                } else if (entityType === 'event') {
+                  const event = dataset.events?.find(
+                    (e: any) => e.id === entityId
+                  );
+                  if (event) {
+                    event.imageUris = sortedImages;
+                    event.imageUri = sortedImages[0]; // Backward compatibility
                   }
                 }
               }
@@ -549,6 +714,9 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       // Extract and restore images
       const allFiles = Object.keys(zipContent.files);
 
+      // Group images by entity ID
+      const imagesByEntity: Record<string, Record<number, string>> = {};
+
       for (const filePath of allFiles) {
         if (filePath.startsWith('images/')) {
           const file = zipContent.file(filePath);
@@ -568,30 +736,63 @@ const importCharacterDataNative = async (): Promise<boolean> => {
 
             const dataUri = createDataUri(mimeType, base64Data);
 
-            // Find and update the corresponding character, location, or event
-            if (filePath.startsWith('images/characters/')) {
-              const characterId = filePath.split('/').pop()?.split('.')[0];
-              const character = dataset.characters?.find(
-                (c: any) => c.id === characterId
-              );
-              if (character) {
-                character.imageUri = dataUri;
-              }
-            } else if (filePath.startsWith('images/locations/')) {
-              const locationId = filePath.split('/').pop()?.split('.')[0];
-              const location = dataset.locations?.find(
-                (l: any) => l.id === locationId
-              );
-              if (location) {
-                location.imageUri = dataUri;
-              }
-            } else if (filePath.startsWith('images/events/')) {
-              const eventId = filePath.split('/').pop()?.split('.')[0];
-              const event = dataset.events?.find((e: any) => e.id === eventId);
-              if (event) {
-                event.imageUri = dataUri;
+            // Parse filename to get entity ID and image index
+            const filename = filePath.split('/').pop();
+            if (filename) {
+              const match = filename.match(/^(.+?)(?:_(\d+))?\.[^.]+$/);
+              if (match) {
+                const entityId = match[1];
+                const imageIndex = match[2] ? parseInt(match[2]) : 0;
+                
+                const entityKey = filePath.startsWith('images/characters/')
+                  ? `character_${entityId}`
+                  : filePath.startsWith('images/locations/')
+                    ? `location_${entityId}`
+                    : filePath.startsWith('images/events/')
+                      ? `event_${entityId}`
+                      : '';
+                
+                if (entityKey) {
+                  if (!imagesByEntity[entityKey]) {
+                    imagesByEntity[entityKey] = {};
+                  }
+                  imagesByEntity[entityKey][imageIndex] = dataUri;
+                }
               }
             }
+          }
+        }
+      }
+
+      // Apply grouped images to entities
+      for (const [entityKey, images] of Object.entries(imagesByEntity)) {
+        const [entityType, entityId] = entityKey.split('_');
+        const sortedImages = Object.keys(images)
+          .map(k => parseInt(k))
+          .sort((a, b) => a - b)
+          .map(idx => images[idx]);
+
+        if (entityType === 'character') {
+          const character = dataset.characters?.find(
+            (c: any) => c.id === entityId
+          );
+          if (character) {
+            character.imageUris = sortedImages;
+            character.imageUri = sortedImages[0]; // Backward compatibility
+          }
+        } else if (entityType === 'location') {
+          const location = dataset.locations?.find(
+            (l: any) => l.id === entityId
+          );
+          if (location) {
+            location.imageUris = sortedImages;
+            location.imageUri = sortedImages[0]; // Backward compatibility
+          }
+        } else if (entityType === 'event') {
+          const event = dataset.events?.find((e: any) => e.id === entityId);
+          if (event) {
+            event.imageUris = sortedImages;
+            event.imageUri = sortedImages[0]; // Backward compatibility
           }
         }
       }
@@ -718,6 +919,9 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
             // Extract and restore images
             const allFiles = Object.keys(zipContent.files);
 
+            // Group images by entity ID
+            const imagesByEntity: Record<string, Record<number, string>> = {};
+
             for (const filePath of allFiles) {
               if (filePath.startsWith('images/')) {
                 const file = zipContent.file(filePath);
@@ -737,35 +941,65 @@ const mergeCharacterDataWeb = async (): Promise<boolean> => {
 
                   const dataUri = createDataUri(mimeType, base64Data);
 
-                  // Find and update the corresponding character, location, or event
-                  if (filePath.startsWith('images/characters/')) {
-                    const characterId = filePath
-                      .split('/')
-                      .pop()
-                      ?.split('.')[0];
-                    const character = dataset.characters?.find(
-                      (c: any) => c.id === characterId
-                    );
-                    if (character) {
-                      character.imageUri = dataUri;
-                    }
-                  } else if (filePath.startsWith('images/locations/')) {
-                    const locationId = filePath.split('/').pop()?.split('.')[0];
-                    const location = dataset.locations?.find(
-                      (l: any) => l.id === locationId
-                    );
-                    if (location) {
-                      location.imageUri = dataUri;
-                    }
-                  } else if (filePath.startsWith('images/events/')) {
-                    const eventId = filePath.split('/').pop()?.split('.')[0];
-                    const event = dataset.events?.find(
-                      (e: any) => e.id === eventId
-                    );
-                    if (event) {
-                      event.imageUri = dataUri;
+                  // Parse filename to get entity ID and image index
+                  const filename = filePath.split('/').pop();
+                  if (filename) {
+                    const match = filename.match(/^(.+?)(?:_(\d+))?\.[^.]+$/);
+                    if (match) {
+                      const entityId = match[1];
+                      const imageIndex = match[2] ? parseInt(match[2]) : 0;
+                      
+                      const entityKey = filePath.startsWith('images/characters/')
+                        ? `character_${entityId}`
+                        : filePath.startsWith('images/locations/')
+                          ? `location_${entityId}`
+                          : filePath.startsWith('images/events/')
+                            ? `event_${entityId}`
+                            : '';
+                      
+                      if (entityKey) {
+                        if (!imagesByEntity[entityKey]) {
+                          imagesByEntity[entityKey] = {};
+                        }
+                        imagesByEntity[entityKey][imageIndex] = dataUri;
+                      }
                     }
                   }
+                }
+              }
+            }
+
+            // Apply grouped images to entities
+            for (const [entityKey, images] of Object.entries(imagesByEntity)) {
+              const [entityType, entityId] = entityKey.split('_');
+              const sortedImages = Object.keys(images)
+                .map(k => parseInt(k))
+                .sort((a, b) => a - b)
+                .map(idx => images[idx]);
+
+              if (entityType === 'character') {
+                const character = dataset.characters?.find(
+                  (c: any) => c.id === entityId
+                );
+                if (character) {
+                  character.imageUris = sortedImages;
+                  character.imageUri = sortedImages[0];
+                }
+              } else if (entityType === 'location') {
+                const location = dataset.locations?.find(
+                  (l: any) => l.id === entityId
+                );
+                if (location) {
+                  location.imageUris = sortedImages;
+                  location.imageUri = sortedImages[0];
+                }
+              } else if (entityType === 'event') {
+                const event = dataset.events?.find(
+                  (e: any) => e.id === eventId
+                );
+                if (event) {
+                  event.imageUris = sortedImages;
+                  event.imageUri = sortedImages[0];
                 }
               }
             }
@@ -925,6 +1159,9 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       // Extract and restore images
       const allFiles = Object.keys(zipContent.files);
 
+      // Group images by entity ID
+      const imagesByEntity: Record<string, Record<number, string>> = {};
+
       for (const filePath of allFiles) {
         if (filePath.startsWith('images/')) {
           const file = zipContent.file(filePath);
@@ -944,30 +1181,63 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
 
             const dataUri = createDataUri(mimeType, base64Data);
 
-            // Find and update the corresponding character or location
-            if (filePath.startsWith('images/characters/')) {
-              const characterId = filePath.split('/').pop()?.split('.')[0];
-              const character = dataset.characters?.find(
-                (c: any) => c.id === characterId
-              );
-              if (character) {
-                character.imageUri = dataUri;
-              }
-            } else if (filePath.startsWith('images/locations/')) {
-              const locationId = filePath.split('/').pop()?.split('.')[0];
-              const location = dataset.locations?.find(
-                (l: any) => l.id === locationId
-              );
-              if (location) {
-                location.imageUri = dataUri;
-              }
-            } else if (filePath.startsWith('images/events/')) {
-              const eventId = filePath.split('/').pop()?.split('.')[0];
-              const event = dataset.events?.find((e: any) => e.id === eventId);
-              if (event) {
-                event.imageUri = dataUri;
+            // Parse filename to get entity ID and image index
+            const filename = filePath.split('/').pop();
+            if (filename) {
+              const match = filename.match(/^(.+?)(?:_(\d+))?\.[^.]+$/);
+              if (match) {
+                const entityId = match[1];
+                const imageIndex = match[2] ? parseInt(match[2]) : 0;
+                
+                const entityKey = filePath.startsWith('images/characters/')
+                  ? `character_${entityId}`
+                  : filePath.startsWith('images/locations/')
+                    ? `location_${entityId}`
+                    : filePath.startsWith('images/events/')
+                      ? `event_${entityId}`
+                      : '';
+                
+                if (entityKey) {
+                  if (!imagesByEntity[entityKey]) {
+                    imagesByEntity[entityKey] = {};
+                  }
+                  imagesByEntity[entityKey][imageIndex] = dataUri;
+                }
               }
             }
+          }
+        }
+      }
+
+      // Apply grouped images to entities
+      for (const [entityKey, images] of Object.entries(imagesByEntity)) {
+        const [entityType, entityId] = entityKey.split('_');
+        const sortedImages = Object.keys(images)
+          .map(k => parseInt(k))
+          .sort((a, b) => a - b)
+          .map(idx => images[idx]);
+
+        if (entityType === 'character') {
+          const character = dataset.characters?.find(
+            (c: any) => c.id === entityId
+          );
+          if (character) {
+            character.imageUris = sortedImages;
+            character.imageUri = sortedImages[0];
+          }
+        } else if (entityType === 'location') {
+          const location = dataset.locations?.find(
+            (l: any) => l.id === entityId
+          );
+          if (location) {
+            location.imageUris = sortedImages;
+            location.imageUri = sortedImages[0];
+          }
+        } else if (entityType === 'event') {
+          const event = dataset.events?.find((e: any) => e.id === entityId);
+          if (event) {
+            event.imageUris = sortedImages;
+            event.imageUri = sortedImages[0];
           }
         }
       }

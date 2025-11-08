@@ -44,6 +44,7 @@ interface EventFormData {
   factionNames: string[];
   notes: string;
   imageUri?: string;
+  imageUris?: string[];
 }
 
 export const EventsFormScreen: React.FC = () => {
@@ -68,6 +69,7 @@ export const EventsFormScreen: React.FC = () => {
     factionNames: [],
     notes: '',
     imageUri: undefined,
+    imageUris: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,6 +107,7 @@ export const EventsFormScreen: React.FC = () => {
         factionNames: event.factionNames || [],
         notes: event.notes || '',
         imageUri: event.imageUri,
+        imageUris: event.imageUris || (event.imageUri ? [event.imageUri] : []),
       });
     }
   }, [event]);
@@ -130,12 +133,25 @@ export const EventsFormScreen: React.FC = () => {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setFormData({ ...formData, imageUri: result.assets[0].uri });
+      const newImageUri = result.assets[0].uri;
+      const currentImages = formData.imageUris || [];
+      const newImages = [...currentImages, newImageUri];
+      setFormData({ 
+        ...formData, 
+        imageUris: newImages,
+        imageUri: newImages[0] // Keep first image for backward compatibility
+      });
     }
   };
 
-  const removeImage = () => {
-    setFormData({ ...formData, imageUri: undefined });
+  const removeImage = (index: number) => {
+    const currentImages = formData.imageUris || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
+    setFormData({ 
+      ...formData, 
+      imageUris: newImages,
+      imageUri: newImages.length > 0 ? newImages[0] : undefined
+    });
   };
 
   const addCharacter = (characterId: string) => {
@@ -386,17 +402,26 @@ export const EventsFormScreen: React.FC = () => {
           />
         </View>
 
-        {/* Image */}
+        {/* Images */}
         <View style={styles.section}>
-          <Text style={styles.label}>Event Photo</Text>
-          {formData.imageUri ? (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: formData.imageUri }} style={styles.image} />
-              <TouchableOpacity
-                style={styles.removeImageButton}
-                onPress={removeImage}
-              >
-                <Text style={styles.removeImageButtonText}>Remove Photo</Text>
+          <Text style={styles.label}>Event Photos</Text>
+          {formData.imageUris && formData.imageUris.length > 0 ? (
+            <View style={styles.imageGalleryContainer}>
+              <View style={styles.imageGrid}>
+                {formData.imageUris.map((uri, index) => (
+                  <View key={index} style={styles.imageItemContainer}>
+                    <Image source={{ uri }} style={styles.imageThumbnail} />
+                    <TouchableOpacity
+                      style={styles.removeImageIconButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Text style={styles.removeImageIconText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+                <Text style={styles.addImageButtonText}>Add Another Photo</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -507,9 +532,28 @@ const styles = StyleSheet.create({
   imageContainer: {
     gap: 12,
   },
+  imageGalleryContainer: {
+    gap: 12,
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  imageItemContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+  },
   image: {
     width: '100%',
     height: 200,
+    borderRadius: 8,
+    backgroundColor: themeColors.elevated,
+  },
+  imageThumbnail: {
+    width: 100,
+    height: 100,
     borderRadius: 8,
     backgroundColor: themeColors.elevated,
   },
@@ -527,6 +571,20 @@ const styles = StyleSheet.create({
     color: themeColors.text.secondary,
     fontWeight: '600',
   },
+  addImageButton: {
+    backgroundColor: themeColors.elevated,
+    borderWidth: 2,
+    borderColor: themeColors.border,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  addImageButtonText: {
+    fontSize: 14,
+    color: themeColors.text.secondary,
+    fontWeight: '600',
+  },
   removeImageButton: {
     backgroundColor: themeColors.accent.danger,
     borderRadius: 8,
@@ -537,6 +595,23 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  removeImageIconButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: themeColors.accent.danger,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageIconText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 20,
   },
   submitButton: {
     backgroundColor: themeColors.accent.primary,
