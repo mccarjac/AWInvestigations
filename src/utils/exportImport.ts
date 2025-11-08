@@ -146,8 +146,13 @@ const exportCharacterDataWeb = async (): Promise<void> => {
     // Add the modified JSON to the zip
     zip.file('data.json', JSON.stringify(dataset, null, 2));
 
-    // Generate the zip file
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    // Generate the zip file with compression
+    // Using DEFLATE compression level 6 for good balance between size and quality
+    const zipBlob = await zip.generateAsync({
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 },
+    });
 
     // Create a filename with timestamp
     const timestamp = new Date()
@@ -244,8 +249,13 @@ const exportCharacterDataNative = async (): Promise<void> => {
     // Add the modified JSON to the zip
     zip.file('data.json', JSON.stringify(dataset, null, 2));
 
-    // Generate the zip file as base64
-    const zipBase64 = await zip.generateAsync({ type: 'base64' });
+    // Generate the zip file as base64 with compression
+    // Using DEFLATE compression level 6 for good balance between size and quality
+    const zipBase64 = await zip.generateAsync({
+      type: 'base64',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 },
+    });
 
     // Create a filename with timestamp
     const timestamp = new Date()
