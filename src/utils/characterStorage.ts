@@ -972,6 +972,7 @@ export const createLocation = async (locationData: {
   name: string;
   description: string;
   imageUri?: string;
+  imageUris?: string[];
 }): Promise<GameLocation | null> => {
   const existingLocations = await loadLocations();
 
@@ -989,6 +990,7 @@ export const createLocation = async (locationData: {
     name: locationData.name,
     description: locationData.description,
     imageUri: locationData.imageUri,
+    imageUris: locationData.imageUris,
     createdAt: now,
     updatedAt: now,
   };

@@ -129,6 +129,7 @@ export const LocationFormScreen: React.FC = () => {
           name: formData.name.trim(),
           description: formData.description.trim(),
           imageUri: formData.imageUri,
+          imageUris: formData.imageUris,
         });
 
         if (updated) {
@@ -147,6 +148,7 @@ export const LocationFormScreen: React.FC = () => {
           name: formData.name.trim(),
           description: formData.description.trim(),
           imageUri: formData.imageUri,
+          imageUris: formData.imageUris,
         });
 
         if (newLocation) {
