@@ -81,8 +81,12 @@ export const EventsFormScreen: React.FC = () => {
     const loadData = async () => {
       const [loadedCharacters, loadedLocations, loadedFactions] =
         await Promise.all([loadCharacters(), loadLocations(), loadFactions()]);
-      setCharacters(loadedCharacters);
-      setLocations(loadedLocations);
+      setCharacters(
+        loadedCharacters.sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setLocations(
+        loadedLocations.sort((a, b) => a.name.localeCompare(b.name))
+      );
       setFactions(loadedFactions.map(f => f.name).sort());
     };
     loadData();
