@@ -162,9 +162,25 @@ export const EventsDetailScreen: React.FC = () => {
       style={commonStyles.layout.scrollView}
       contentContainerStyle={styles.content}
     >
-      {/* Event Image */}
-      {event.imageUri && (
-        <Image source={{ uri: event.imageUri }} style={styles.eventImage} />
+      {/* Event Images */}
+      {((event.imageUris && event.imageUris.length > 0) || event.imageUri) && (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.imageGallery}
+          contentContainerStyle={styles.imageGalleryContent}
+        >
+          {(event.imageUris && event.imageUris.length > 0 
+            ? event.imageUris 
+            : event.imageUri 
+              ? [event.imageUri]
+              : []
+          ).map((uri, index) => (
+            <View key={index} style={styles.imageContainer}>
+              <Image source={{ uri }} style={styles.eventImage} />
+            </View>
+          ))}
+        </ScrollView>
       )}
 
       {/* Date and Time */}
@@ -281,9 +297,22 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: themeColors.text.primary,
   },
+  imageGallery: {
+    marginBottom: 8,
+  },
+  imageGalleryContent: {
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  imageContainer: {
+    width: 280,
+    height: 250,
+    marginRight: 12,
+  },
   eventImage: {
     width: '100%',
-    height: 250,
+    height: '100%',
+    borderRadius: 12,
     backgroundColor: themeColors.elevated,
   },
   section: {

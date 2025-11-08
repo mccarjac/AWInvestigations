@@ -141,15 +141,29 @@ export const LocationDetailsScreen: React.FC = () => {
         <View style={styles.locationHeader}>
           <Text style={styles.locationName}>{location.name}</Text>
 
-          {/* Location Image */}
-          {location.imageUri && (
-            <View style={styles.imageContainer}>
-              <Image
-                source={{ uri: location.imageUri }}
-                style={styles.locationImage}
-                resizeMode="cover"
-              />
-            </View>
+          {/* Location Images */}
+          {((location.imageUris && location.imageUris.length > 0) || location.imageUri) && (
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageGallery}
+              contentContainerStyle={styles.imageGalleryContent}
+            >
+              {(location.imageUris && location.imageUris.length > 0 
+                ? location.imageUris 
+                : location.imageUri 
+                  ? [location.imageUri]
+                  : []
+              ).map((uri, index) => (
+                <View key={index} style={styles.imageContainer}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.locationImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              ))}
+            </ScrollView>
           )}
 
           {/* Description Section */}
@@ -334,14 +348,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 16,
   },
-  imageContainer: {
+  imageGallery: {
     marginBottom: 16,
+  },
+  imageGalleryContent: {
+    gap: 12,
+  },
+  imageContainer: {
+    width: 250,
+    height: 200,
     borderRadius: 12,
     overflow: 'hidden',
+    marginRight: 12,
   },
   locationImage: {
     width: '100%',
-    height: 200,
+    height: '100%',
     backgroundColor: themeColors.surface,
   },
 
