@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 interface StoredFaction {
   name: string;
   description: string;
+  imageUri?: string; // Deprecated: Use imageUris instead
+  imageUris?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -801,6 +803,46 @@ export const saveFactionDescription = async (
   await saveFactions(factions);
 };
 
+export const saveFactionImages = async (
+  factionName: string,
+  imageUris: string[]
+): Promise<void> => {
+  const factions = await loadFactions();
+  const existingIndex = factions.findIndex(f => f.name === factionName);
+
+  const now = new Date().toISOString();
+
+  if (existingIndex >= 0) {
+    // Update existing faction
+    factions[existingIndex] = {
+      ...factions[existingIndex],
+      imageUris,
+      imageUri: imageUris.length > 0 ? imageUris[0] : undefined,
+      updatedAt: now,
+    };
+  } else {
+    // Create new faction with images
+    factions.push({
+      name: factionName,
+      description: '',
+      imageUris,
+      imageUri: imageUris.length > 0 ? imageUris[0] : undefined,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await saveFactions(factions);
+};
+
+export const getFactionImages = async (
+  factionName: string
+): Promise<string[]> => {
+  const factions = await loadFactions();
+  const faction = factions.find(f => f.name === factionName);
+  return faction?.imageUris || [];
+};
+
 export const getAllStoredFactions = async (): Promise<StoredFaction[]> => {
   return await loadFactions();
 };
@@ -865,6 +907,7 @@ export const deleteFactionCompletely = async (
 export const createFaction = async (factionData: {
   name: string;
   description: string;
+  imageUris?: string[];
 }): Promise<boolean> => {
   const existingFactions = await loadFactions();
 
@@ -880,6 +923,8 @@ export const createFaction = async (factionData: {
   const newFaction: StoredFaction = {
     name: factionData.name,
     description: factionData.description,
+    imageUris: factionData.imageUris,
+    imageUri: factionData.imageUris?.[0], // Backward compatibility
     createdAt: now,
     updatedAt: now,
   };

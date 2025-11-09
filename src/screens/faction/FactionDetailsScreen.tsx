@@ -7,6 +7,7 @@ import {
   Alert,
   TextInput,
   Text,
+  Image,
 } from 'react-native';
 import {
   GameCharacter,
@@ -21,7 +22,10 @@ import {
   getFactionDescription,
   saveFactionDescription,
   migrateFactionDescriptions,
+  getFactionImages,
+  saveFactionImages,
 } from '@utils/characterStorage';
+import * as ImagePicker from 'expo-image-picker';
 import {
   useNavigation,
   useRoute,
@@ -52,6 +56,7 @@ export const FactionDetailsScreen: React.FC = () => {
   const [factionDescription, setFactionDescription] = useState<string>('');
   const [editingDescription, setEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState<string>('');
+  const [factionImages, setFactionImages] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)
@@ -85,6 +90,10 @@ export const FactionDetailsScreen: React.FC = () => {
     // Get the faction description from centralized faction storage
     const description = await getFactionDescription(factionName);
     setFactionDescription(description);
+
+    // Get the faction images from centralized faction storage
+    const images = await getFactionImages(factionName);
+    setFactionImages(images);
   }, [factionName]);
 
   useFocusEffect(
@@ -248,6 +257,46 @@ export const FactionDetailsScreen: React.FC = () => {
   const handleCancelEditDescription = () => {
     setTempDescription('');
     setEditingDescription(false);
+  };
+
+  const handleAddImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Sorry, we need camera roll permissions to add images!'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const newImageUri = result.assets[0].uri;
+      const updatedImages = [...factionImages, newImageUri];
+      setFactionImages(updatedImages);
+      await saveFactionImages(factionName, updatedImages);
+    }
+  };
+
+  const handleRemoveImage = async (index: number) => {
+    Alert.alert('Remove Image', 'Are you sure you want to remove this image?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          const updatedImages = factionImages.filter((_, i) => i !== index);
+          setFactionImages(updatedImages);
+          await saveFactionImages(factionName, updatedImages);
+        },
+      },
+    ]);
   };
 
   const getStandingStyle = (standing: string) => {
@@ -491,6 +540,44 @@ export const FactionDetailsScreen: React.FC = () => {
               <View style={styles.descriptionDisplay}>
                 <Text style={styles.descriptionText}>
                   {factionDescription || 'No description provided'}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Images Section */}
+          <View style={styles.imagesSection}>
+            <View style={styles.descriptionHeader}>
+              <Text style={styles.descriptionLabel}>Images</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={handleAddImage}
+              >
+                <Text style={styles.editButtonText}>+ Add</Text>
+              </TouchableOpacity>
+            </View>
+            {factionImages.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.imagesScrollView}
+              >
+                {factionImages.map((uri, index) => (
+                  <View key={index} style={styles.imageContainer}>
+                    <Image source={{ uri }} style={styles.factionImage} />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => handleRemoveImage(index)}
+                    >
+                      <Text style={styles.removeImageText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.noImagesContainer}>
+                <Text style={styles.noImagesText}>
+                  No images added yet. Tap "+ Add" to add faction images.
                 </Text>
               </View>
             )}
@@ -929,5 +1016,55 @@ const styles = StyleSheet.create({
     color: themeColors.text.muted,
     fontSize: 14,
     fontWeight: '600',
+  },
+
+  // Images Section Styles
+  imagesSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: themeColors.border,
+  },
+  imagesScrollView: {
+    marginTop: 12,
+  },
+  imageContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  factionImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    backgroundColor: themeColors.elevated,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: themeColors.accent.danger,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageText: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  noImagesContainer: {
+    backgroundColor: themeColors.elevated,
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    marginTop: 12,
+  },
+  noImagesText: {
+    fontSize: 14,
+    color: themeColors.text.muted,
+    textAlign: 'center',
   },
 });

@@ -343,6 +343,100 @@ const exportCharacterDataNative = async (): Promise<void> => {
       }
     }
 
+    // Process faction images
+    if (dataset.factions) {
+      for (const faction of dataset.factions) {
+        // Handle multiple images
+        if (faction.imageUris && faction.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < faction.imageUris.length; i++) {
+            const uri = faction.imageUris[i];
+            if (uri) {
+              if (uri.startsWith('data:')) {
+                // Handle base64 data URI
+                const imageData = extractImageData(uri);
+                if (imageData) {
+                  // Use faction name (sanitized) as identifier
+                  const sanitizedName = faction.name.replace(
+                    /[^a-zA-Z0-9]/g,
+                    '_'
+                  );
+                  const filename = `images/factions/${sanitizedName}_${i}.${imageData.extension}`;
+                  zip.file(filename, imageData.base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                }
+              } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+                // Handle file URI - read and convert to base64
+                try {
+                  const base64Data = await FileSystem.readAsStringAsync(uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
+                  // Detect file extension from URI or default to jpg
+                  const extension =
+                    uri.split('.').pop()?.toLowerCase() || 'jpg';
+                  const sanitizedName = faction.name.replace(
+                    /[^a-zA-Z0-9]/g,
+                    '_'
+                  );
+                  const filename = `images/factions/${sanitizedName}_${i}.${extension}`;
+                  zip.file(filename, base64Data, { base64: true });
+                  processedUris.push(filename);
+                  imageCounter++;
+                } catch {
+                  // Image file not accessible, skip
+                }
+              } else {
+                processedUris.push(uri);
+              }
+            }
+          }
+          if (processedUris.length > 0) {
+            faction.imageUris = processedUris;
+            faction.imageUri = processedUris[0];
+          }
+        }
+        // Handle legacy single image
+        else if (faction.imageUri) {
+          if (faction.imageUri.startsWith('data:')) {
+            const imageData = extractImageData(faction.imageUri);
+            if (imageData) {
+              const sanitizedName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+              const filename = `images/factions/${sanitizedName}.${imageData.extension}`;
+              zip.file(filename, imageData.base64Data, { base64: true });
+              faction.imageUri = filename;
+              faction.imageUris = [filename];
+              imageCounter++;
+            }
+          } else if (
+            faction.imageUri.startsWith('file://') ||
+            faction.imageUri.startsWith('/')
+          ) {
+            // Handle file URI - read and convert to base64
+            try {
+              const base64Data = await FileSystem.readAsStringAsync(
+                faction.imageUri,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+              // Detect file extension from URI or default to jpg
+              const extension =
+                faction.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+              const sanitizedName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+              const filename = `images/factions/${sanitizedName}.${extension}`;
+              zip.file(filename, base64Data, { base64: true });
+              faction.imageUri = filename;
+              faction.imageUris = [filename];
+              imageCounter++;
+            } catch {
+              // Image file not accessible, skip
+            }
+          }
+        }
+      }
+    }
+
     // Add the modified JSON to the zip
     zip.file('data.json', JSON.stringify(dataset, null, 2));
 
@@ -473,7 +567,9 @@ const importCharacterDataNative = async (): Promise<boolean> => {
                     ? `location_${entityId}`
                     : filePath.startsWith('images/events/')
                       ? `event_${entityId}`
-                      : '';
+                      : filePath.startsWith('images/factions/')
+                        ? `faction_${entityId}`
+                        : '';
 
                 if (entityKey) {
                   if (!imagesByEntity[entityKey]) {
@@ -516,6 +612,14 @@ const importCharacterDataNative = async (): Promise<boolean> => {
           if (event) {
             event.imageUris = sortedImages;
             event.imageUri = sortedImages[0]; // Backward compatibility
+          }
+        } else if (entityType === 'faction') {
+          const faction = dataset.factions?.find(
+            (f: any) => f.name === entityId.replace(/_/g, ' ')
+          );
+          if (faction) {
+            faction.imageUris = sortedImages;
+            faction.imageUri = sortedImages[0]; // Backward compatibility
           }
         }
       }
@@ -674,7 +778,9 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
                     ? `location_${entityId}`
                     : filePath.startsWith('images/events/')
                       ? `event_${entityId}`
-                      : '';
+                      : filePath.startsWith('images/factions/')
+                        ? `faction_${entityId}`
+                        : '';
 
                 if (entityKey) {
                   if (!imagesByEntity[entityKey]) {
@@ -717,6 +823,14 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
           if (event) {
             event.imageUris = sortedImages;
             event.imageUri = sortedImages[0];
+          }
+        } else if (entityType === 'faction') {
+          const faction = dataset.factions?.find(
+            (f: any) => f.name === entityId.replace(/_/g, ' ')
+          );
+          if (faction) {
+            faction.imageUris = sortedImages;
+            faction.imageUri = sortedImages[0];
           }
         }
       }

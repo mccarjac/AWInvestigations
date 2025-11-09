@@ -9,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,6 +17,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { createFaction } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import * as ImagePicker from 'expo-image-picker';
 
 type FactionFormNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -25,6 +27,7 @@ type FactionFormNavigationProp = StackNavigationProp<
 interface FactionFormData {
   name: string;
   description: string;
+  imageUris: string[];
 }
 
 export const FactionFormScreen: React.FC = () => {
@@ -33,6 +36,7 @@ export const FactionFormScreen: React.FC = () => {
   const [formData, setFormData] = useState<FactionFormData>({
     name: '',
     description: '',
+    imageUris: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,6 +55,40 @@ export const FactionFormScreen: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Sorry, we need camera roll permissions to add images!'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const newImageUri = result.assets[0].uri;
+      setFormData({
+        ...formData,
+        imageUris: [...formData.imageUris, newImageUri],
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = formData.imageUris.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      imageUris: newImages,
+    });
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
@@ -62,6 +100,7 @@ export const FactionFormScreen: React.FC = () => {
       const success = await createFaction({
         name: formData.name.trim(),
         description: formData.description.trim(),
+        imageUris: formData.imageUris,
       });
 
       if (success) {
@@ -155,6 +194,30 @@ export const FactionFormScreen: React.FC = () => {
             <Text style={styles.characterCount}>
               {formData.description.length}/500 characters
             </Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Images</Text>
+            {formData.imageUris && formData.imageUris.length > 0 ? (
+              <View style={styles.imageGrid}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {formData.imageUris.map((uri, index) => (
+                    <View key={index} style={styles.imageContainer}>
+                      <Image source={{ uri }} style={styles.imagePreview} />
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => removeImage(index)}
+                      >
+                        <Text style={styles.removeImageText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <Text style={styles.addImageButtonText}>+ Add Image</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -273,5 +336,45 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: themeColors.text.primary,
     letterSpacing: 0.2,
+  },
+  imageGrid: {
+    marginBottom: 12,
+  },
+  imageContainer: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  imagePreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    backgroundColor: themeColors.elevated,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: themeColors.accent.danger,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageText: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  addImageButton: {
+    ...commonStyles.button.secondary,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignSelf: 'flex-start',
+  },
+  addImageButtonText: {
+    color: themeColors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

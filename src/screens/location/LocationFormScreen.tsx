@@ -55,7 +55,8 @@ export const LocationFormScreen: React.FC = () => {
         name: location.name,
         description: location.description,
         imageUri: location.imageUri,
-        imageUris: location.imageUris || (location.imageUri ? [location.imageUri] : []),
+        imageUris:
+          location.imageUris || (location.imageUri ? [location.imageUri] : []),
       });
     }
   }, [location]);
@@ -84,10 +85,10 @@ export const LocationFormScreen: React.FC = () => {
       const newImageUri = result.assets[0].uri;
       const currentImages = formData.imageUris || [];
       const newImages = [...currentImages, newImageUri];
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         imageUris: newImages,
-        imageUri: newImages[0] // Keep first image for backward compatibility
+        imageUri: newImages[0], // Keep first image for backward compatibility
       });
     }
   };
@@ -95,10 +96,10 @@ export const LocationFormScreen: React.FC = () => {
   const removeImage = (index: number) => {
     const currentImages = formData.imageUris || [];
     const newImages = currentImages.filter((_, i) => i !== index);
-    setFormData({ 
-      ...formData, 
+    setFormData({
+      ...formData,
       imageUris: newImages,
-      imageUri: newImages.length > 0 ? newImages[0] : undefined
+      imageUri: newImages.length > 0 ? newImages[0] : undefined,
     });
   };
 
@@ -235,7 +236,9 @@ export const LocationFormScreen: React.FC = () => {
                   style={styles.addImageButton}
                   onPress={pickImage}
                 >
-                  <Text style={styles.addImageButtonText}>Add Another Image</Text>
+                  <Text style={styles.addImageButtonText}>
+                    Add Another Image
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
