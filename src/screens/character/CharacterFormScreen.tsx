@@ -75,9 +75,7 @@ export const CharacterFormScreen: React.FC = () => {
           notes: editingCharacter.notes || '',
           occupation: editingCharacter.occupation || '',
           imageUri: editingCharacter.imageUri,
-          imageUris:
-            editingCharacter.imageUris ||
-            (editingCharacter.imageUri ? [editingCharacter.imageUri] : []),
+          imageUris: editingCharacter.imageUris || (editingCharacter.imageUri ? [editingCharacter.imageUri] : []),
           locationId: editingCharacter.locationId,
           retired: editingCharacter.retired,
           cyberware: [...(editingCharacter.cyberware || [])],
@@ -336,9 +334,7 @@ export const CharacterFormScreen: React.FC = () => {
               onPress={pickImage}
             >
               <Text style={styles.imagePickerButtonText}>
-                {form.imageUris && form.imageUris.length > 0
-                  ? 'Add Another Image'
-                  : 'Add Image'}
+                {form.imageUris && form.imageUris.length > 0 ? 'Add Another Image' : 'Add Image'}
               </Text>
             </TouchableOpacity>
           </View>

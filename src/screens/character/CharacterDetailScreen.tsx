@@ -320,22 +320,24 @@ export const CharacterDetailScreen: React.FC = () => {
         showsVerticalScrollIndicator={true}
       >
         <View style={styles.header}>
-          {((character.imageUris && character.imageUris.length > 0) ||
-            character.imageUri) && (
-            <ScrollView
-              horizontal
+          {((character.imageUris && character.imageUris.length > 0) || character.imageUri) && (
+            <ScrollView 
+              horizontal 
               showsHorizontalScrollIndicator={false}
               style={styles.imageGallery}
               contentContainerStyle={styles.imageGalleryContent}
             >
-              {(character.imageUris && character.imageUris.length > 0
-                ? character.imageUris
-                : character.imageUri
+              {(character.imageUris && character.imageUris.length > 0 
+                ? character.imageUris 
+                : character.imageUri 
                   ? [character.imageUri]
                   : []
               ).map((uri, index) => (
                 <View key={index} style={styles.imageContainer}>
-                  <Image source={{ uri }} style={styles.characterImage} />
+                  <Image
+                    source={{ uri }}
+                    style={styles.characterImage}
+                  />
                 </View>
               ))}
             </ScrollView>
