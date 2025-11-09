@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,7 +9,11 @@ import {
   Image,
 } from 'react-native';
 import { GameCharacter, GameLocation } from '@models/types';
-import { loadCharacters, getLocation } from '@utils/characterStorage';
+import {
+  loadCharacters,
+  getLocation,
+  deleteLocationCompletely,
+} from '@utils/characterStorage';
 import {
   useNavigation,
   useRoute,
@@ -20,6 +24,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseDetailScreen, Section } from '@/components';
 
 type LocationDetailsRouteProp = RouteProp<
   RootStackParamList,
@@ -63,23 +68,6 @@ export const LocationDetailsScreen: React.FC = () => {
       loadData();
     }, [loadData])
   );
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() =>
-            navigation.navigate('LocationForm', {
-              location: location || undefined,
-            })
-          }
-        >
-          <Text style={styles.editButtonText}>Edit</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, location]);
 
   const getStats = () => {
     const totalCharacters = characters.length;
@@ -131,98 +119,103 @@ export const LocationDetailsScreen: React.FC = () => {
   const stats = getStats();
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={true}
-      >
-        {/* Location Header */}
-        <View style={styles.locationHeader}>
-          <Text style={styles.locationName}>{location.name}</Text>
+    <BaseDetailScreen
+      onEditPress={() =>
+        navigation.navigate('LocationForm', {
+          location: location || undefined,
+        })
+      }
+      deleteConfig={{
+        itemName: `"${location.name}"`,
+        onDelete: async () => {
+          const result = await deleteLocationCompletely(locationId);
+          if (result.success && result.charactersUpdated > 0) {
+            Alert.alert(
+              'Success',
+              `Location "${location.name}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
+            );
+          } else if (!result.success) {
+            throw new Error('Failed to delete location');
+          }
+        },
+        confirmMessage: `Are you sure you want to delete "${location.name}"? This will remove it from all characters and cannot be undone.`,
+      }}
+    >
+      {/* Location Header */}
+      <View style={styles.locationHeader}>
+        <Text style={styles.locationName}>{location.name}</Text>
 
-          {/* Location Images */}
-          {((location.imageUris && location.imageUris.length > 0) ||
-            location.imageUri) && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.imageGallery}
-              contentContainerStyle={styles.imageGalleryContent}
-            >
-              {(location.imageUris && location.imageUris.length > 0
-                ? location.imageUris
-                : location.imageUri
-                  ? [location.imageUri]
-                  : []
-              ).map((uri, index) => (
-                <View key={index} style={styles.imageContainer}>
-                  <Image
-                    source={{ uri }}
-                    style={styles.locationImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              ))}
-            </ScrollView>
-          )}
-
-          {/* Description Section */}
-          {location.description && (
-            <View style={styles.descriptionSection}>
-              <Text style={styles.descriptionLabel}>Description</Text>
-              <View style={styles.descriptionDisplay}>
-                <Text style={styles.descriptionText}>
-                  {location.description}
-                </Text>
+        {/* Location Images */}
+        {((location.imageUris && location.imageUris.length > 0) ||
+          location.imageUri) && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.imageGallery}
+            contentContainerStyle={styles.imageGalleryContent}
+          >
+            {(location.imageUris && location.imageUris.length > 0
+              ? location.imageUris
+              : location.imageUri
+                ? [location.imageUri]
+                : []
+            ).map((uri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image
+                  source={{ uri }}
+                  style={styles.locationImage}
+                  resizeMode="cover"
+                />
               </View>
-            </View>
-          )}
-        </View>
+            ))}
+          </ScrollView>
+        )}
 
-        {/* Location Statistics */}
-        <View style={styles.statsSection}>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.totalCharacters}</Text>
-              <Text style={styles.statLabel}>Total Characters</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.presentCharacters}</Text>
-              <Text style={styles.statLabel}>Present</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.absentCharacters}</Text>
-              <Text style={styles.statLabel}>Absent</Text>
+        {/* Description Section */}
+        {location.description && (
+          <View style={styles.descriptionSection}>
+            <Text style={styles.descriptionLabel}>Description</Text>
+            <View style={styles.descriptionDisplay}>
+              <Text style={styles.descriptionText}>{location.description}</Text>
             </View>
           </View>
-        </View>
+        )}
+      </View>
 
-        {/* Characters Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              Characters at this Location ({characters.length})
+      {/* Location Statistics */}
+      <Section title="Statistics">
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.totalCharacters}</Text>
+            <Text style={styles.statLabel}>Total Characters</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.presentCharacters}</Text>
+            <Text style={styles.statLabel}>Present</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.absentCharacters}</Text>
+            <Text style={styles.statLabel}>Absent</Text>
+          </View>
+        </View>
+      </Section>
+
+      {/* Characters Section */}
+      <Section title={`Characters at this Location (${characters.length})`}>
+        {characters.length > 0 ? (
+          <View style={styles.charactersList}>
+            {characters.map(renderCharacter)}
+          </View>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No characters at this location</Text>
+            <Text style={styles.emptySubText}>
+              Assign characters to this location from their detail screens
             </Text>
           </View>
-
-          {characters.length > 0 ? (
-            <View style={styles.charactersList}>
-              {characters.map(renderCharacter)}
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                No characters at this location
-              </Text>
-              <Text style={styles.emptySubText}>
-                Assign characters to this location from their detail screens
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </View>
+        )}
+      </Section>
+    </BaseDetailScreen>
   );
 };
 
@@ -231,20 +224,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: themeColors.primary,
   },
-  scrollView: {
-    backgroundColor: themeColors.primary,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
   loadingText: {
     ...commonStyles.text.body,
     textAlign: 'center',
     marginTop: 40,
-  },
-  statsSection: {
-    marginBottom: 32,
+    paddingTop: 8,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -267,15 +251,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: themeColors.text.muted,
     textAlign: 'center',
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    ...commonStyles.text.h2,
   },
   charactersList: {
     gap: 12,
@@ -387,15 +362,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: themeColors.text.primary,
     lineHeight: 20,
-  },
-  editButton: {
-    ...commonStyles.button.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  editButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
   },
 });

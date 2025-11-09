@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -21,6 +21,7 @@ import {
   getFactionDescription,
   migrateFactionDescriptions,
   loadFactions,
+  deleteFactionCompletely,
 } from '@utils/characterStorage';
 import {
   useNavigation,
@@ -32,6 +33,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseDetailScreen, Section } from '@/components';
 
 type FactionDetailsRouteProp = RouteProp<RootStackParamList, 'FactionDetails'>;
 type FactionDetailsNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -100,23 +102,6 @@ export const FactionDetailsScreen: React.FC = () => {
       loadData();
     }, [loadData])
   );
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerEditButton}
-          onPress={() =>
-            navigation.navigate('FactionForm', {
-              factionName: factionName,
-            })
-          }
-        >
-          <Text style={styles.headerEditButtonText}>Edit</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, factionName]);
 
   const handleRemoveMember = async (character: GameCharacter) => {
     Alert.alert(
@@ -419,163 +404,157 @@ export const FactionDetailsScreen: React.FC = () => {
   const stats = getStats();
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={true}
-      >
-        {/* Faction Header */}
-        <View style={styles.factionHeader}>
-          <Text style={styles.factionName}>{factionName}</Text>
+    <BaseDetailScreen
+      onEditPress={() =>
+        navigation.navigate('FactionForm', {
+          factionName: factionName,
+        })
+      }
+      deleteConfig={{
+        itemName: `"${factionName}"`,
+        onDelete: async () => {
+          const result = await deleteFactionCompletely(factionName);
+          if (result.success && result.charactersUpdated > 0) {
+            Alert.alert(
+              'Success',
+              `Faction "${factionName}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
+            );
+          } else if (!result.success) {
+            throw new Error('Failed to delete faction');
+          }
+        },
+        confirmMessage: `Are you sure you want to delete "${factionName}"? This will remove it from all characters and cannot be undone.`,
+      }}
+    >
+      {/* Faction Header */}
+      <View style={styles.factionHeader}>
+        <Text style={styles.factionName}>{factionName}</Text>
 
-          {/* Faction Images */}
-          {factionImageUris && factionImageUris.length > 0 && (
-            <View style={styles.imageGallerySection}>
-              <Text style={styles.imageGalleryLabel}>Faction Images</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.imageGallery}
-              >
-                {factionImageUris.map((uri, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri }}
-                    style={styles.factionImage}
-                  />
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          <View style={styles.descriptionSection}>
-            <Text style={styles.descriptionLabel}>Description</Text>
-            <View style={styles.descriptionDisplay}>
-              <Text style={styles.descriptionText}>
-                {factionDescription || 'No description provided'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Faction Statistics */}
-        <View style={styles.statsSection}>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.totalMembers}</Text>
-              <Text style={styles.statLabel}>Active Members</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.presentMembers}</Text>
-              <Text style={styles.statLabel}>Present Members</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {stats.totalMembers - stats.presentMembers}
-              </Text>
-              <Text style={styles.statLabel}>Absent</Text>
-            </View>
-          </View>
-
-          {/* Standing Distribution */}
-          <View style={styles.standingDistribution}>
-            <Text style={styles.sectionSubtitle}>Standing Distribution</Text>
-            <View style={styles.standingGrid}>
-              {Object.entries(stats.standingCounts).map(([standing, count]) => (
-                <View
-                  key={standing}
-                  style={[styles.standingCard, getStandingStyle(standing)]}
-                >
-                  <Text
-                    style={[
-                      styles.standingCardCount,
-                      getStandingTextStyle(standing),
-                    ]}
-                  >
-                    {count}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.standingCardLabel,
-                      getStandingTextStyle(standing),
-                    ]}
-                  >
-                    {standing}
-                  </Text>
-                </View>
+        {/* Faction Images */}
+        {factionImageUris && factionImageUris.length > 0 && (
+          <View style={styles.imageGallerySection}>
+            <Text style={styles.imageGalleryLabel}>Faction Images</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.imageGallery}
+            >
+              {factionImageUris.map((uri, index) => (
+                <Image
+                  key={index}
+                  source={{ uri }}
+                  style={styles.factionImage}
+                />
               ))}
-            </View>
+            </ScrollView>
+          </View>
+        )}
+
+        <View style={styles.descriptionSection}>
+          <Text style={styles.descriptionLabel}>Description</Text>
+          <View style={styles.descriptionDisplay}>
+            <Text style={styles.descriptionText}>
+              {factionDescription || 'No description provided'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Faction Statistics */}
+      <Section title="Statistics">
+        <View style={styles.statsGrid}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.totalMembers}</Text>
+            <Text style={styles.statLabel}>Active Members</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.presentMembers}</Text>
+            <Text style={styles.statLabel}>Present Members</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {stats.totalMembers - stats.presentMembers}
+            </Text>
+            <Text style={styles.statLabel}>Absent</Text>
           </View>
         </View>
 
-        {/* Members Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              All Relationships ({members.length})
-            </Text>
-            <Text style={styles.sectionDescription}>
-              Includes all characters with any relationship to this faction.
-              Only positive relationships (Ally/Friend) count as members in
-              statistics.
-            </Text>
-          </View>
-
-          <View style={styles.membersList}>
-            {members.map(item => (
-              <View key={item.character.id}>{renderMember({ item })}</View>
+        {/* Standing Distribution */}
+        <View style={styles.standingDistribution}>
+          <Text style={styles.sectionSubtitle}>Standing Distribution</Text>
+          <View style={styles.standingGrid}>
+            {Object.entries(stats.standingCounts).map(([standing, count]) => (
+              <View
+                key={standing}
+                style={[styles.standingCard, getStandingStyle(standing)]}
+              >
+                <Text
+                  style={[
+                    styles.standingCardCount,
+                    getStandingTextStyle(standing),
+                  ]}
+                >
+                  {count}
+                </Text>
+                <Text
+                  style={[
+                    styles.standingCardLabel,
+                    getStandingTextStyle(standing),
+                  ]}
+                >
+                  {standing}
+                </Text>
+              </View>
             ))}
           </View>
         </View>
+      </Section>
 
-        {/* Add Members Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Add Members</Text>
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => setShowAddMember(!showAddMember)}
-            >
-              <Text style={styles.toggleButtonText}>
-                {showAddMember ? 'Hide' : 'Show'} Available Characters
-              </Text>
-            </TouchableOpacity>
-          </View>
+      {/* Members Section */}
+      <Section title={`All Relationships (${members.length})`}>
+        <Text style={styles.sectionDescription}>
+          Includes all characters with any relationship to this faction. Only
+          positive relationships (Ally/Friend) count as members in statistics.
+        </Text>
 
-          {showAddMember && (
-            <>
-              <Text style={styles.sectionDescription}>
-                Add characters to {factionName} by selecting their standing:
-              </Text>
-              <View style={styles.nonMembersList}>
-                {nonMembers.map(item => (
-                  <View key={item.id}>{renderNonMember({ item })}</View>
-                ))}
-              </View>
-            </>
-          )}
+        <View style={styles.membersList}>
+          {members.map(item => (
+            <View key={item.character.id}>{renderMember({ item })}</View>
+          ))}
         </View>
-      </ScrollView>
-    </View>
+      </Section>
+
+      {/* Add Members Section */}
+      <Section title="Add Members">
+        <View style={styles.sectionHeader}>
+          <TouchableOpacity
+            style={styles.toggleButton}
+            onPress={() => setShowAddMember(!showAddMember)}
+          >
+            <Text style={styles.toggleButtonText}>
+              {showAddMember ? 'Hide' : 'Show'} Available Characters
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {showAddMember && (
+          <>
+            <Text style={styles.sectionDescription}>
+              Add characters to {factionName} by selecting their standing:
+            </Text>
+            <View style={styles.nonMembersList}>
+              {nonMembers.map(item => (
+                <View key={item.id}>{renderNonMember({ item })}</View>
+              ))}
+            </View>
+          </>
+        )}
+      </Section>
+    </BaseDetailScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.primary,
-  },
-  scrollView: {
-    backgroundColor: themeColors.primary,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 100,
-  },
-  statsSection: {
-    marginBottom: 32,
-  },
   statsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -625,17 +604,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  section: {
-    marginBottom: 32,
-  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-  },
-  sectionTitle: {
-    ...commonStyles.text.h2,
   },
   sectionDescription: {
     fontSize: 14,
@@ -818,17 +791,6 @@ const styles = StyleSheet.create({
     ...commonStyles.text.h1,
     textAlign: 'center',
     marginBottom: 16,
-  },
-
-  // Header Button Styles
-  headerEditButton: {
-    marginRight: 16,
-    padding: 8,
-  },
-  headerEditButtonText: {
-    color: themeColors.accent.primary,
-    fontSize: 16,
-    fontWeight: '600',
   },
 
   // Description Styles

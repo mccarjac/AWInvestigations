@@ -1,18 +1,15 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
-  FlatList,
   StyleSheet,
   TouchableOpacity,
   Alert,
   Platform,
-  TextInput,
   Text,
 } from 'react-native';
 import { GameCharacter } from '@models/types';
 import {
   loadCharacters,
-  deleteCharacter,
   toggleCharacterPresent,
   resetAllPresentStatus,
 } from '@utils/characterStorage';
@@ -24,8 +21,8 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
-import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseListScreen } from '@/components';
 
 type NavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'CharacterList'>,
@@ -50,31 +47,15 @@ export const CharacterListScreen: React.FC = () => {
     }, [loadData])
   );
 
-  // Set up the header with a plus button
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerAddButton}
-          onPress={() => navigation.navigate('CharacterForm', {})}
-        >
-          <Text style={styles.headerAddButtonText}>+</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
+  const handleTogglePresent = useCallback(
+    async (id: string) => {
+      await toggleCharacterPresent(id);
+      await loadData();
+    },
+    [loadData]
+  );
 
-  const handleDelete = async (id: string) => {
-    await deleteCharacter(id);
-    setCharacters(characters.filter(c => c.id !== id));
-  };
-
-  const handleTogglePresent = async (id: string) => {
-    await toggleCharacterPresent(id);
-    await loadData(); // Refresh the list
-  };
-
-  const handleResetAllPresent = async () => {
+  const handleResetAllPresent = useCallback(async () => {
     const confirmReset = () => {
       if (Platform.OS === 'web') {
         return window.confirm(
@@ -106,7 +87,7 @@ export const CharacterListScreen: React.FC = () => {
       await resetAllPresentStatus();
       await loadData();
     }
-  };
+  }, [loadData]);
 
   const getFilteredCharacters = React.useCallback(() => {
     // First filter out retired characters
@@ -132,124 +113,83 @@ export const CharacterListScreen: React.FC = () => {
     [getFilteredCharacters]
   );
 
-  const renderItem = React.useCallback(
-    ({ item }: { item: GameCharacter }) => (
-      <TouchableOpacity
-        style={[styles.card, item.present && styles.cardPresent]}
-        onPress={() =>
-          navigation.navigate('CharacterDetail', { character: item })
-        }
-      >
-        <View style={styles.cardHeader}>
-          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
-            {item.name}
-          </Text>
-          <TouchableOpacity
-            style={[
-              styles.presentButton,
-              item.present && styles.presentButtonActive,
-            ]}
-            onPress={() => handleTogglePresent(item.id)}
-          >
-            <Text
-              style={[
-                styles.presentText,
-                item.present && styles.presentTextActive,
-              ]}
-            >
-              {item.present ? 'Present' : 'Absent'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.factions}>
-          {(item.factions || []).map(f => f.name).join(', ') || 'No factions'}
+  const renderItem = (item: GameCharacter) => (
+    <TouchableOpacity
+      style={[styles.card, item.present && styles.cardPresent]}
+      onPress={() =>
+        navigation.navigate('CharacterDetail', { character: item })
+      }
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">
+          {item.name}
         </Text>
         <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDelete(item.id)}
+          style={[
+            styles.presentButton,
+            item.present && styles.presentButtonActive,
+          ]}
+          onPress={() => handleTogglePresent(item.id)}
         >
-          <Text style={styles.deleteText}>Delete</Text>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    ),
-    [navigation, handleTogglePresent, handleDelete]
-  );
-
-  const renderHeader = React.useCallback(
-    () => (
-      <View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
+          <Text
             style={[
-              styles.actionButton,
-              showOnlyPresent ? styles.filterButtonActive : styles.filterButton,
+              styles.presentText,
+              item.present && styles.presentTextActive,
             ]}
-            onPress={() => setShowOnlyPresent(!showOnlyPresent)}
           >
-            <Text style={styles.buttonText}>
-              {showOnlyPresent ? 'Show All' : 'Present Only'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.resetButton]}
-            onPress={handleResetAllPresent}
-          >
-            <Text style={styles.buttonText}>Reset Present</Text>
-          </TouchableOpacity>
-        </View>
+            {item.present ? 'Present' : 'Absent'}
+          </Text>
+        </TouchableOpacity>
       </View>
-    ),
-    [showOnlyPresent, handleResetAllPresent]
+      <Text style={styles.factions}>
+        {(item.factions || []).map(f => f.name).join(', ') || 'No factions'}
+      </Text>
+    </TouchableOpacity>
   );
 
-  const renderFooter = React.useCallback(
-    () => <View style={styles.footerPadding} />,
-    []
+  const renderHeaderButtons = () => (
+    <View style={styles.headerButtons}>
+      <TouchableOpacity
+        style={[
+          styles.actionButton,
+          showOnlyPresent ? styles.filterButtonActive : styles.filterButton,
+        ]}
+        onPress={() => setShowOnlyPresent(!showOnlyPresent)}
+      >
+        <Text style={styles.buttonText}>
+          {showOnlyPresent ? 'Show All' : 'Present Only'}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.resetButton]}
+        onPress={handleResetAllPresent}
+      >
+        <Text style={styles.buttonText}>Reset Present</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          key="search-input"
-          style={styles.searchInput}
-          placeholder="Search characters by name..."
-          placeholderTextColor={themeColors.text.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          blurOnSubmit={false}
-          autoFocus={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            style={styles.clearSearchButton}
-            onPress={() => setSearchQuery('')}
-          >
-            <Text style={styles.clearSearchText}>✕</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      <FlatList
-        data={filteredCharacters}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        style={styles.list}
-        showsVerticalScrollIndicator={true}
-        contentContainerStyle={styles.contentContainer}
-      />
-    </View>
+    <BaseListScreen
+      data={filteredCharacters}
+      renderItem={renderItem}
+      keyExtractor={item => item.id}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search characters by name..."
+      ListHeaderComponent={renderHeaderButtons()}
+      onAddPress={() => navigation.navigate('CharacterForm', {})}
+      emptyStateTitle="No characters found"
+      emptyStateSubtitle="Create a character to get started"
+      contentContainerStyle={styles.listContentContainer}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  // Use common layout styles where possible
-  container: commonStyles.layout.container,
-
-  contentContainer: commonStyles.layout.contentContainer,
+  listContentContainer: {
+    paddingBottom: 100,
+  },
   headerButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -260,40 +200,26 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
   },
-  headerAddButton: commonStyles.headerButton.add,
-  headerAddButtonText: commonStyles.headerButton.addText,
-
   filterButton: commonStyles.button.outline,
   filterButtonActive: commonStyles.button.outlineActive,
   resetButton: commonStyles.button.warning,
   buttonText: commonStyles.button.text,
-  list: {
-    flex: 1,
-  },
   card: commonStyles.card.base,
   cardPresent: commonStyles.card.present,
   cardHeader: commonStyles.card.header,
   name: {
     ...commonStyles.text.h3,
-    flex: 1, // Allow name to take available space but not overflow
+    flex: 1,
   },
-
   factions: {
     ...commonStyles.text.caption,
     marginTop: 8,
     fontStyle: 'italic',
   },
-  deleteButton: {
-    ...commonStyles.button.small,
-    ...commonStyles.button.danger,
-    marginTop: 12,
-    alignSelf: 'flex-end',
-  },
-  deleteText: commonStyles.button.textSmall,
   presentButton: {
     ...commonStyles.badge.base,
     ...commonStyles.badge.absent,
-    minWidth: 70, // Ensure consistent button width
+    minWidth: 70,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -301,10 +227,4 @@ const styles = StyleSheet.create({
   presentButtonActive: commonStyles.badge.present,
   presentText: commonStyles.badge.textMuted,
   presentTextActive: commonStyles.badge.text,
-
-  searchContainer: commonStyles.search.container,
-  searchInput: commonStyles.search.input,
-  clearSearchButton: commonStyles.search.clearButton,
-  clearSearchText: commonStyles.search.clearText,
-  footerPadding: commonStyles.layout.footerPadding,
 });

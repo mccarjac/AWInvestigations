@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import {
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -43,6 +42,7 @@ import {
 } from '@models/gameData';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseFormScreen } from '@/components';
 
 type CharacterFormRouteProp = RouteProp<RootStackParamList, 'CharacterForm'>;
 
@@ -290,395 +290,414 @@ export const CharacterFormScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ height: 882, overflow: 'scroll' }}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={true}
-      >
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            value={form.name}
-            onChangeText={value => handleChange('name', value)}
-            placeholder="Character Name"
-          />
-        </View>
+    <BaseFormScreen>
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Name</Text>
+        <TextInput
+          style={styles.input}
+          value={form.name}
+          onChangeText={value => handleChange('name', value)}
+          placeholder="Character Name"
+        />
+      </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Character Images</Text>
-          <View style={styles.imageGalleryContainer}>
-            {form.imageUris && form.imageUris.length > 0 ? (
-              <View style={styles.imageGrid}>
-                {form.imageUris.map((uri, index) => (
-                  <View key={index} style={styles.imageItemContainer}>
-                    <Image
-                      source={{ uri }}
-                      style={styles.characterImageThumbnail}
-                    />
-                    <TouchableOpacity
-                      style={styles.removeImageButton}
-                      onPress={() => removeImage(index)}
-                    >
-                      <Text style={styles.removeImageButtonText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <View style={styles.placeholderImage}>
-                <Text style={styles.placeholderText}>No images selected</Text>
-              </View>
-            )}
-            <TouchableOpacity
-              style={styles.imagePickerButton}
-              onPress={pickImage}
-            >
-              <Text style={styles.imagePickerButtonText}>
-                {form.imageUris && form.imageUris.length > 0
-                  ? 'Add Another Image'
-                  : 'Add Image'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Species</Text>
-          <Picker
-            selectedValue={form.species}
-            style={[styles.picker, { flex: 1 }]}
-            onValueChange={(value: Species) => handleChange('species', value)}
-          >
-            {Object.keys(SPECIES_BASE_STATS).map(species => (
-              <Picker.Item key={species} label={species} value={species} />
-            ))}
-          </Picker>
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Location</Text>
-          <Picker
-            selectedValue={form.locationId}
-            style={[styles.picker, { flex: 1 }]}
-            onValueChange={(value: string) =>
-              handleChange('locationId', value || undefined)
-            }
-          >
-            <Picker.Item label="(No Location)" value="" />
-            {availableLocations.map(location => (
-              <Picker.Item
-                key={location.id}
-                label={location.name}
-                value={location.id}
-              />
-            ))}
-          </Picker>
-        </View>
-
-        <View style={styles.formSection}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setPerksExpanded(!perksExpanded)}
-          >
-            <Text style={styles.label}>Perks</Text>
-            <Text style={styles.expandIcon}>{perksExpanded ? '▼' : '▶'}</Text>
-          </TouchableOpacity>
-          {perksExpanded && (
-            <>
-              <View style={styles.filterContainer}>
-                <Text style={styles.filterLabel}>Filter by Tag:</Text>
-                <Picker
-                  selectedValue={selectedPerkTag}
-                  style={[styles.picker, { flex: 1 }]}
-                  onValueChange={setSelectedPerkTag}
-                >
-                  <Picker.Item label="All Tags" value="" />
-                  {Array.from(new Set(AVAILABLE_PERKS.map(perk => perk.tag)))
-                    .sort()
-                    .map(tag => (
-                      <Picker.Item key={tag} label={tag} value={tag} />
-                    ))}
-                </Picker>
-              </View>
-              {AVAILABLE_PERKS.filter(
-                perk =>
-                  (!selectedPerkTag || perk.tag === selectedPerkTag) &&
-                  (!perk.allowedSpecies ||
-                    perk.allowedSpecies.includes(form.species))
-              ).map(perk => (
-                <TouchableOpacity
-                  key={perk.id}
-                  style={[
-                    styles.selectionItem,
-                    form.perkIds.includes(perk.id) && styles.selectedItem,
-                    perk.allowedSpecies && styles.speciesSpecificItem,
-                  ]}
-                  onPress={() => {
-                    const newPerkIds = form.perkIds.includes(perk.id)
-                      ? form.perkIds.filter(id => id !== perk.id)
-                      : [...form.perkIds, perk.id];
-                    handleChange('perkIds', newPerkIds);
-                  }}
-                >
-                  <View style={styles.perkContainer}>
-                    <View style={styles.perkHeaderContainer}>
-                      <Text style={styles.itemName}>{perk.name}</Text>
-                      <View style={styles.perkBadgeContainer}>
-                        {perk.allowedSpecies &&
-                          perk.allowedSpecies.length > 0 && (
-                            <Text style={styles.speciesText}>
-                              {perk.allowedSpecies.length === 1
-                                ? perk.allowedSpecies[0]
-                                : `${perk.allowedSpecies.length} Species`}
-                            </Text>
-                          )}
-                        <Text style={styles.tagText}>{perk.tag}</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Text style={styles.descriptionText}>{perk.description}</Text>
-                </TouchableOpacity>
-              ))}
-            </>
-          )}
-        </View>
-
-        <View style={styles.formSection}>
-          <TouchableOpacity
-            style={styles.sectionHeader}
-            onPress={() => setDistinctionsExpanded(!distinctionsExpanded)}
-          >
-            <Text style={styles.label}>Distinctions</Text>
-            <Text style={styles.expandIcon}>
-              {distinctionsExpanded ? '▼' : '▶'}
-            </Text>
-          </TouchableOpacity>
-          {distinctionsExpanded && (
-            <>
-              {AVAILABLE_DISTINCTIONS.map(distinction => (
-                <TouchableOpacity
-                  key={distinction.id}
-                  style={[
-                    styles.selectionItem,
-                    form.distinctionIds.includes(distinction.id) &&
-                      styles.selectedItem,
-                  ]}
-                  onPress={() => {
-                    const isSelected = form.distinctionIds.includes(
-                      distinction.id
-                    );
-
-                    if (isSelected) {
-                      // Allow deselection
-                      const newDistinctionIds = form.distinctionIds.filter(
-                        id => id !== distinction.id
-                      );
-                      handleChange('distinctionIds', newDistinctionIds);
-                    } else if (form.distinctionIds.length < 3) {
-                      // Allow selection if under limit
-                      const newDistinctionIds = [
-                        ...form.distinctionIds,
-                        distinction.id,
-                      ];
-                      handleChange('distinctionIds', newDistinctionIds);
-                    } else {
-                      // Show alert when limit reached
-                      Alert.alert(
-                        'Maximum Reached',
-                        'You can only select up to 3 distinctions.'
-                      );
-                    }
-                  }}
-                >
-                  <Text style={styles.itemName}>{distinction.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </>
-          )}
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Cyberware</Text>
-          {form.cyberware &&
-            form.cyberware.map((cyber, index) => (
-              <View key={index} style={styles.cyberwareContainer}>
-                <View style={styles.cyberwareHeaderRow}>
-                  <TextInput
-                    style={styles.cyberwareName}
-                    value={cyber.name}
-                    onChangeText={value => {
-                      const newCyberware = [...(form.cyberware || [])];
-                      newCyberware[index] = { ...cyber, name: value };
-                      handleChange('cyberware', newCyberware);
-                    }}
-                    placeholder="Cyberware name"
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Character Images</Text>
+        <View style={styles.imageGalleryContainer}>
+          {form.imageUris && form.imageUris.length > 0 ? (
+            <View style={styles.imageGrid}>
+              {form.imageUris.map((uri, index) => (
+                <View key={index} style={styles.imageItemContainer}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.characterImageThumbnail}
                   />
                   <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => {
-                      const newCyberware = (form.cyberware || []).filter(
-                        (_, i) => i !== index
-                      );
-                      handleChange('cyberware', newCyberware);
-                    }}
+                    style={styles.removeImageButton}
+                    onPress={() => removeImage(index)}
                   >
-                    <Text style={styles.removeButtonText}>×</Text>
+                    <Text style={styles.removeImageButtonText}>×</Text>
                   </TouchableOpacity>
                 </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.placeholderImage}>
+              <Text style={styles.placeholderText}>No images selected</Text>
+            </View>
+          )}
+          <TouchableOpacity
+            style={styles.imagePickerButton}
+            onPress={pickImage}
+          >
+            <Text style={styles.imagePickerButtonText}>
+              {form.imageUris && form.imageUris.length > 0
+                ? 'Add Another Image'
+                : 'Add Image'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Species</Text>
+        <Picker
+          selectedValue={form.species}
+          style={[styles.picker, { flex: 1 }]}
+          onValueChange={(value: Species) => handleChange('species', value)}
+        >
+          {Object.keys(SPECIES_BASE_STATS).map(species => (
+            <Picker.Item key={species} label={species} value={species} />
+          ))}
+        </Picker>
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Location</Text>
+        <Picker
+          selectedValue={form.locationId}
+          style={[styles.picker, { flex: 1 }]}
+          onValueChange={(value: string) =>
+            handleChange('locationId', value || undefined)
+          }
+        >
+          <Picker.Item label="(No Location)" value="" />
+          {availableLocations.map(location => (
+            <Picker.Item
+              key={location.id}
+              label={location.name}
+              value={location.id}
+            />
+          ))}
+        </Picker>
+      </View>
+
+      <View style={styles.formSection}>
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setPerksExpanded(!perksExpanded)}
+        >
+          <Text style={styles.label}>Perks</Text>
+          <Text style={styles.expandIcon}>{perksExpanded ? '▼' : '▶'}</Text>
+        </TouchableOpacity>
+        {perksExpanded && (
+          <>
+            <View style={styles.filterContainer}>
+              <Text style={styles.filterLabel}>Filter by Tag:</Text>
+              <Picker
+                selectedValue={selectedPerkTag}
+                style={[styles.picker, { flex: 1 }]}
+                onValueChange={setSelectedPerkTag}
+              >
+                <Picker.Item label="All Tags" value="" />
+                {Array.from(new Set(AVAILABLE_PERKS.map(perk => perk.tag)))
+                  .sort()
+                  .map(tag => (
+                    <Picker.Item key={tag} label={tag} value={tag} />
+                  ))}
+              </Picker>
+            </View>
+            {AVAILABLE_PERKS.filter(
+              perk =>
+                (!selectedPerkTag || perk.tag === selectedPerkTag) &&
+                (!perk.allowedSpecies ||
+                  perk.allowedSpecies.includes(form.species))
+            ).map(perk => (
+              <TouchableOpacity
+                key={perk.id}
+                style={[
+                  styles.selectionItem,
+                  form.perkIds.includes(perk.id) && styles.selectedItem,
+                  perk.allowedSpecies && styles.speciesSpecificItem,
+                ]}
+                onPress={() => {
+                  const newPerkIds = form.perkIds.includes(perk.id)
+                    ? form.perkIds.filter(id => id !== perk.id)
+                    : [...form.perkIds, perk.id];
+                  handleChange('perkIds', newPerkIds);
+                }}
+              >
+                <View style={styles.perkContainer}>
+                  <View style={styles.perkHeaderContainer}>
+                    <Text style={styles.itemName}>{perk.name}</Text>
+                    <View style={styles.perkBadgeContainer}>
+                      {perk.allowedSpecies &&
+                        perk.allowedSpecies.length > 0 && (
+                          <Text style={styles.speciesText}>
+                            {perk.allowedSpecies.length === 1
+                              ? perk.allowedSpecies[0]
+                              : `${perk.allowedSpecies.length} Species`}
+                          </Text>
+                        )}
+                      <Text style={styles.tagText}>{perk.tag}</Text>
+                    </View>
+                  </View>
+                </View>
+                <Text style={styles.descriptionText}>{perk.description}</Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+      </View>
+
+      <View style={styles.formSection}>
+        <TouchableOpacity
+          style={styles.sectionHeader}
+          onPress={() => setDistinctionsExpanded(!distinctionsExpanded)}
+        >
+          <Text style={styles.label}>Distinctions</Text>
+          <Text style={styles.expandIcon}>
+            {distinctionsExpanded ? '▼' : '▶'}
+          </Text>
+        </TouchableOpacity>
+        {distinctionsExpanded && (
+          <>
+            {AVAILABLE_DISTINCTIONS.map(distinction => (
+              <TouchableOpacity
+                key={distinction.id}
+                style={[
+                  styles.selectionItem,
+                  form.distinctionIds.includes(distinction.id) &&
+                    styles.selectedItem,
+                ]}
+                onPress={() => {
+                  const isSelected = form.distinctionIds.includes(
+                    distinction.id
+                  );
+
+                  if (isSelected) {
+                    // Allow deselection
+                    const newDistinctionIds = form.distinctionIds.filter(
+                      id => id !== distinction.id
+                    );
+                    handleChange('distinctionIds', newDistinctionIds);
+                  } else if (form.distinctionIds.length < 3) {
+                    // Allow selection if under limit
+                    const newDistinctionIds = [
+                      ...form.distinctionIds,
+                      distinction.id,
+                    ];
+                    handleChange('distinctionIds', newDistinctionIds);
+                  } else {
+                    // Show alert when limit reached
+                    Alert.alert(
+                      'Maximum Reached',
+                      'You can only select up to 3 distinctions.'
+                    );
+                  }
+                }}
+              >
+                <Text style={styles.itemName}>{distinction.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Cyberware</Text>
+        {form.cyberware &&
+          form.cyberware.map((cyber, index) => (
+            <View key={index} style={styles.cyberwareContainer}>
+              <View style={styles.cyberwareHeaderRow}>
                 <TextInput
-                  style={styles.cyberwareDescription}
-                  value={cyber.description}
+                  style={styles.cyberwareName}
+                  value={cyber.name}
                   onChangeText={value => {
                     const newCyberware = [...(form.cyberware || [])];
-                    newCyberware[index] = { ...cyber, description: value };
+                    newCyberware[index] = { ...cyber, name: value };
                     handleChange('cyberware', newCyberware);
                   }}
-                  placeholder="Description"
-                  multiline
+                  placeholder="Cyberware name"
                 />
-                <View style={styles.cyberwareModifiersSection}>
-                  <Text style={styles.cyberwareModifiersLabel}>
-                    Stat Modifiers (optional):
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => {
+                    const newCyberware = (form.cyberware || []).filter(
+                      (_, i) => i !== index
+                    );
+                    handleChange('cyberware', newCyberware);
+                  }}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                style={styles.cyberwareDescription}
+                value={cyber.description}
+                onChangeText={value => {
+                  const newCyberware = [...(form.cyberware || [])];
+                  newCyberware[index] = { ...cyber, description: value };
+                  handleChange('cyberware', newCyberware);
+                }}
+                placeholder="Description"
+                multiline
+              />
+              <View style={styles.cyberwareModifiersSection}>
+                <Text style={styles.cyberwareModifiersLabel}>
+                  Stat Modifiers (optional):
+                </Text>
+                <View style={styles.modifierRow}>
+                  <View style={styles.modifierInput}>
+                    <Text style={styles.modifierLabel}>Health:</Text>
+                    <TextInput
+                      style={styles.modifierField}
+                      value={
+                        cyber.statModifiers?.healthModifier?.toString() || ''
+                      }
+                      onChangeText={value => {
+                        const newCyberware = [...(form.cyberware || [])];
+                        const numValue =
+                          value === '' ? undefined : parseInt(value) || 0;
+                        newCyberware[index] = {
+                          ...cyber,
+                          statModifiers: {
+                            ...cyber.statModifiers,
+                            healthModifier: numValue,
+                          },
+                        };
+                        handleChange('cyberware', newCyberware);
+                      }}
+                      placeholder="0"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.modifierInput}>
+                    <Text style={styles.modifierLabel}>Limit:</Text>
+                    <TextInput
+                      style={styles.modifierField}
+                      value={
+                        cyber.statModifiers?.limitModifier?.toString() || ''
+                      }
+                      onChangeText={value => {
+                        const newCyberware = [...(form.cyberware || [])];
+                        const numValue =
+                          value === '' ? undefined : parseInt(value) || 0;
+                        newCyberware[index] = {
+                          ...cyber,
+                          statModifiers: {
+                            ...cyber.statModifiers,
+                            limitModifier: numValue,
+                          },
+                        };
+                        handleChange('cyberware', newCyberware);
+                      }}
+                      placeholder="0"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </View>
+                <View style={styles.modifierRow}>
+                  <View style={styles.modifierInput}>
+                    <Text style={styles.modifierLabel}>Health Cap:</Text>
+                    <TextInput
+                      style={styles.modifierField}
+                      value={
+                        cyber.statModifiers?.healthCapModifier?.toString() || ''
+                      }
+                      onChangeText={value => {
+                        const newCyberware = [...(form.cyberware || [])];
+                        const numValue =
+                          value === '' ? undefined : parseInt(value) || 0;
+                        newCyberware[index] = {
+                          ...cyber,
+                          statModifiers: {
+                            ...cyber.statModifiers,
+                            healthCapModifier: numValue,
+                          },
+                        };
+                        handleChange('cyberware', newCyberware);
+                      }}
+                      placeholder="0"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.modifierInput}>
+                    <Text style={styles.modifierLabel}>Limit Cap:</Text>
+                    <TextInput
+                      style={styles.modifierField}
+                      value={
+                        cyber.statModifiers?.limitCapModifier?.toString() || ''
+                      }
+                      onChangeText={value => {
+                        const newCyberware = [...(form.cyberware || [])];
+                        const numValue =
+                          value === '' ? undefined : parseInt(value) || 0;
+                        newCyberware[index] = {
+                          ...cyber,
+                          statModifiers: {
+                            ...cyber.statModifiers,
+                            limitCapModifier: numValue,
+                          },
+                        };
+                        handleChange('cyberware', newCyberware);
+                      }}
+                      placeholder="0"
+                      keyboardType="numeric"
+                    />
+                  </View>
+                </View>
+                <View style={styles.tagModifiersSection}>
+                  <Text style={styles.tagModifiersLabel}>
+                    Tag Score Modifiers (optional):
                   </Text>
-                  <View style={styles.modifierRow}>
-                    <View style={styles.modifierInput}>
-                      <Text style={styles.modifierLabel}>Health:</Text>
-                      <TextInput
-                        style={styles.modifierField}
-                        value={
-                          cyber.statModifiers?.healthModifier?.toString() || ''
-                        }
-                        onChangeText={value => {
-                          const newCyberware = [...(form.cyberware || [])];
-                          const numValue =
-                            value === '' ? undefined : parseInt(value) || 0;
-                          newCyberware[index] = {
-                            ...cyber,
-                            statModifiers: {
-                              ...cyber.statModifiers,
-                              healthModifier: numValue,
-                            },
-                          };
-                          handleChange('cyberware', newCyberware);
-                        }}
-                        placeholder="0"
-                        keyboardType="numeric"
-                      />
-                    </View>
-                    <View style={styles.modifierInput}>
-                      <Text style={styles.modifierLabel}>Limit:</Text>
-                      <TextInput
-                        style={styles.modifierField}
-                        value={
-                          cyber.statModifiers?.limitModifier?.toString() || ''
-                        }
-                        onChangeText={value => {
-                          const newCyberware = [...(form.cyberware || [])];
-                          const numValue =
-                            value === '' ? undefined : parseInt(value) || 0;
-                          newCyberware[index] = {
-                            ...cyber,
-                            statModifiers: {
-                              ...cyber.statModifiers,
-                              limitModifier: numValue,
-                            },
-                          };
-                          handleChange('cyberware', newCyberware);
-                        }}
-                        placeholder="0"
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.modifierRow}>
-                    <View style={styles.modifierInput}>
-                      <Text style={styles.modifierLabel}>Health Cap:</Text>
-                      <TextInput
-                        style={styles.modifierField}
-                        value={
-                          cyber.statModifiers?.healthCapModifier?.toString() ||
-                          ''
-                        }
-                        onChangeText={value => {
-                          const newCyberware = [...(form.cyberware || [])];
-                          const numValue =
-                            value === '' ? undefined : parseInt(value) || 0;
-                          newCyberware[index] = {
-                            ...cyber,
-                            statModifiers: {
-                              ...cyber.statModifiers,
-                              healthCapModifier: numValue,
-                            },
-                          };
-                          handleChange('cyberware', newCyberware);
-                        }}
-                        placeholder="0"
-                        keyboardType="numeric"
-                      />
-                    </View>
-                    <View style={styles.modifierInput}>
-                      <Text style={styles.modifierLabel}>Limit Cap:</Text>
-                      <TextInput
-                        style={styles.modifierField}
-                        value={
-                          cyber.statModifiers?.limitCapModifier?.toString() ||
-                          ''
-                        }
-                        onChangeText={value => {
-                          const newCyberware = [...(form.cyberware || [])];
-                          const numValue =
-                            value === '' ? undefined : parseInt(value) || 0;
-                          newCyberware[index] = {
-                            ...cyber,
-                            statModifiers: {
-                              ...cyber.statModifiers,
-                              limitCapModifier: numValue,
-                            },
-                          };
-                          handleChange('cyberware', newCyberware);
-                        }}
-                        placeholder="0"
-                        keyboardType="numeric"
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.tagModifiersSection}>
-                    <Text style={styles.tagModifiersLabel}>
-                      Tag Score Modifiers (optional):
-                    </Text>
-                    <View style={styles.tagModifiersList}>
-                      {Object.values(PerkTag).map(tag => {
-                        const currentValue =
-                          cyber.statModifiers?.tagModifiers?.[tag];
-                        if (currentValue === undefined && !cyber.statModifiers)
-                          return null;
+                  <View style={styles.tagModifiersList}>
+                    {Object.values(PerkTag).map(tag => {
+                      const currentValue =
+                        cyber.statModifiers?.tagModifiers?.[tag];
+                      if (currentValue === undefined && !cyber.statModifiers)
+                        return null;
 
-                        return (
-                          <View key={tag} style={styles.tagModifierRow}>
-                            <Text style={styles.tagModifierName}>{tag}:</Text>
-                            <TextInput
-                              style={styles.tagModifierField}
-                              value={currentValue?.toString() || ''}
-                              onChangeText={value => {
+                      return (
+                        <View key={tag} style={styles.tagModifierRow}>
+                          <Text style={styles.tagModifierName}>{tag}:</Text>
+                          <TextInput
+                            style={styles.tagModifierField}
+                            value={currentValue?.toString() || ''}
+                            onChangeText={value => {
+                              const newCyberware = [...(form.cyberware || [])];
+                              const numValue =
+                                value === '' ? undefined : parseInt(value) || 0;
+
+                              const currentTagModifiers = {
+                                ...(cyber.statModifiers?.tagModifiers || {}),
+                              };
+
+                              if (numValue === undefined) {
+                                delete currentTagModifiers[tag];
+                              } else {
+                                currentTagModifiers[tag] = numValue;
+                              }
+
+                              newCyberware[index] = {
+                                ...cyber,
+                                statModifiers: {
+                                  ...cyber.statModifiers,
+                                  tagModifiers:
+                                    Object.keys(currentTagModifiers).length > 0
+                                      ? (currentTagModifiers as Record<
+                                          PerkTag,
+                                          number
+                                        >)
+                                      : undefined,
+                                },
+                              };
+                              handleChange('cyberware', newCyberware);
+                            }}
+                            placeholder="0"
+                            keyboardType="numeric"
+                          />
+                          {currentValue !== undefined && (
+                            <TouchableOpacity
+                              style={styles.tagModifierRemove}
+                              onPress={() => {
                                 const newCyberware = [
                                   ...(form.cyberware || []),
                                 ];
-                                const numValue =
-                                  value === ''
-                                    ? undefined
-                                    : parseInt(value) || 0;
-
                                 const currentTagModifiers = {
                                   ...(cyber.statModifiers?.tagModifiers || {}),
                                 };
-
-                                if (numValue === undefined) {
-                                  delete currentTagModifiers[tag];
-                                } else {
-                                  currentTagModifiers[tag] = numValue;
-                                }
+                                delete currentTagModifiers[tag];
 
                                 newCyberware[index] = {
                                   ...cyber,
@@ -696,390 +715,347 @@ export const CharacterFormScreen: React.FC = () => {
                                 };
                                 handleChange('cyberware', newCyberware);
                               }}
-                              placeholder="0"
-                              keyboardType="numeric"
-                            />
-                            {currentValue !== undefined && (
-                              <TouchableOpacity
-                                style={styles.tagModifierRemove}
-                                onPress={() => {
-                                  const newCyberware = [
-                                    ...(form.cyberware || []),
-                                  ];
-                                  const currentTagModifiers = {
-                                    ...(cyber.statModifiers?.tagModifiers ||
-                                      {}),
-                                  };
-                                  delete currentTagModifiers[tag];
-
-                                  newCyberware[index] = {
-                                    ...cyber,
-                                    statModifiers: {
-                                      ...cyber.statModifiers,
-                                      tagModifiers:
-                                        Object.keys(currentTagModifiers)
-                                          .length > 0
-                                          ? (currentTagModifiers as Record<
-                                              PerkTag,
-                                              number
-                                            >)
-                                          : undefined,
-                                    },
-                                  };
-                                  handleChange('cyberware', newCyberware);
-                                }}
-                              >
-                                <Text style={styles.tagModifierRemoveText}>
-                                  ×
-                                </Text>
-                              </TouchableOpacity>
-                            )}
-                          </View>
-                        );
-                      })}
-                    </View>
-                    <TouchableOpacity
-                      style={styles.addTagModifierButton}
-                      onPress={() => {
-                        // Find first tag that doesn't have a modifier
-                        const currentTagModifiers =
-                          cyber.statModifiers?.tagModifiers || {};
-                        const availableTags = Object.values(PerkTag).filter(
-                          tag => !(tag in currentTagModifiers)
-                        );
-
-                        if (availableTags.length > 0) {
-                          const newCyberware = [...(form.cyberware || [])];
-                          const newTagModifiers = {
-                            ...currentTagModifiers,
-                            [availableTags[0]]: 1,
-                          } as Record<PerkTag, number>;
-
-                          newCyberware[index] = {
-                            ...cyber,
-                            statModifiers: {
-                              ...cyber.statModifiers,
-                              tagModifiers: newTagModifiers,
-                            },
-                          };
-                          handleChange('cyberware', newCyberware);
-                        } else {
-                          Alert.alert(
-                            'All Tags Added',
-                            'All available tags already have modifiers.'
-                          );
-                        }
-                      }}
-                    >
-                      <Text style={styles.addTagModifierButtonText}>
-                        + Add Tag Modifier
-                      </Text>
-                    </TouchableOpacity>
+                            >
+                              <Text style={styles.tagModifierRemoveText}>
+                                ×
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      );
+                    })}
                   </View>
+                  <TouchableOpacity
+                    style={styles.addTagModifierButton}
+                    onPress={() => {
+                      // Find first tag that doesn't have a modifier
+                      const currentTagModifiers =
+                        cyber.statModifiers?.tagModifiers || {};
+                      const availableTags = Object.values(PerkTag).filter(
+                        tag => !(tag in currentTagModifiers)
+                      );
+
+                      if (availableTags.length > 0) {
+                        const newCyberware = [...(form.cyberware || [])];
+                        const newTagModifiers = {
+                          ...currentTagModifiers,
+                          [availableTags[0]]: 1,
+                        } as Record<PerkTag, number>;
+
+                        newCyberware[index] = {
+                          ...cyber,
+                          statModifiers: {
+                            ...cyber.statModifiers,
+                            tagModifiers: newTagModifiers,
+                          },
+                        };
+                        handleChange('cyberware', newCyberware);
+                      } else {
+                        Alert.alert(
+                          'All Tags Added',
+                          'All available tags already have modifiers.'
+                        );
+                      }
+                    }}
+                  >
+                    <Text style={styles.addTagModifierButtonText}>
+                      + Add Tag Modifier
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-            ))}
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              handleChange('cyberware', [
-                ...(form.cyberware || []),
-                {
-                  name: '',
-                  description: '',
-                  statModifiers: {},
-                },
-              ]);
-            }}
-          >
-            <Text style={styles.addButtonText}>Add Cyberware</Text>
-          </TouchableOpacity>
-        </View>
+            </View>
+          ))}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            handleChange('cyberware', [
+              ...(form.cyberware || []),
+              {
+                name: '',
+                description: '',
+                statModifiers: {},
+              },
+            ]);
+          }}
+        >
+          <Text style={styles.addButtonText}>Add Cyberware</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Factions</Text>
-          {form.factions.map((faction, index) => (
-            <View key={index} style={styles.factionContainer}>
-              {showCustomFactionInput[index] ? (
-                <View style={styles.customFactionContainer}>
-                  <TextInput
-                    style={styles.factionInput}
-                    value={faction.name}
-                    onChangeText={value => {
-                      const newFactions = [...form.factions];
-                      newFactions[index] = { ...faction, name: value };
-                      handleChange('factions', newFactions);
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Factions</Text>
+        {form.factions.map((faction, index) => (
+          <View key={index} style={styles.factionContainer}>
+            {showCustomFactionInput[index] ? (
+              <View style={styles.customFactionContainer}>
+                <TextInput
+                  style={styles.factionInput}
+                  value={faction.name}
+                  onChangeText={value => {
+                    const newFactions = [...form.factions];
+                    newFactions[index] = { ...faction, name: value };
+                    handleChange('factions', newFactions);
 
-                      // Add new faction to available list if it doesn't exist
-                      if (
-                        value.trim() &&
-                        !availableFactions.includes(value.trim())
-                      ) {
-                        setAvailableFactions(prev =>
-                          [...prev, value.trim()].sort()
-                        );
-                      }
-                    }}
-                    placeholder="Enter new faction name"
-                    autoFocus={true}
-                    onBlur={() => {
-                      // Switch back to dropdown if input is empty
-                      if (!faction.name.trim()) {
-                        setShowCustomFactionInput(prev => ({
-                          ...prev,
-                          [index]: false,
-                        }));
-                      }
-                    }}
-                  />
-                  <TouchableOpacity
-                    style={styles.backToDropdownButton}
-                    onPress={() => {
+                    // Add new faction to available list if it doesn't exist
+                    if (
+                      value.trim() &&
+                      !availableFactions.includes(value.trim())
+                    ) {
+                      setAvailableFactions(prev =>
+                        [...prev, value.trim()].sort()
+                      );
+                    }
+                  }}
+                  placeholder="Enter new faction name"
+                  autoFocus={true}
+                  onBlur={() => {
+                    // Switch back to dropdown if input is empty
+                    if (!faction.name.trim()) {
                       setShowCustomFactionInput(prev => ({
                         ...prev,
                         [index]: false,
                       }));
-                    }}
-                  >
-                    <Text style={styles.backToDropdownText}>↩</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <Picker
-                  selectedValue={faction.name || ''}
-                  style={styles.factionInput}
-                  onValueChange={value => {
-                    if (value === '__ADD_NEW__') {
-                      setShowCustomFactionInput(prev => ({
-                        ...prev,
-                        [index]: true,
-                      }));
-                      const newFactions = [...form.factions];
-                      newFactions[index] = { ...faction, name: '' };
-                      handleChange('factions', newFactions);
-                    } else if (value && value !== faction.name) {
-                      const newFactions = [...form.factions];
-                      newFactions[index] = { ...faction, name: value };
-                      handleChange('factions', newFactions);
                     }
                   }}
+                />
+                <TouchableOpacity
+                  style={styles.backToDropdownButton}
+                  onPress={() => {
+                    setShowCustomFactionInput(prev => ({
+                      ...prev,
+                      [index]: false,
+                    }));
+                  }}
                 >
-                  <Picker.Item label="Select a faction..." value="" />
-                  {availableFactions.map(factionName => (
-                    <Picker.Item
-                      key={factionName}
-                      label={factionName}
-                      value={factionName}
-                    />
-                  ))}
-                  <Picker.Item label="Add New Faction..." value="__ADD_NEW__" />
-                </Picker>
-              )}
+                  <Text style={styles.backToDropdownText}>↩</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
               <Picker
-                selectedValue={faction.standing}
-                style={styles.factionStanding}
+                selectedValue={faction.name || ''}
+                style={styles.factionInput}
                 onValueChange={value => {
-                  const newFactions = [...form.factions];
-                  newFactions[index] = { ...faction, standing: value };
-                  handleChange('factions', newFactions);
+                  if (value === '__ADD_NEW__') {
+                    setShowCustomFactionInput(prev => ({
+                      ...prev,
+                      [index]: true,
+                    }));
+                    const newFactions = [...form.factions];
+                    newFactions[index] = { ...faction, name: '' };
+                    handleChange('factions', newFactions);
+                  } else if (value && value !== faction.name) {
+                    const newFactions = [...form.factions];
+                    newFactions[index] = { ...faction, name: value };
+                    handleChange('factions', newFactions);
+                  }
                 }}
               >
-                {Object.values(RelationshipStanding).map(standing => (
+                <Picker.Item label="Select a faction..." value="" />
+                {availableFactions.map(factionName => (
                   <Picker.Item
-                    key={standing}
-                    label={standing}
-                    value={standing}
+                    key={factionName}
+                    label={factionName}
+                    value={factionName}
                   />
+                ))}
+                <Picker.Item label="Add New Faction..." value="__ADD_NEW__" />
+              </Picker>
+            )}
+            <Picker
+              selectedValue={faction.standing}
+              style={styles.factionStanding}
+              onValueChange={value => {
+                const newFactions = [...form.factions];
+                newFactions[index] = { ...faction, standing: value };
+                handleChange('factions', newFactions);
+              }}
+            >
+              {Object.values(RelationshipStanding).map(standing => (
+                <Picker.Item key={standing} label={standing} value={standing} />
+              ))}
+            </Picker>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => {
+                const newFactions = form.factions.filter((_, i) => i !== index);
+                handleChange('factions', newFactions);
+              }}
+            >
+              <Text style={styles.removeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            handleChange('factions', [
+              ...form.factions,
+              { name: '', standing: 'Neutral' },
+            ]);
+          }}
+        >
+          <Text style={styles.addButtonText}>Add Faction</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Relationships</Text>
+        {form.relationships.map((relationship, index) => (
+          <View key={index} style={styles.relationshipGroup}>
+            <View style={styles.relationshipContainer}>
+              <View style={styles.relationshipPickerContainer}>
+                <Picker
+                  selectedValue={relationship.characterName}
+                  style={styles.relationshipNamePicker}
+                  onValueChange={value => {
+                    const newRelationships = [...form.relationships];
+                    newRelationships[index] = {
+                      ...relationship,
+                      characterName: value,
+                    };
+                    handleChange('relationships', newRelationships);
+                  }}
+                >
+                  <Picker.Item label="Select Character..." value="" />
+                  {getAvailableCharacterNames().map(name => (
+                    <Picker.Item key={name} label={name} value={name} />
+                  ))}
+                  <Picker.Item label="Other (Custom Name)" value="__CUSTOM__" />
+                </Picker>
+              </View>
+              <Picker
+                selectedValue={relationship.relationshipType}
+                style={styles.relationshipType}
+                onValueChange={value => {
+                  const newRelationships = [...form.relationships];
+                  newRelationships[index] = {
+                    ...relationship,
+                    relationshipType: value,
+                  };
+                  handleChange('relationships', newRelationships);
+                }}
+              >
+                {Object.values(RelationshipStanding).map(type => (
+                  <Picker.Item key={type} label={type} value={type} />
                 ))}
               </Picker>
               <TouchableOpacity
                 style={styles.removeButton}
                 onPress={() => {
-                  const newFactions = form.factions.filter(
+                  const newRelationships = form.relationships.filter(
                     (_, i) => i !== index
                   );
-                  handleChange('factions', newFactions);
+                  handleChange('relationships', newRelationships);
                 }}
               >
                 <Text style={styles.removeButtonText}>×</Text>
               </TouchableOpacity>
             </View>
-          ))}
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              handleChange('factions', [
-                ...form.factions,
-                { name: '', standing: 'Neutral' },
-              ]);
-            }}
-          >
-            <Text style={styles.addButtonText}>Add Faction</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Relationships</Text>
-          {form.relationships.map((relationship, index) => (
-            <View key={index} style={styles.relationshipGroup}>
-              <View style={styles.relationshipContainer}>
-                <View style={styles.relationshipPickerContainer}>
-                  <Picker
-                    selectedValue={relationship.characterName}
-                    style={styles.relationshipNamePicker}
-                    onValueChange={value => {
-                      const newRelationships = [...form.relationships];
-                      newRelationships[index] = {
-                        ...relationship,
-                        characterName: value,
-                      };
-                      handleChange('relationships', newRelationships);
-                    }}
-                  >
-                    <Picker.Item label="Select Character..." value="" />
-                    {getAvailableCharacterNames().map(name => (
-                      <Picker.Item key={name} label={name} value={name} />
-                    ))}
-                    <Picker.Item
-                      label="Other (Custom Name)"
-                      value="__CUSTOM__"
-                    />
-                  </Picker>
-                </View>
-                <Picker
-                  selectedValue={relationship.relationshipType}
-                  style={styles.relationshipType}
-                  onValueChange={value => {
-                    const newRelationships = [...form.relationships];
-                    newRelationships[index] = {
-                      ...relationship,
-                      relationshipType: value,
-                    };
-                    handleChange('relationships', newRelationships);
-                  }}
-                >
-                  {Object.values(RelationshipStanding).map(type => (
-                    <Picker.Item key={type} label={type} value={type} />
-                  ))}
-                </Picker>
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => {
-                    const newRelationships = form.relationships.filter(
-                      (_, i) => i !== index
-                    );
-                    handleChange('relationships', newRelationships);
-                  }}
-                >
-                  <Text style={styles.removeButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-              {relationship.characterName === '__CUSTOM__' && (
-                <View style={styles.customNameContainer}>
-                  <TextInput
-                    style={styles.customNameInput}
-                    value={relationship.customName || ''}
-                    onChangeText={value => {
-                      const newRelationships = [...form.relationships];
-                      newRelationships[index] = {
-                        ...relationship,
-                        customName: value,
-                      };
-                      handleChange('relationships', newRelationships);
-                    }}
-                    placeholder="Enter custom character name"
-                  />
-                </View>
-              )}
-              <View style={styles.relationshipDescContainer}>
+            {relationship.characterName === '__CUSTOM__' && (
+              <View style={styles.customNameContainer}>
                 <TextInput
-                  style={styles.relationshipDescInput}
-                  value={relationship.description || ''}
+                  style={styles.customNameInput}
+                  value={relationship.customName || ''}
                   onChangeText={value => {
                     const newRelationships = [...form.relationships];
                     newRelationships[index] = {
                       ...relationship,
-                      description: value,
+                      customName: value,
                     };
                     handleChange('relationships', newRelationships);
                   }}
-                  placeholder={`Description of relationship with ${relationship.characterName || 'character'}`}
-                  multiline
+                  placeholder="Enter custom character name"
                 />
               </View>
+            )}
+            <View style={styles.relationshipDescContainer}>
+              <TextInput
+                style={styles.relationshipDescInput}
+                value={relationship.description || ''}
+                onChangeText={value => {
+                  const newRelationships = [...form.relationships];
+                  newRelationships[index] = {
+                    ...relationship,
+                    description: value,
+                  };
+                  handleChange('relationships', newRelationships);
+                }}
+                placeholder={`Description of relationship with ${relationship.characterName || 'character'}`}
+                multiline
+              />
             </View>
-          ))}
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              handleChange('relationships', [
-                ...form.relationships,
-                {
-                  characterName: '',
-                  relationshipType: RelationshipStanding.Friend,
-                  description: '',
-                },
-              ]);
-            }}
-          >
-            <Text style={styles.addButtonText}>Add Relationship</Text>
-          </TouchableOpacity>
-        </View>
+          </View>
+        ))}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            handleChange('relationships', [
+              ...form.relationships,
+              {
+                characterName: '',
+                relationshipType: RelationshipStanding.Friend,
+                description: '',
+              },
+            ]);
+          }}
+        >
+          <Text style={styles.addButtonText}>Add Relationship</Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Status</Text>
-          <TouchableOpacity
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Status</Text>
+        <TouchableOpacity
+          style={[
+            styles.statusButton,
+            form.retired && styles.statusButtonRetired,
+          ]}
+          onPress={() => handleChange('retired', !form.retired)}
+        >
+          <Text
             style={[
-              styles.statusButton,
-              form.retired && styles.statusButtonRetired,
+              styles.statusButtonText,
+              form.retired && styles.statusButtonTextRetired,
             ]}
-            onPress={() => handleChange('retired', !form.retired)}
           >
-            <Text
-              style={[
-                styles.statusButtonText,
-                form.retired && styles.statusButtonTextRetired,
-              ]}
-            >
-              {form.retired ? '🔒 Retired' : '✓ Active'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            {form.retired ? '🔒 Retired' : '✓ Active'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Occupation</Text>
-          <TextInput
-            style={styles.input}
-            value={form.occupation}
-            onChangeText={value => handleChange('occupation', value)}
-            placeholder="Character Occupation"
-          />
-        </View>
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Occupation</Text>
+        <TextInput
+          style={styles.input}
+          value={form.occupation}
+          onChangeText={value => handleChange('occupation', value)}
+          placeholder="Character Occupation"
+        />
+      </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={[styles.input, styles.notesInput]}
-            value={form.notes}
-            onChangeText={value => handleChange('notes', value)}
-            placeholder="Character Notes"
-            multiline
-          />
-        </View>
+      <View style={styles.formSection}>
+        <Text style={styles.label}>Notes</Text>
+        <TextInput
+          style={[styles.input, styles.notesInput]}
+          value={form.notes}
+          onChangeText={value => handleChange('notes', value)}
+          placeholder="Character Notes"
+          multiline
+        />
+      </View>
 
-        <View style={styles.submitContainer}>
-          <Button
-            title={editingCharacter ? 'Update Character' : 'Create Character'}
-            onPress={handleSubmit}
-          />
-        </View>
-      </ScrollView>
-    </View>
+      <View style={styles.submitContainer}>
+        <Button
+          title={editingCharacter ? 'Update Character' : 'Create Character'}
+          onPress={handleSubmit}
+        />
+      </View>
+    </BaseFormScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: commonStyles.layout.scrollView,
   imageGalleryContainer: {
     ...commonStyles.image.container,
   },
@@ -1123,7 +1099,6 @@ const styles = StyleSheet.create({
     ...commonStyles.button.text,
     textAlign: 'center',
   },
-  contentContainer: commonStyles.layout.contentContainer,
   filterContainer: {
     ...commonStyles.layout.section,
     flexDirection: 'row',

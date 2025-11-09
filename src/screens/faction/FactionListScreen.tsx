@@ -1,13 +1,5 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Alert,
-  TextInput,
-  Text,
-} from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import {
   GameCharacter,
   Faction,
@@ -20,7 +12,6 @@ import {
   getFactionDescription,
   migrateFactionDescriptions,
   loadFactions,
-  deleteFactionCompletely,
 } from '@utils/characterStorage';
 import {
   useNavigation,
@@ -30,8 +21,8 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
-import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseListScreen } from '@/components';
 
 type FactionNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Factions'>,
@@ -46,7 +37,7 @@ interface FactionInfo {
   standingCounts: Record<string, number>;
 }
 
-export const FactionScreen: React.FC = () => {
+export const FactionListScreen: React.FC = () => {
   const [factionInfos, setFactionInfos] = useState<FactionInfo[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const navigation = useNavigation<FactionNavigationProp>();
@@ -170,78 +161,13 @@ export const FactionScreen: React.FC = () => {
     [getFilteredFactions]
   );
 
-  // Set up the header with a plus button
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerAddButton}
-          onPress={handleCreateFaction}
-        >
-          <Text style={styles.headerAddButtonText}>+</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
   const handleFactionSelect = (factionInfo: FactionInfo) => {
     navigation.navigate('FactionDetails', {
       factionName: factionInfo.faction.name,
     });
   };
 
-  const handleCreateFaction = () => {
-    navigation.navigate('FactionForm');
-  };
-
-  const handleDeleteFaction = async (factionName: string) => {
-    Alert.alert(
-      'Delete Faction',
-      `Are you sure you want to delete "${factionName}"? This will remove it from all characters and cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await deleteFactionCompletely(factionName);
-
-              if (result.success) {
-                // Refresh the faction list
-                await loadData();
-
-                // Show success message
-                const message =
-                  result.charactersUpdated > 0
-                    ? `Faction "${factionName}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
-                    : `Faction "${factionName}" deleted successfully.`;
-
-                Alert.alert('Success', message, [{ text: 'OK' }]);
-              } else {
-                Alert.alert(
-                  'Error',
-                  'Failed to delete faction. Please try again.',
-                  [{ text: 'OK' }]
-                );
-              }
-            } catch {
-              Alert.alert(
-                'Error',
-                'An unexpected error occurred while deleting the faction.',
-                [{ text: 'OK' }]
-              );
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const renderFactionItem = ({ item }: { item: FactionInfo }) => (
+  const renderFactionItem = (item: FactionInfo) => (
     <View style={styles.factionCard}>
       <TouchableOpacity
         style={styles.factionContent}
@@ -271,13 +197,6 @@ export const FactionScreen: React.FC = () => {
             </View>
           ))}
         </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => handleDeleteFaction(item.faction.name)}
-      >
-        <Text style={styles.deleteText}>Delete</Text>
       </TouchableOpacity>
     </View>
   );
@@ -324,49 +243,20 @@ export const FactionScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Fixed search bar outside of FlatList to prevent focus loss */}
-      {/* <View style={styles.fixedHeader}> */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search factions by name..."
-          placeholderTextColor={themeColors.text.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          blurOnSubmit={false}
-          autoFocus={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            style={styles.clearSearchButton}
-            onPress={() => setSearchQuery('')}
-          >
-            <Text style={styles.clearSearchText}>✕</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <FlatList
-        data={filteredFactions}
-        renderItem={renderFactionItem}
-        keyExtractor={item => item.faction.name}
-        style={styles.factionList}
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-      />
-    </View>
+    <BaseListScreen
+      data={filteredFactions}
+      renderItem={renderFactionItem}
+      keyExtractor={(item: FactionInfo) => item.faction.name}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search factions by name..."
+      emptyStateTitle="No factions found"
+      onAddPress={() => navigation.navigate('FactionForm', {})}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: commonStyles.layout.container,
-  contentContainer: commonStyles.layout.contentContainer,
-  factionList: {
-    flex: 1,
-  },
   factionCard: commonStyles.card.base,
   factionContent: {
     flex: 1,
@@ -406,17 +296,4 @@ const styles = StyleSheet.create({
   standingText: commonStyles.badge.text,
   standingTextLight: commonStyles.badge.text,
   standingTextDark: commonStyles.badge.text,
-  headerAddButton: commonStyles.headerButton.add,
-  headerAddButtonText: commonStyles.headerButton.addText,
-  deleteButton: {
-    ...commonStyles.button.small,
-    ...commonStyles.button.danger,
-    marginTop: 12,
-    alignSelf: 'flex-end',
-  },
-  deleteText: commonStyles.button.textSmall,
-  searchContainer: commonStyles.search.container,
-  searchInput: commonStyles.search.input,
-  clearSearchButton: commonStyles.search.clearButton,
-  clearSearchText: commonStyles.search.clearText,
 });

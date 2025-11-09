@@ -12,14 +12,14 @@ import { CharacterFormScreen } from './src/screens/character/CharacterFormScreen
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
 import { CharacterSearchScreen } from './src/screens/character/CharacterSearchScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
-import { FactionScreen } from './src/screens/faction/FactionScreen';
-import { FactionDetailsScreen } from './src/screens/faction/FactionDetailsScreen';
+import { FactionListScreen } from './src/screens/faction/FactionListScreen';
+import { FactionDetailsScreen } from './src/screens/faction/FactionDetailScreen';
 import { FactionFormScreen } from './src/screens/faction/FactionFormScreen';
 import { LocationListScreen } from './src/screens/location/LocationListScreen';
-import { LocationDetailsScreen } from './src/screens/location/LocationDetailsScreen';
+import { LocationDetailsScreen } from './src/screens/location/LocationDetailScreen';
 import { LocationFormScreen } from './src/screens/location/LocationFormScreen';
 import { LocationMapScreen } from './src/screens/location/LocationMapScreen';
-import { EventsTimelineScreen } from './src/screens/events/EventsTimelineScreen';
+import { EventsTimelineScreen } from './src/screens/events/EventsListScreen';
 import { EventsFormScreen } from './src/screens/events/EventsFormScreen';
 import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -82,7 +82,7 @@ function MainDrawer() {
       />
       <Drawer.Screen
         name="Factions"
-        component={FactionScreen}
+        component={FactionListScreen}
         options={{
           title: 'Factions',
           drawerLabel: 'Factions',

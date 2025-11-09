@@ -1,13 +1,5 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Text,
-  TextInput,
-  Image,
-} from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text, Image } from 'react-native';
 import { GameEvent } from '@models/types';
 import {
   loadEvents,
@@ -24,8 +16,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
-import { commonStyles } from '@/styles/commonStyles';
 import { Picker } from '@react-native-picker/picker';
+import { BaseListScreen } from '@/components';
 
 type EventsNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Events'>,
@@ -101,19 +93,6 @@ export const EventsTimelineScreen: React.FC = () => {
     }, [loadData])
   );
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate('EventsForm', {})}
-        >
-          <Text style={styles.addButtonText}>+ Add Event</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
   const getFilteredEvents = useCallback(() => {
     let filtered = events;
 
@@ -160,7 +139,7 @@ export const EventsTimelineScreen: React.FC = () => {
     return timeString ? `${dateStr} at ${timeString}` : dateStr;
   };
 
-  const renderEvent = ({ item }: { item: EventWithDetails }) => (
+  const renderEvent = (item: EventWithDetails) => (
     <TouchableOpacity
       style={styles.eventCard}
       onPress={() => navigation.navigate('EventsDetail', { eventId: item.id })}
@@ -217,116 +196,77 @@ export const EventsTimelineScreen: React.FC = () => {
 
   const filteredEvents = getFilteredEvents();
 
-  return (
-    <View style={commonStyles.layout.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search events..."
-          placeholderTextColor={themeColors.text.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+  const renderFilters = () => (
+    <View style={styles.filtersContainer}>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={filterLocation}
+          onValueChange={setFilterLocation}
+          style={styles.picker}
+          dropdownIconColor={themeColors.text.secondary}
+        >
+          <Picker.Item label="All Locations" value="" />
+          {locations.map(location => (
+            <Picker.Item
+              key={location.id}
+              label={location.name}
+              value={location.id}
+            />
+          ))}
+        </Picker>
       </View>
 
-      <View style={styles.filtersContainer}>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={filterLocation}
-            onValueChange={setFilterLocation}
-            style={styles.picker}
-            dropdownIconColor={themeColors.text.secondary}
-          >
-            <Picker.Item label="All Locations" value="" />
-            {locations.map(location => (
-              <Picker.Item
-                key={location.id}
-                label={location.name}
-                value={location.id}
-              />
-            ))}
-          </Picker>
-        </View>
-
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={filterCharacter}
-            onValueChange={setFilterCharacter}
-            style={styles.picker}
-            dropdownIconColor={themeColors.text.secondary}
-          >
-            <Picker.Item label="All Characters" value="" />
-            {characters.map(character => (
-              <Picker.Item
-                key={character.id}
-                label={character.name}
-                value={character.id}
-              />
-            ))}
-          </Picker>
-        </View>
-
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={filterFaction}
-            onValueChange={setFilterFaction}
-            style={styles.picker}
-            dropdownIconColor={themeColors.text.secondary}
-          >
-            <Picker.Item label="All Factions" value="" />
-            {factions.map(faction => (
-              <Picker.Item key={faction} label={faction} value={faction} />
-            ))}
-          </Picker>
-        </View>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={filterCharacter}
+          onValueChange={setFilterCharacter}
+          style={styles.picker}
+          dropdownIconColor={themeColors.text.secondary}
+        >
+          <Picker.Item label="All Characters" value="" />
+          {characters.map(character => (
+            <Picker.Item
+              key={character.id}
+              label={character.name}
+              value={character.id}
+            />
+          ))}
+        </Picker>
       </View>
 
-      <FlatList
-        data={filteredEvents}
-        renderItem={renderEvent}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No events found</Text>
-            <Text style={styles.emptySubtext}>
-              Tap "+ Add Event" to create your first event
-            </Text>
-          </View>
-        }
-      />
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={filterFaction}
+          onValueChange={setFilterFaction}
+          style={styles.picker}
+          dropdownIconColor={themeColors.text.secondary}
+        >
+          <Picker.Item label="All Factions" value="" />
+          {factions.map(faction => (
+            <Picker.Item key={faction} label={faction} value={faction} />
+          ))}
+        </Picker>
+      </View>
     </View>
+  );
+
+  return (
+    <BaseListScreen
+      data={filteredEvents}
+      renderItem={renderEvent}
+      keyExtractor={(item: EventWithDetails) => item.id}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search events..."
+      emptyStateTitle="No events found"
+      emptyStateSubtitle="Tap the add button to create your first event"
+      onAddPress={() => navigation.navigate('EventsForm', {})}
+      ListHeaderComponent={renderFilters()}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  addButton: {
-    marginRight: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: themeColors.accent.primary,
-    borderRadius: 8,
-  },
-  addButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  searchContainer: {
-    padding: 16,
-    backgroundColor: themeColors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-  },
-  searchInput: {
-    backgroundColor: themeColors.elevated,
-    borderWidth: 1,
-    borderColor: themeColors.border,
-    borderRadius: 8,
-    padding: 12,
-    color: themeColors.text.primary,
-    fontSize: 16,
-  },
   filtersContainer: {
     padding: 16,
     paddingTop: 8,
@@ -344,10 +284,6 @@ const styles = StyleSheet.create({
   },
   picker: {
     color: themeColors.text.primary,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 100,
   },
   eventCard: {
     backgroundColor: themeColors.surface,
@@ -407,21 +343,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: themeColors.text.secondary,
     flex: 1,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: themeColors.text.secondary,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: themeColors.text.muted,
-    textAlign: 'center',
   },
 });
