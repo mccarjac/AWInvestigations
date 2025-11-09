@@ -75,7 +75,9 @@ export const CharacterFormScreen: React.FC = () => {
           notes: editingCharacter.notes || '',
           occupation: editingCharacter.occupation || '',
           imageUri: editingCharacter.imageUri,
-          imageUris: editingCharacter.imageUris || (editingCharacter.imageUri ? [editingCharacter.imageUri] : []),
+          imageUris:
+            editingCharacter.imageUris ||
+            (editingCharacter.imageUri ? [editingCharacter.imageUri] : []),
           locationId: editingCharacter.locationId,
           retired: editingCharacter.retired,
           cyberware: [...(editingCharacter.cyberware || [])],
@@ -334,7 +336,9 @@ export const CharacterFormScreen: React.FC = () => {
               onPress={pickImage}
             >
               <Text style={styles.imagePickerButtonText}>
-                {form.imageUris && form.imageUris.length > 0 ? 'Add Another Image' : 'Add Image'}
+                {form.imageUris && form.imageUris.length > 0
+                  ? 'Add Another Image'
+                  : 'Add Image'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1076,7 +1080,6 @@ export const CharacterFormScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   scrollView: commonStyles.layout.scrollView,
-  imageContainer: commonStyles.image.container,
   imageGalleryContainer: {
     ...commonStyles.image.container,
   },
@@ -1114,7 +1117,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 20,
   },
-  characterImage: commonStyles.image.characterLarge,
   placeholderImage: commonStyles.image.placeholder,
   imagePickerButton: commonStyles.image.pickerButton,
   imagePickerButtonText: {

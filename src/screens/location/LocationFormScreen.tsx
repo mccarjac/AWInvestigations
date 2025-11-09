@@ -55,7 +55,8 @@ export const LocationFormScreen: React.FC = () => {
         name: location.name,
         description: location.description,
         imageUri: location.imageUri,
-        imageUris: location.imageUris || (location.imageUri ? [location.imageUri] : []),
+        imageUris:
+          location.imageUris || (location.imageUri ? [location.imageUri] : []),
       });
     }
   }, [location]);
@@ -84,10 +85,10 @@ export const LocationFormScreen: React.FC = () => {
       const newImageUri = result.assets[0].uri;
       const currentImages = formData.imageUris || [];
       const newImages = [...currentImages, newImageUri];
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         imageUris: newImages,
-        imageUri: newImages[0] // Keep first image for backward compatibility
+        imageUri: newImages[0], // Keep first image for backward compatibility
       });
     }
   };
@@ -95,10 +96,10 @@ export const LocationFormScreen: React.FC = () => {
   const removeImage = (index: number) => {
     const currentImages = formData.imageUris || [];
     const newImages = currentImages.filter((_, i) => i !== index);
-    setFormData({ 
-      ...formData, 
+    setFormData({
+      ...formData,
       imageUris: newImages,
-      imageUri: newImages.length > 0 ? newImages[0] : undefined
+      imageUri: newImages.length > 0 ? newImages[0] : undefined,
     });
   };
 
@@ -235,7 +236,9 @@ export const LocationFormScreen: React.FC = () => {
                   style={styles.addImageButton}
                   onPress={pickImage}
                 >
-                  <Text style={styles.addImageButtonText}>Add Another Image</Text>
+                  <Text style={styles.addImageButtonText}>
+                    Add Another Image
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -374,10 +377,6 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 6,
   },
-  imageContainer: {
-    alignItems: 'center',
-    gap: 12,
-  },
   imageGalleryContainer: {
     gap: 12,
   },
@@ -390,12 +389,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 100,
     height: 100,
-  },
-  locationImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    backgroundColor: themeColors.surface,
   },
   locationImageThumbnail: {
     width: 100,
@@ -434,18 +427,6 @@ const styles = StyleSheet.create({
   addImageButtonText: {
     ...commonStyles.text.body,
     color: themeColors.text.secondary,
-    fontWeight: '600',
-  },
-  removeImageButton: {
-    backgroundColor: themeColors.accent.danger,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignSelf: 'center',
-  },
-  removeImageButtonText: {
-    ...commonStyles.text.body,
-    color: themeColors.text.primary,
     fontWeight: '600',
   },
   removeImageIconButton: {

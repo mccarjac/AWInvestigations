@@ -2,8 +2,8 @@ import 'react-native-get-random-values';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import { Alert, Platform } from 'react-native';
-import JSZip from 'jszip';
+import { Alert } from 'react-native';
+import { zip, unzip } from 'react-native-zip-archive';
 import {
   exportDataset,
   importDataset,
@@ -29,13 +29,6 @@ const extractImageData = (
   const extension = mimeType.split('/')[1] || 'jpg';
 
   return { mimeType, base64Data, extension };
-};
-
-/**
- * Create a data URI from image data
- */
-const createDataUri = (mimeType: string, base64Data: string): string => {
-  return `data:${mimeType};base64,${base64Data}`;
 };
 
 /**
@@ -88,8 +81,26 @@ const exportCharacterDataNative = async (): Promise<void> => {
     const jsonData = await exportDataset();
     const dataset = JSON.parse(jsonData);
 
-    // Create a new ZIP file
-    const zip = new JSZip();
+    // Create a temporary directory for building the zip
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/:/g, '-')
+      .replace(/\..+/, '');
+    const tempDir =
+      (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') +
+      `export_temp_${timestamp}/`;
+
+    // Create directory structure
+    await FileSystem.makeDirectoryAsync(tempDir, { intermediates: true });
+    await FileSystem.makeDirectoryAsync(tempDir + 'images/characters/', {
+      intermediates: true,
+    });
+    await FileSystem.makeDirectoryAsync(tempDir + 'images/locations/', {
+      intermediates: true,
+    });
+    await FileSystem.makeDirectoryAsync(tempDir + 'images/events/', {
+      intermediates: true,
+    });
 
     // Track image references and replace URIs with file paths
     let imageCounter = 0;
@@ -108,21 +119,25 @@ const exportCharacterDataNative = async (): Promise<void> => {
                 const imageData = extractImageData(uri);
                 if (imageData) {
                   const filename = `images/characters/${character.id}_${i}.${imageData.extension}`;
-                  zip.file(filename, imageData.base64Data, { base64: true });
+                  const filePath = tempDir + filename;
+                  await FileSystem.writeAsStringAsync(
+                    filePath,
+                    imageData.base64Data,
+                    {
+                      encoding: FileSystem.EncodingType.Base64,
+                    }
+                  );
                   processedUris.push(filename);
                   imageCounter++;
                 }
               } else if (uri.startsWith('file://') || uri.startsWith('/')) {
-                // Handle file URI - read and convert to base64
+                // Handle file URI - copy file directly
                 try {
-                  const base64Data = await FileSystem.readAsStringAsync(uri, {
-                    encoding: FileSystem.EncodingType.Base64,
-                  });
-                  // Detect file extension from URI or default to jpg
                   const extension =
                     uri.split('.').pop()?.toLowerCase() || 'jpg';
                   const filename = `images/characters/${character.id}_${i}.${extension}`;
-                  zip.file(filename, base64Data, { base64: true });
+                  const filePath = tempDir + filename;
+                  await FileSystem.copyAsync({ from: uri, to: filePath });
                   processedUris.push(filename);
                   imageCounter++;
                 } catch {
@@ -144,7 +159,14 @@ const exportCharacterDataNative = async (): Promise<void> => {
             const imageData = extractImageData(character.imageUri);
             if (imageData) {
               const filename = `images/characters/${character.id}.${imageData.extension}`;
-              zip.file(filename, imageData.base64Data, { base64: true });
+              const filePath = tempDir + filename;
+              await FileSystem.writeAsStringAsync(
+                filePath,
+                imageData.base64Data,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
               character.imageUri = filename;
               character.imageUris = [filename];
               imageCounter++;
@@ -153,19 +175,16 @@ const exportCharacterDataNative = async (): Promise<void> => {
             character.imageUri.startsWith('file://') ||
             character.imageUri.startsWith('/')
           ) {
-            // Handle file URI - read and convert to base64
+            // Handle file URI - copy file directly
             try {
-              const base64Data = await FileSystem.readAsStringAsync(
-                character.imageUri,
-                {
-                  encoding: FileSystem.EncodingType.Base64,
-                }
-              );
-              // Detect file extension from URI or default to jpg
               const extension =
                 character.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
               const filename = `images/characters/${character.id}.${extension}`;
-              zip.file(filename, base64Data, { base64: true });
+              const filePath = tempDir + filename;
+              await FileSystem.copyAsync({
+                from: character.imageUri,
+                to: filePath,
+              });
               character.imageUri = filename;
               character.imageUris = [filename];
               imageCounter++;
@@ -191,21 +210,25 @@ const exportCharacterDataNative = async (): Promise<void> => {
                 const imageData = extractImageData(uri);
                 if (imageData) {
                   const filename = `images/locations/${location.id}_${i}.${imageData.extension}`;
-                  zip.file(filename, imageData.base64Data, { base64: true });
+                  const filePath = tempDir + filename;
+                  await FileSystem.writeAsStringAsync(
+                    filePath,
+                    imageData.base64Data,
+                    {
+                      encoding: FileSystem.EncodingType.Base64,
+                    }
+                  );
                   processedUris.push(filename);
                   imageCounter++;
                 }
               } else if (uri.startsWith('file://') || uri.startsWith('/')) {
-                // Handle file URI - read and convert to base64
+                // Handle file URI - copy file directly
                 try {
-                  const base64Data = await FileSystem.readAsStringAsync(uri, {
-                    encoding: FileSystem.EncodingType.Base64,
-                  });
-                  // Detect file extension from URI or default to jpg
                   const extension =
                     uri.split('.').pop()?.toLowerCase() || 'jpg';
                   const filename = `images/locations/${location.id}_${i}.${extension}`;
-                  zip.file(filename, base64Data, { base64: true });
+                  const filePath = tempDir + filename;
+                  await FileSystem.copyAsync({ from: uri, to: filePath });
                   processedUris.push(filename);
                   imageCounter++;
                 } catch {
@@ -227,7 +250,14 @@ const exportCharacterDataNative = async (): Promise<void> => {
             const imageData = extractImageData(location.imageUri);
             if (imageData) {
               const filename = `images/locations/${location.id}.${imageData.extension}`;
-              zip.file(filename, imageData.base64Data, { base64: true });
+              const filePath = tempDir + filename;
+              await FileSystem.writeAsStringAsync(
+                filePath,
+                imageData.base64Data,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
               location.imageUri = filename;
               location.imageUris = [filename];
               imageCounter++;
@@ -236,19 +266,16 @@ const exportCharacterDataNative = async (): Promise<void> => {
             location.imageUri.startsWith('file://') ||
             location.imageUri.startsWith('/')
           ) {
-            // Handle file URI - read and convert to base64
+            // Handle file URI - copy file directly
             try {
-              const base64Data = await FileSystem.readAsStringAsync(
-                location.imageUri,
-                {
-                  encoding: FileSystem.EncodingType.Base64,
-                }
-              );
-              // Detect file extension from URI or default to jpg
               const extension =
                 location.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
               const filename = `images/locations/${location.id}.${extension}`;
-              zip.file(filename, base64Data, { base64: true });
+              const filePath = tempDir + filename;
+              await FileSystem.copyAsync({
+                from: location.imageUri,
+                to: filePath,
+              });
               location.imageUri = filename;
               location.imageUris = [filename];
               imageCounter++;
@@ -274,21 +301,25 @@ const exportCharacterDataNative = async (): Promise<void> => {
                 const imageData = extractImageData(uri);
                 if (imageData) {
                   const filename = `images/events/${event.id}_${i}.${imageData.extension}`;
-                  zip.file(filename, imageData.base64Data, { base64: true });
+                  const filePath = tempDir + filename;
+                  await FileSystem.writeAsStringAsync(
+                    filePath,
+                    imageData.base64Data,
+                    {
+                      encoding: FileSystem.EncodingType.Base64,
+                    }
+                  );
                   processedUris.push(filename);
                   imageCounter++;
                 }
               } else if (uri.startsWith('file://') || uri.startsWith('/')) {
-                // Handle file URI - read and convert to base64
+                // Handle file URI - copy file directly
                 try {
-                  const base64Data = await FileSystem.readAsStringAsync(uri, {
-                    encoding: FileSystem.EncodingType.Base64,
-                  });
-                  // Detect file extension from URI or default to jpg
                   const extension =
                     uri.split('.').pop()?.toLowerCase() || 'jpg';
                   const filename = `images/events/${event.id}_${i}.${extension}`;
-                  zip.file(filename, base64Data, { base64: true });
+                  const filePath = tempDir + filename;
+                  await FileSystem.copyAsync({ from: uri, to: filePath });
                   processedUris.push(filename);
                   imageCounter++;
                 } catch {
@@ -310,7 +341,14 @@ const exportCharacterDataNative = async (): Promise<void> => {
             const imageData = extractImageData(event.imageUri);
             if (imageData) {
               const filename = `images/events/${event.id}.${imageData.extension}`;
-              zip.file(filename, imageData.base64Data, { base64: true });
+              const filePath = tempDir + filename;
+              await FileSystem.writeAsStringAsync(
+                filePath,
+                imageData.base64Data,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
               event.imageUri = filename;
               event.imageUris = [filename];
               imageCounter++;
@@ -319,19 +357,16 @@ const exportCharacterDataNative = async (): Promise<void> => {
             event.imageUri.startsWith('file://') ||
             event.imageUri.startsWith('/')
           ) {
-            // Handle file URI - read and convert to base64
+            // Handle file URI - copy file directly
             try {
-              const base64Data = await FileSystem.readAsStringAsync(
-                event.imageUri,
-                {
-                  encoding: FileSystem.EncodingType.Base64,
-                }
-              );
-              // Detect file extension from URI or default to jpg
               const extension =
                 event.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
               const filename = `images/events/${event.id}.${extension}`;
-              zip.file(filename, base64Data, { base64: true });
+              const filePath = tempDir + filename;
+              await FileSystem.copyAsync({
+                from: event.imageUri,
+                to: filePath,
+              });
               event.imageUri = filename;
               event.imageUris = [filename];
               imageCounter++;
@@ -343,37 +378,34 @@ const exportCharacterDataNative = async (): Promise<void> => {
       }
     }
 
-    // Add the modified JSON to the zip
-    zip.file('data.json', JSON.stringify(dataset, null, 2));
+    // Write the modified JSON to the temp directory
+    const dataJsonPath = tempDir + 'data.json';
+    await FileSystem.writeAsStringAsync(
+      dataJsonPath,
+      JSON.stringify(dataset, null, 2)
+    );
 
-    // Generate the zip file as base64
-    const zipBase64 = await zip.generateAsync({ type: 'base64' });
-
-    // Create a filename with timestamp
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/:/g, '-')
-      .replace(/\..+/, '');
+    // Create the zip file from the directory
     const filename = `character-faction-data-${timestamp}.zip`;
-
-    // Write to a temporary file
-    const fileUri =
+    const zipPath =
       (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') +
       filename;
-    await FileSystem.writeAsStringAsync(fileUri, zipBase64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+
+    await zip(tempDir, zipPath);
+
+    // Clean up temp directory
+    await FileSystem.deleteAsync(tempDir, { idempotent: true });
 
     // Check if sharing is available
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri, {
+      await Sharing.shareAsync(zipPath, {
         mimeType: 'application/zip',
         dialogTitle: 'Export Character Data',
       });
     } else {
       Alert.alert(
         'Export Complete',
-        `Character and faction data exported to: ${fileUri}${imageCounter > 0 ? ` (includes ${imageCounter} images)` : ''}`,
+        `Character and faction data exported to: ${zipPath}${imageCounter > 0 ? ` (includes ${imageCounter} images)` : ''}`,
         [{ text: 'OK' }]
       );
     }
@@ -414,116 +446,254 @@ const importCharacterDataNative = async (): Promise<boolean> => {
     const isZip = fileName.endsWith('.zip');
 
     if (isZip) {
-      // Handle ZIP file
-      const base64Content = await FileSystem.readAsStringAsync(fileUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      console.log('[ZIP Import] Starting import from:', fileName);
+      console.log('[ZIP Import] File URI:', fileUri);
 
-      const zip = new JSZip();
-      const zipContent = await zip.loadAsync(base64Content, { base64: true });
+      // Handle ZIP file - extract to temp directory
+      const timestamp = new Date().getTime();
+      const tempDir =
+        (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') +
+        `import_temp_${timestamp}/`;
 
-      // Extract data.json
-      const dataFile = zipContent.file('data.json');
-      if (!dataFile) {
-        Alert.alert('Import Failed', 'Invalid zip file: data.json not found.', [
-          { text: 'OK' },
-        ]);
+      console.log('[ZIP Import] Temp directory:', tempDir);
+
+      try {
+        console.log('[ZIP Import] Attempting to unzip...');
+        await unzip(fileUri, tempDir);
+        console.log('[ZIP Import] Unzip successful');
+      } catch (unzipError) {
+        console.error('[ZIP Import] Unzip failed:', unzipError);
+        Alert.alert(
+          'Import Failed',
+          `Failed to extract zip file: ${unzipError instanceof Error ? unzipError.message : 'Unknown error'}`,
+          [{ text: 'OK' }]
+        );
         return false;
       }
 
-      const jsonContent = await dataFile.async('text');
+      // Read data.json
+      const dataJsonPath = tempDir + 'data.json';
+      console.log('[ZIP Import] Checking for data.json at:', dataJsonPath);
+
+      const dataJsonInfo = await FileSystem.getInfoAsync(dataJsonPath);
+      console.log('[ZIP Import] data.json exists:', dataJsonInfo.exists);
+
+      if (!dataJsonInfo.exists) {
+        // List what files were extracted to help debug
+        try {
+          const extractedFiles = await FileSystem.readDirectoryAsync(tempDir);
+          console.error('[ZIP Import] Files in temp dir:', extractedFiles);
+        } catch (e) {
+          console.error('[ZIP Import] Could not list temp dir:', e);
+        }
+
+        Alert.alert(
+          'Import Failed',
+          'Invalid zip file: data.json not found in the archive.',
+          [{ text: 'OK' }]
+        );
+        await FileSystem.deleteAsync(tempDir, { idempotent: true });
+        return false;
+      }
+
+      console.log('[ZIP Import] Reading data.json...');
+      const jsonContent = await FileSystem.readAsStringAsync(dataJsonPath);
+      console.log('[ZIP Import] JSON content length:', jsonContent.length);
+
+      try {
+        const dataset = JSON.parse(jsonContent);
+        console.log('[ZIP Import] Parsed dataset:', {
+          hasCharacters: !!dataset.characters,
+          characterCount: dataset.characters?.length || 0,
+          hasLocations: !!dataset.locations,
+          locationCount: dataset.locations?.length || 0,
+          hasEvents: !!dataset.events,
+          eventCount: dataset.events?.length || 0,
+        });
+      } catch (parseError) {
+        console.error('[ZIP Import] JSON parse error:', parseError);
+        Alert.alert(
+          'Import Failed',
+          `Invalid JSON in data.json: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
+          [{ text: 'OK' }]
+        );
+        await FileSystem.deleteAsync(tempDir, { idempotent: true });
+        return false;
+      }
+
       const dataset = JSON.parse(jsonContent);
 
-      // Extract and restore images
-      const allFiles = Object.keys(zipContent.files);
+      // Helper function to read directory recursively
+      const readDirRecursive = async (
+        dirPath: string
+      ): Promise<{ path: string; isDirectory: boolean }[]> => {
+        const items = await FileSystem.readDirectoryAsync(dirPath);
+        const results: { path: string; isDirectory: boolean }[] = [];
 
-      // Group images by entity ID
+        for (const item of items) {
+          const itemPath = dirPath + item;
+          const info = await FileSystem.getInfoAsync(itemPath);
+          if (info.isDirectory) {
+            results.push({ path: itemPath + '/', isDirectory: true });
+            const subItems = await readDirRecursive(itemPath + '/');
+            results.push(...subItems);
+          } else {
+            results.push({ path: itemPath, isDirectory: false });
+          }
+        }
+
+        return results;
+      };
+
+      // Extract and restore images - save to permanent storage as files
+      console.log('[ZIP Import] Processing images...');
+      const allFiles = await readDirRecursive(tempDir);
+      console.log(`[ZIP Import] Total files extracted: ${allFiles.length}`);
+      const imageFiles = allFiles.filter(
+        f => !f.isDirectory && f.path.includes('/images/')
+      );
+      console.log(`[ZIP Import] Found ${imageFiles.length} image files`);
+      if (imageFiles.length > 0) {
+        console.log(
+          '[ZIP Import] Sample image paths:',
+          imageFiles.slice(0, 3).map(f => f.path)
+        );
+      }
+
+      // Create permanent image directories
+      const permanentImageDir = FileSystem.documentDirectory + 'images/';
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'characters/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'locations/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'events/', {
+        intermediates: true,
+      });
+
+      // Group images by entity ID as file URIs (NOT base64 data URIs)
       const imagesByEntity: Record<string, Record<number, string>> = {};
 
-      for (const filePath of allFiles) {
-        if (filePath.startsWith('images/')) {
-          const file = zipContent.file(filePath);
-          if (file) {
-            const base64Data = await file.async('base64');
+      for (const fileInfo of imageFiles) {
+        const filePath = fileInfo.path;
+        const filename = filePath.split('/').pop();
 
-            // Determine mime type from extension
-            const extension = filePath.split('.').pop()?.toLowerCase();
-            const mimeType =
-              extension === 'png'
-                ? 'image/png'
-                : extension === 'jpg' || extension === 'jpeg'
-                  ? 'image/jpeg'
-                  : extension === 'gif'
-                    ? 'image/gif'
-                    : 'image/jpeg';
+        if (filename) {
+          // Match pattern: entityId_index.ext or entityId.ext
+          // Use non-greedy match up to the last _digits before extension
+          const match =
+            filename.match(/^(.+?)_(\d+)\.[^.]+$/) ||
+            filename.match(/^(.+)\.[^.]+$/);
+          if (match) {
+            const entityId = match[1];
+            const imageIndex = match[2] ? parseInt(match[2]) : 0;
 
-            const dataUri = createDataUri(mimeType, base64Data);
+            const entityType = filePath.includes('/characters/')
+              ? 'characters'
+              : filePath.includes('/locations/')
+                ? 'locations'
+                : filePath.includes('/events/')
+                  ? 'events'
+                  : '';
 
-            // Parse filename to get entity ID and image index
-            const filename = filePath.split('/').pop();
-            if (filename) {
-              const match = filename.match(/^(.+?)(?:_(\d+))?\.[^.]+$/);
-              if (match) {
-                const entityId = match[1];
-                const imageIndex = match[2] ? parseInt(match[2]) : 0;
+            if (entityType) {
+              // Copy image to permanent storage
+              const permanentPath =
+                permanentImageDir + entityType + '/' + filename;
+              await FileSystem.copyAsync({
+                from: filePath,
+                to: permanentPath,
+              });
 
-                const entityKey = filePath.startsWith('images/characters/')
-                  ? `character_${entityId}`
-                  : filePath.startsWith('images/locations/')
-                    ? `location_${entityId}`
-                    : filePath.startsWith('images/events/')
-                      ? `event_${entityId}`
-                      : '';
-
-                if (entityKey) {
-                  if (!imagesByEntity[entityKey]) {
-                    imagesByEntity[entityKey] = {};
-                  }
-                  imagesByEntity[entityKey][imageIndex] = dataUri;
-                }
+              const entityKey = `${entityType.slice(0, -1)}_${entityId}`;
+              if (!imagesByEntity[entityKey]) {
+                imagesByEntity[entityKey] = {};
               }
+              imagesByEntity[entityKey][imageIndex] = permanentPath;
             }
           }
         }
       }
 
+      console.log(
+        `[ZIP Import] Processed ${Object.keys(imagesByEntity).length} entities with images`
+      );
+
       // Apply grouped images to entities
+      console.log('[ZIP Import] Applying images to entities...');
       for (const [entityKey, images] of Object.entries(imagesByEntity)) {
-        const [entityType, entityId] = entityKey.split('_');
+        // Entity key format: "character_entityId" or "location_entityId" etc.
+        // entityId may contain underscores, so only split on the first underscore
+        const firstUnderscoreIndex = entityKey.indexOf('_');
+        const entityType = entityKey.substring(0, firstUnderscoreIndex);
+        const entityId = entityKey.substring(firstUnderscoreIndex + 1);
         const sortedImages = Object.keys(images)
           .map(k => parseInt(k))
           .sort((a, b) => a - b)
           .map(idx => images[idx]);
+
+        console.log(
+          `[ZIP Import] Processing ${entityType} ${entityId}: ${sortedImages.length} images`
+        );
+        console.log(`[ZIP Import] First image path: ${sortedImages[0]}`);
 
         if (entityType === 'character') {
           const character = dataset.characters?.find(
             (c: any) => c.id === entityId
           );
           if (character) {
+            console.log(
+              `[ZIP Import] Found character ${character.name}, updating imageUri from "${character.imageUri}" to "${sortedImages[0]}"`
+            );
             character.imageUris = sortedImages;
             character.imageUri = sortedImages[0]; // Backward compatibility
+          } else {
+            console.warn(
+              `[ZIP Import] Character ${entityId} not found in dataset`
+            );
           }
         } else if (entityType === 'location') {
           const location = dataset.locations?.find(
             (l: any) => l.id === entityId
           );
           if (location) {
+            console.log(
+              `[ZIP Import] Found location ${location.name}, updating imageUri`
+            );
             location.imageUris = sortedImages;
             location.imageUri = sortedImages[0]; // Backward compatibility
+          } else {
+            console.warn(
+              `[ZIP Import] Location ${entityId} not found in dataset`
+            );
           }
         } else if (entityType === 'event') {
           const event = dataset.events?.find((e: any) => e.id === entityId);
           if (event) {
+            console.log(
+              `[ZIP Import] Found event ${event.title}, updating imageUri`
+            );
             event.imageUris = sortedImages;
             event.imageUri = sortedImages[0]; // Backward compatibility
+          } else {
+            console.warn(`[ZIP Import] Event ${entityId} not found in dataset`);
           }
         }
       }
 
+      // Clean up temp directory
+      console.log('[ZIP Import] Cleaning up temp directory...');
+      await FileSystem.deleteAsync(tempDir, { idempotent: true });
+      console.log('[ZIP Import] Temp directory cleaned up');
+
       // Import the dataset
+      console.log('[ZIP Import] Calling importDataset...');
       const success = await importDataset(JSON.stringify(dataset));
+      console.log('[ZIP Import] importDataset result:', success);
 
       if (success) {
+        console.log('[ZIP Import] Import completed successfully');
         Alert.alert(
           'Import Successful',
           'Character and faction data has been imported successfully. All existing data has been replaced.',
@@ -531,6 +701,7 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         );
         return true;
       } else {
+        console.error('[ZIP Import] importDataset returned false');
         Alert.alert(
           'Import Failed',
           'The selected file is not a valid character and faction data file.',
@@ -576,10 +747,18 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       }
     }
   } catch (error) {
-    console.error('Import error:', error);
+    console.error('[ZIP Import] Unexpected error:', error);
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error('[ZIP Import] Error details:', {
+      message: errorMessage,
+      stack: errorStack,
+    });
+
     Alert.alert(
       'Import Failed',
-      'Failed to import character data. Please check the file format and try again.',
+      `Failed to import character data: ${errorMessage}\n\nPlease check the file format and try again.`,
       [{ text: 'OK' }]
     );
     return false;
@@ -615,74 +794,107 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     let fileContent: string;
 
     if (isZip) {
-      // Handle ZIP file
-      const base64Content = await FileSystem.readAsStringAsync(fileUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      // Handle ZIP file - extract to temp directory
+      const timestamp = new Date().getTime();
+      const tempDir =
+        (FileSystem.cacheDirectory || FileSystem.documentDirectory || '') +
+        `merge_temp_${timestamp}/`;
 
-      const zip = new JSZip();
-      const zipContent = await zip.loadAsync(base64Content, { base64: true });
+      await unzip(fileUri, tempDir);
 
-      // Extract data.json
-      const dataFile = zipContent.file('data.json');
-      if (!dataFile) {
+      // Read data.json
+      const dataJsonPath = tempDir + 'data.json';
+      const dataJsonInfo = await FileSystem.getInfoAsync(dataJsonPath);
+      if (!dataJsonInfo.exists) {
         Alert.alert('Merge Failed', 'Invalid zip file: data.json not found.', [
           { text: 'OK' },
         ]);
+        await FileSystem.deleteAsync(tempDir, { idempotent: true });
         return false;
       }
 
-      const jsonContent = await dataFile.async('text');
+      const jsonContent = await FileSystem.readAsStringAsync(dataJsonPath);
       const dataset = JSON.parse(jsonContent);
 
-      // Extract and restore images
-      const allFiles = Object.keys(zipContent.files);
+      // Helper function to read directory recursively
+      const readDirRecursive = async (
+        dirPath: string
+      ): Promise<{ path: string; isDirectory: boolean }[]> => {
+        const items = await FileSystem.readDirectoryAsync(dirPath);
+        const results: { path: string; isDirectory: boolean }[] = [];
 
-      // Group images by entity ID
+        for (const item of items) {
+          const itemPath = dirPath + item;
+          const info = await FileSystem.getInfoAsync(itemPath);
+          if (info.isDirectory) {
+            results.push({ path: itemPath + '/', isDirectory: true });
+            const subItems = await readDirRecursive(itemPath + '/');
+            results.push(...subItems);
+          } else {
+            results.push({ path: itemPath, isDirectory: false });
+          }
+        }
+
+        return results;
+      };
+
+      // Extract and restore images - save to permanent storage as files
+      const allFiles = await readDirRecursive(tempDir);
+      const imageFiles = allFiles.filter(
+        f => !f.isDirectory && f.path.includes('/images/')
+      );
+
+      // Create permanent image directories
+      const permanentImageDir = FileSystem.documentDirectory + 'images/';
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'characters/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'locations/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'events/', {
+        intermediates: true,
+      });
+
+      // Group images by entity ID as file URIs (NOT base64 data URIs)
       const imagesByEntity: Record<string, Record<number, string>> = {};
 
-      for (const filePath of allFiles) {
-        if (filePath.startsWith('images/')) {
-          const file = zipContent.file(filePath);
-          if (file) {
-            const base64Data = await file.async('base64');
+      for (const fileInfo of imageFiles) {
+        const filePath = fileInfo.path;
+        const filename = filePath.split('/').pop();
 
-            // Determine mime type from extension
-            const extension = filePath.split('.').pop()?.toLowerCase();
-            const mimeType =
-              extension === 'png'
-                ? 'image/png'
-                : extension === 'jpg' || extension === 'jpeg'
-                  ? 'image/jpeg'
-                  : extension === 'gif'
-                    ? 'image/gif'
-                    : 'image/jpeg';
+        if (filename) {
+          // Match pattern: entityId_index.ext or entityId.ext
+          // Use non-greedy match up to the last _digits before extension
+          const match =
+            filename.match(/^(.+?)_(\d+)\.[^.]+$/) ||
+            filename.match(/^(.+)\.[^.]+$/);
+          if (match) {
+            const entityId = match[1];
+            const imageIndex = match[2] ? parseInt(match[2]) : 0;
 
-            const dataUri = createDataUri(mimeType, base64Data);
+            const entityType = filePath.includes('/characters/')
+              ? 'characters'
+              : filePath.includes('/locations/')
+                ? 'locations'
+                : filePath.includes('/events/')
+                  ? 'events'
+                  : '';
 
-            // Parse filename to get entity ID and image index
-            const filename = filePath.split('/').pop();
-            if (filename) {
-              const match = filename.match(/^(.+?)(?:_(\d+))?\.[^.]+$/);
-              if (match) {
-                const entityId = match[1];
-                const imageIndex = match[2] ? parseInt(match[2]) : 0;
+            if (entityType) {
+              // Copy image to permanent storage
+              const permanentPath =
+                permanentImageDir + entityType + '/' + filename;
+              await FileSystem.copyAsync({
+                from: filePath,
+                to: permanentPath,
+              });
 
-                const entityKey = filePath.startsWith('images/characters/')
-                  ? `character_${entityId}`
-                  : filePath.startsWith('images/locations/')
-                    ? `location_${entityId}`
-                    : filePath.startsWith('images/events/')
-                      ? `event_${entityId}`
-                      : '';
-
-                if (entityKey) {
-                  if (!imagesByEntity[entityKey]) {
-                    imagesByEntity[entityKey] = {};
-                  }
-                  imagesByEntity[entityKey][imageIndex] = dataUri;
-                }
+              const entityKey = `${entityType.slice(0, -1)}_${entityId}`;
+              if (!imagesByEntity[entityKey]) {
+                imagesByEntity[entityKey] = {};
               }
+              imagesByEntity[entityKey][imageIndex] = permanentPath;
             }
           }
         }
@@ -690,7 +902,11 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
 
       // Apply grouped images to entities
       for (const [entityKey, images] of Object.entries(imagesByEntity)) {
-        const [entityType, entityId] = entityKey.split('_');
+        // Entity key format: "character_entityId" or "location_entityId" etc.
+        // entityId may contain underscores, so only split on the first underscore
+        const firstUnderscoreIndex = entityKey.indexOf('_');
+        const entityType = entityKey.substring(0, firstUnderscoreIndex);
+        const entityId = entityKey.substring(firstUnderscoreIndex + 1);
         const sortedImages = Object.keys(images)
           .map(k => parseInt(k))
           .sort((a, b) => a - b)
@@ -720,6 +936,9 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
           }
         }
       }
+
+      // Clean up temp directory
+      await FileSystem.deleteAsync(tempDir, { idempotent: true });
 
       fileContent = JSON.stringify(dataset);
     } else {
@@ -842,17 +1061,6 @@ export const showImportOptions = (): void => {
       },
     ]
   );
-};
-
-/**
- * Cross-platform alert function
- */
-const showAlert = (title: string, message: string): void => {
-  if (Platform.OS === 'web') {
-    window.alert(`${title}\n\n${message}`);
-  } else {
-    Alert.alert(title, message, [{ text: 'OK' }]);
-  }
 };
 
 /**
@@ -1075,80 +1283,11 @@ const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
 };
 
 /**
- * Import characters from CSV file (web version)
+ * Import characters from CSV file
  */
-const importCSVCharactersWeb = async (): Promise<boolean> => {
+export const importCSVCharacters = async (): Promise<boolean> => {
   try {
-    return new Promise<boolean>(resolve => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.csv';
-      input.style.display = 'none';
-
-      input.onchange = async (event: any) => {
-        try {
-          const file = event.target.files[0];
-          if (!file) {
-            resolve(false);
-            return;
-          }
-
-          const reader = new FileReader();
-          reader.onload = async e => {
-            try {
-              const csvContent = e.target?.result as string;
-              const characters = parseCSVToCharacters(csvContent);
-
-              // Save the characters
-              await saveCharacters(characters);
-
-              showAlert(
-                'CSV Import Successful',
-                `Successfully imported ${characters.length} characters from CSV.`
-              );
-              resolve(true);
-            } catch (error) {
-              console.error('CSV parsing error:', error);
-              showAlert(
-                'CSV Import Failed',
-                `Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
-              );
-              resolve(false);
-            }
-          };
-
-          reader.onerror = () => {
-            showAlert('File Read Error', 'Failed to read the selected file.');
-            resolve(false);
-          };
-
-          reader.readAsText(file);
-        } catch (error) {
-          console.error('File selection error:', error);
-          resolve(false);
-        }
-      };
-
-      document.body.appendChild(input);
-      input.click();
-      document.body.removeChild(input);
-    });
-  } catch (error) {
-    console.error('CSV import error:', error);
-    showAlert(
-      'CSV Import Failed',
-      'Failed to import CSV data. Please check the file format and try again.'
-    );
-    return false;
-  }
-};
-
-/**
- * Import characters from CSV file (native version)
- */
-const importCSVCharactersNative = async (): Promise<boolean> => {
-  try {
-    console.log('Starting native CSV import...');
+    console.log('Starting CSV import...');
     const result = await DocumentPicker.getDocumentAsync({
       type: 'text/csv',
       copyToCacheDirectory: true,
@@ -1169,9 +1308,10 @@ const importCSVCharactersNative = async (): Promise<boolean> => {
       // Save the characters
       await saveCharacters(characters);
 
-      showAlert(
+      Alert.alert(
         'CSV Import Successful',
-        `Successfully imported ${characters.length} characters from CSV.`
+        `Successfully imported ${characters.length} characters from CSV.`,
+        [{ text: 'OK' }]
       );
       return true;
     } else {
@@ -1180,21 +1320,11 @@ const importCSVCharactersNative = async (): Promise<boolean> => {
     }
   } catch (error) {
     console.error('CSV import error:', error);
-    showAlert(
+    Alert.alert(
       'CSV Import Failed',
-      `Failed to import CSV data: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to import CSV data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      [{ text: 'OK' }]
     );
     return false;
-  }
-};
-
-/**
- * Import characters from CSV file (cross-platform)
- */
-export const importCSVCharacters = async (): Promise<boolean> => {
-  if (Platform.OS === 'web') {
-    return await importCSVCharactersWeb();
-  } else {
-    return await importCSVCharactersNative();
   }
 };

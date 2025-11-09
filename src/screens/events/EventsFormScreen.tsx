@@ -136,10 +136,10 @@ export const EventsFormScreen: React.FC = () => {
       const newImageUri = result.assets[0].uri;
       const currentImages = formData.imageUris || [];
       const newImages = [...currentImages, newImageUri];
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         imageUris: newImages,
-        imageUri: newImages[0] // Keep first image for backward compatibility
+        imageUri: newImages[0], // Keep first image for backward compatibility
       });
     }
   };
@@ -147,10 +147,10 @@ export const EventsFormScreen: React.FC = () => {
   const removeImage = (index: number) => {
     const currentImages = formData.imageUris || [];
     const newImages = currentImages.filter((_, i) => i !== index);
-    setFormData({ 
-      ...formData, 
+    setFormData({
+      ...formData,
       imageUris: newImages,
-      imageUri: newImages.length > 0 ? newImages[0] : undefined
+      imageUri: newImages.length > 0 ? newImages[0] : undefined,
     });
   };
 
@@ -420,7 +420,10 @@ export const EventsFormScreen: React.FC = () => {
                   </View>
                 ))}
               </View>
-              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={pickImage}
+              >
                 <Text style={styles.addImageButtonText}>Add Another Photo</Text>
               </TouchableOpacity>
             </View>
@@ -529,9 +532,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingHorizontal: 4,
   },
-  imageContainer: {
-    gap: 12,
-  },
   imageGalleryContainer: {
     gap: 12,
   },
@@ -544,12 +544,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: 100,
     height: 100,
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: themeColors.elevated,
   },
   imageThumbnail: {
     width: 100,
@@ -583,17 +577,6 @@ const styles = StyleSheet.create({
   addImageButtonText: {
     fontSize: 14,
     color: themeColors.text.secondary,
-    fontWeight: '600',
-  },
-  removeImageButton: {
-    backgroundColor: themeColors.accent.danger,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  removeImageButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
     fontWeight: '600',
   },
   removeImageIconButton: {
