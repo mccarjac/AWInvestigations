@@ -303,23 +303,34 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
 
     // Auto-create any missing locations referenced by characters
     if (dataset.characters) {
-      console.log('Checking for old location data to migrate...');
+      console.log(
+        '[importDataset] Checking for old location data to migrate...'
+      );
       await migrateOldLocationData(dataset.characters);
+      console.log('[importDataset] Old location data migration complete');
 
-      console.log('Checking for missing locations referenced by characters...');
+      console.log(
+        '[importDataset] Checking for missing locations referenced by characters...'
+      );
       await ensureLocationsExist(dataset.characters);
+      console.log('[importDataset] Location existence check complete');
     }
 
     // Handle character data
+    console.log('[importDataset] Saving character data...');
     const characterDataset: CharacterDataset = {
       characters: dataset.characters || [],
       version: dataset.version || '1.0',
       lastUpdated: dataset.lastUpdated || new Date().toISOString(),
     };
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(characterDataset));
+    console.log(
+      `[importDataset] Saved ${characterDataset.characters.length} characters`
+    );
 
     // Handle faction data if present
     if (dataset.factions) {
+      console.log('[importDataset] Saving faction data...');
       const factionDataset: FactionDataset = {
         factions: dataset.factions,
         version: dataset.version || '1.0',
@@ -329,10 +340,12 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
         FACTION_STORAGE_KEY,
         JSON.stringify(factionDataset)
       );
+      console.log(`[importDataset] Saved ${dataset.factions.length} factions`);
     }
 
     // Handle event data if present
     if (dataset.events) {
+      console.log('[importDataset] Saving event data...');
       const eventDataset: EventDataset = {
         events: dataset.events,
         version: dataset.version || '1.0',
@@ -342,11 +355,17 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
         EVENT_STORAGE_KEY,
         JSON.stringify(eventDataset)
       );
-      console.log(`Imported ${dataset.events.length} events`);
+      console.log(`[importDataset] Saved ${dataset.events.length} events`);
     }
 
+    console.log('[importDataset] Import completed successfully');
     return true;
-  } catch {
+  } catch (error) {
+    console.error('[importDataset] Import failed:', error);
+    console.error(
+      '[importDataset] Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return false;
   }
 };
