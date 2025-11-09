@@ -101,6 +101,9 @@ const exportCharacterDataNative = async (): Promise<void> => {
     await FileSystem.makeDirectoryAsync(tempDir + 'images/events/', {
       intermediates: true,
     });
+    await FileSystem.makeDirectoryAsync(tempDir + 'images/factions/', {
+      intermediates: true,
+    });
 
     // Track image references and replace URIs with file paths
     let imageCounter = 0;
@@ -378,6 +381,102 @@ const exportCharacterDataNative = async (): Promise<void> => {
       }
     }
 
+    // Process faction images
+    if (dataset.factions) {
+      for (const faction of dataset.factions) {
+        // Handle multiple images
+        if (faction.imageUris && faction.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < faction.imageUris.length; i++) {
+            const uri = faction.imageUris[i];
+            if (uri) {
+              if (uri.startsWith('data:')) {
+                // Handle base64 data URI
+                const imageData = extractImageData(uri);
+                if (imageData) {
+                  // Use faction name as identifier (sanitize for filename)
+                  const safeName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+                  const filename = `images/factions/${safeName}_${i}.${imageData.extension}`;
+                  const filePath = tempDir + filename;
+                  await FileSystem.writeAsStringAsync(
+                    filePath,
+                    imageData.base64Data,
+                    {
+                      encoding: FileSystem.EncodingType.Base64,
+                    }
+                  );
+                  processedUris.push(filename);
+                  imageCounter++;
+                }
+              } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+                // Handle file URI - copy file directly
+                try {
+                  const extension =
+                    uri.split('.').pop()?.toLowerCase() || 'jpg';
+                  const safeName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+                  const filename = `images/factions/${safeName}_${i}.${extension}`;
+                  const filePath = tempDir + filename;
+                  await FileSystem.copyAsync({ from: uri, to: filePath });
+                  processedUris.push(filename);
+                  imageCounter++;
+                } catch {
+                  // Image file not accessible, skip
+                }
+              } else {
+                processedUris.push(uri);
+              }
+            }
+          }
+          if (processedUris.length > 0) {
+            faction.imageUris = processedUris;
+            faction.imageUri = processedUris[0];
+          }
+        }
+        // Handle legacy single image
+        else if (faction.imageUri) {
+          if (faction.imageUri.startsWith('data:')) {
+            const imageData = extractImageData(faction.imageUri);
+            if (imageData) {
+              const safeName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+              const filename = `images/factions/${safeName}.${imageData.extension}`;
+              const filePath = tempDir + filename;
+              await FileSystem.writeAsStringAsync(
+                filePath,
+                imageData.base64Data,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+              faction.imageUri = filename;
+              faction.imageUris = [filename];
+              imageCounter++;
+            }
+          } else if (
+            faction.imageUri.startsWith('file://') ||
+            faction.imageUri.startsWith('/')
+          ) {
+            // Handle file URI - copy file directly
+            try {
+              const extension =
+                faction.imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+              const safeName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+              const filename = `images/factions/${safeName}.${extension}`;
+              const filePath = tempDir + filename;
+              await FileSystem.copyAsync({
+                from: faction.imageUri,
+                to: filePath,
+              });
+              faction.imageUri = filename;
+              faction.imageUris = [filename];
+              imageCounter++;
+            } catch {
+              // Image file not accessible, skip
+            }
+          }
+        }
+      }
+    }
+
     // Write the modified JSON to the temp directory
     const dataJsonPath = tempDir + 'data.json';
     await FileSystem.writeAsStringAsync(
@@ -571,6 +670,9 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       await FileSystem.makeDirectoryAsync(permanentImageDir + 'events/', {
         intermediates: true,
       });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'factions/', {
+        intermediates: true,
+      });
 
       // Group images by entity ID as file URIs (NOT base64 data URIs)
       const imagesByEntity: Record<string, Record<number, string>> = {};
@@ -595,7 +697,9 @@ const importCharacterDataNative = async (): Promise<boolean> => {
                 ? 'locations'
                 : filePath.includes('/events/')
                   ? 'events'
-                  : '';
+                  : filePath.includes('/factions/')
+                    ? 'factions'
+                    : '';
 
             if (entityType) {
               // Copy image to permanent storage
@@ -678,6 +782,22 @@ const importCharacterDataNative = async (): Promise<boolean> => {
             event.imageUri = sortedImages[0]; // Backward compatibility
           } else {
             console.warn(`[ZIP Import] Event ${entityId} not found in dataset`);
+          }
+        } else if (entityType === 'faction') {
+          // For factions, entityId is the sanitized faction name
+          const faction = dataset.factions?.find(
+            (f: any) => f.name.replace(/[^a-zA-Z0-9]/g, '_') === entityId
+          );
+          if (faction) {
+            console.log(
+              `[ZIP Import] Found faction ${faction.name}, updating imageUri`
+            );
+            faction.imageUris = sortedImages;
+            faction.imageUri = sortedImages[0]; // Backward compatibility
+          } else {
+            console.warn(
+              `[ZIP Import] Faction ${entityId} not found in dataset`
+            );
           }
         }
       }
@@ -855,6 +975,9 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       await FileSystem.makeDirectoryAsync(permanentImageDir + 'events/', {
         intermediates: true,
       });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'factions/', {
+        intermediates: true,
+      });
 
       // Group images by entity ID as file URIs (NOT base64 data URIs)
       const imagesByEntity: Record<string, Record<number, string>> = {};
@@ -879,7 +1002,9 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
                 ? 'locations'
                 : filePath.includes('/events/')
                   ? 'events'
-                  : '';
+                  : filePath.includes('/factions/')
+                    ? 'factions'
+                    : '';
 
             if (entityType) {
               // Copy image to permanent storage
@@ -933,6 +1058,15 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
           if (event) {
             event.imageUris = sortedImages;
             event.imageUri = sortedImages[0];
+          }
+        } else if (entityType === 'faction') {
+          // For factions, entityId is the sanitized faction name
+          const faction = dataset.factions?.find(
+            (f: any) => f.name.replace(/[^a-zA-Z0-9]/g, '_') === entityId
+          );
+          if (faction) {
+            faction.imageUris = sortedImages;
+            faction.imageUri = sortedImages[0];
           }
         }
       }

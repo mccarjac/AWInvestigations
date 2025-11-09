@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,17 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
-import { createFaction } from '@utils/characterStorage';
+import {
+  createFaction,
+  updateFaction,
+  loadFactions,
+} from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
@@ -22,21 +28,49 @@ type FactionFormNavigationProp = StackNavigationProp<
   'FactionForm'
 >;
 
+type FactionFormRouteProp = RouteProp<RootStackParamList, 'FactionForm'>;
+
 interface FactionFormData {
   name: string;
   description: string;
+  imageUri?: string;
+  imageUris?: string[];
 }
 
 export const FactionFormScreen: React.FC = () => {
   const navigation = useNavigation<FactionFormNavigationProp>();
+  const route = useRoute<FactionFormRouteProp>();
+  const { factionName } = route.params || {};
 
   const [formData, setFormData] = useState<FactionFormData>({
     name: '',
     description: '',
+    imageUri: undefined,
+    imageUris: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load existing faction data if editing
+  useEffect(() => {
+    const loadFactionData = async () => {
+      if (factionName) {
+        const factions = await loadFactions();
+        const faction = factions.find(f => f.name === factionName);
+        if (faction) {
+          setFormData({
+            name: faction.name,
+            description: faction.description,
+            imageUri: faction.imageUri,
+            imageUris:
+              faction.imageUris || (faction.imageUri ? [faction.imageUri] : []),
+          });
+        }
+      }
+    };
+    loadFactionData();
+  }, [factionName]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -51,6 +85,41 @@ export const FactionFormScreen: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const newImageUri = result.assets[0].uri;
+      const currentImages = formData.imageUris || [];
+      setFormData({
+        ...formData,
+        imageUris: [...currentImages, newImageUri],
+        imageUri: currentImages.length === 0 ? newImageUri : formData.imageUri,
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const currentImages = formData.imageUris || [];
+    const newImages = currentImages.filter((_, i) => i !== index);
+    setFormData({
+      ...formData,
+      imageUris: newImages,
+      imageUri: newImages.length > 0 ? newImages[0] : undefined,
+    });
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
@@ -59,29 +128,59 @@ export const FactionFormScreen: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const success = await createFaction({
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-      });
+      if (factionName) {
+        // Update existing faction
+        const updated = await updateFaction(factionName, {
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          imageUri: formData.imageUri,
+          imageUris: formData.imageUris,
+        });
 
-      if (success) {
-        Alert.alert('Success', 'Faction created successfully!', [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack(),
-          },
-        ]);
+        if (updated) {
+          Alert.alert('Success', 'Faction updated successfully!', [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        } else {
+          Alert.alert(
+            'Error',
+            'Failed to update faction. The name may already exist.',
+            [{ text: 'OK' }]
+          );
+        }
       } else {
-        Alert.alert(
-          'Error',
-          'A faction with this name already exists. Please choose a different name.',
-          [{ text: 'OK' }]
-        );
+        // Create new faction
+        const success = await createFaction({
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          imageUri: formData.imageUri,
+          imageUris: formData.imageUris,
+        });
+
+        if (success) {
+          Alert.alert('Success', 'Faction created successfully!', [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        } else {
+          Alert.alert(
+            'Error',
+            'A faction with this name already exists. Please choose a different name.',
+            [{ text: 'OK' }]
+          );
+        }
       }
     } catch {
-      Alert.alert('Error', 'Failed to create faction. Please try again.', [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        'Error',
+        `Failed to ${factionName ? 'update' : 'create'} faction. Please try again.`,
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -138,6 +237,44 @@ export const FactionFormScreen: React.FC = () => {
           </View>
 
           <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Faction Images</Text>
+            <View style={styles.imageGalleryContainer}>
+              {formData.imageUris && formData.imageUris.length > 0 ? (
+                <View style={styles.imageGrid}>
+                  {formData.imageUris.map((uri, index) => (
+                    <View key={index} style={styles.imageItemContainer}>
+                      <Image
+                        source={{ uri }}
+                        style={styles.factionImageThumbnail}
+                      />
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => removeImage(index)}
+                      >
+                        <Text style={styles.removeImageButtonText}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.placeholderImage}>
+                  <Text style={styles.placeholderText}>No images selected</Text>
+                </View>
+              )}
+              <TouchableOpacity
+                style={styles.imagePickerButton}
+                onPress={pickImage}
+              >
+                <Text style={styles.imagePickerButtonText}>
+                  {formData.imageUris && formData.imageUris.length > 0
+                    ? 'Add Another Image'
+                    : 'Add Image'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>Description</Text>
             <TextInput
               style={[styles.textArea]}
@@ -178,7 +315,13 @@ export const FactionFormScreen: React.FC = () => {
           disabled={isSubmitting}
         >
           <Text style={styles.submitButtonText}>
-            {isSubmitting ? 'Creating...' : 'Create Faction'}
+            {isSubmitting
+              ? factionName
+                ? 'Updating...'
+                : 'Creating...'
+              : factionName
+                ? 'Update Faction'
+                : 'Create Faction'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -273,5 +416,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: themeColors.text.primary,
     letterSpacing: 0.2,
+  },
+  imageGalleryContainer: {
+    ...commonStyles.image.container,
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 12,
+  },
+  imageItemContainer: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+  },
+  factionImageThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: themeColors.surface,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: themeColors.status.error,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeImageButtonText: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  placeholderImage: commonStyles.image.placeholder,
+  placeholderText: {
+    ...commonStyles.text.body,
+    fontWeight: '500',
+  },
+  imagePickerButton: commonStyles.image.pickerButton,
+  imagePickerButtonText: {
+    ...commonStyles.button.text,
+    textAlign: 'center',
   },
 });

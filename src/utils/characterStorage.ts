@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 interface StoredFaction {
   name: string;
   description: string;
+  imageUri?: string; // Deprecated: Use imageUris instead
+  imageUris?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -884,6 +886,8 @@ export const deleteFactionCompletely = async (
 export const createFaction = async (factionData: {
   name: string;
   description: string;
+  imageUri?: string;
+  imageUris?: string[];
 }): Promise<boolean> => {
   const existingFactions = await loadFactions();
 
@@ -899,12 +903,68 @@ export const createFaction = async (factionData: {
   const newFaction: StoredFaction = {
     name: factionData.name,
     description: factionData.description,
+    imageUri: factionData.imageUri,
+    imageUris: factionData.imageUris,
     createdAt: now,
     updatedAt: now,
   };
 
   await saveFactions([...existingFactions, newFaction]);
   return true;
+};
+
+export const updateFaction = async (
+  factionName: string,
+  updates: {
+    name?: string;
+    description?: string;
+    imageUri?: string;
+    imageUris?: string[];
+  }
+): Promise<StoredFaction | null> => {
+  const factions = await loadFactions();
+  const index = factions.findIndex(f => f.name === factionName);
+
+  if (index === -1) return null;
+
+  // If name is being changed, check if new name already exists
+  if (updates.name && updates.name !== factionName) {
+    const nameExists = factions.some(
+      f => f.name.toLowerCase() === updates.name!.toLowerCase()
+    );
+    if (nameExists) {
+      return null; // New name already exists
+    }
+  }
+
+  const updatedFaction: StoredFaction = {
+    ...factions[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  factions[index] = updatedFaction;
+  await saveFactions(factions);
+
+  // If name changed, update all character faction references
+  if (updates.name && updates.name !== factionName) {
+    const characters = await loadCharacters();
+    const updatedCharacters = characters.map(character => {
+      const updatedFactions = character.factions.map(faction =>
+        faction.name === factionName
+          ? { ...faction, name: updates.name! }
+          : faction
+      );
+      return {
+        ...character,
+        factions: updatedFactions,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+    await saveCharacters(updatedCharacters);
+  }
+
+  return updatedFaction;
 };
 
 // Migration function to move faction descriptions from character data to centralized storage
