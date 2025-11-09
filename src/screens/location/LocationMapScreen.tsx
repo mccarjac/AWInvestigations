@@ -109,6 +109,7 @@ export const LocationMapScreen: React.FC = () => {
       }
     });
 
+  // Handle single tap to place pin at selected location
   const singleTap = Gesture.Tap()
     .numberOfTaps(1)
     .onEnd(e => {
