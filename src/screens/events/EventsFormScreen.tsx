@@ -4,11 +4,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -23,9 +20,9 @@ import {
   loadFactions,
 } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
-import { commonStyles } from '@/styles/commonStyles';
 import { Picker } from '@react-native-picker/picker';
 import { GameCharacter, GameLocation } from '@models/types';
+import { BaseFormScreen } from '@/components';
 
 type EventsFormNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -225,8 +222,7 @@ export const EventsFormScreen: React.FC = () => {
           },
         ]);
       }
-    } catch (error) {
-      console.error('Error saving event:', error);
+    } catch {
       Alert.alert('Error', 'Failed to save event. Please try again.', [
         { text: 'OK' },
       ]);
@@ -236,225 +232,208 @@ export const EventsFormScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={commonStyles.layout.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        style={commonStyles.layout.scrollView}
-        contentContainerStyle={styles.content}
-      >
-        {/* Title */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={[styles.input, errors.title && styles.inputError]}
-            placeholder="Event title"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.title}
-            onChangeText={title => setFormData({ ...formData, title })}
-          />
-          {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-        </View>
+    <BaseFormScreen contentContainerStyle={styles.content}>
+      {/* Title */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Title *</Text>
+        <TextInput
+          style={[styles.input, errors.title && styles.inputError]}
+          placeholder="Event title"
+          placeholderTextColor={themeColors.text.muted}
+          value={formData.title}
+          onChangeText={title => setFormData({ ...formData, title })}
+        />
+        {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+      </View>
 
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Event description"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.description}
-            onChangeText={description =>
-              setFormData({ ...formData, description })
+      {/* Description */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Description</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Event description"
+          placeholderTextColor={themeColors.text.muted}
+          value={formData.description}
+          onChangeText={description =>
+            setFormData({ ...formData, description })
+          }
+          multiline
+          numberOfLines={4}
+        />
+      </View>
+
+      {/* Date and Time */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Date *</Text>
+        <TextInput
+          style={[styles.input, errors.date && styles.inputError]}
+          placeholder="YYYY-MM-DD"
+          placeholderTextColor={themeColors.text.muted}
+          value={formData.date}
+          onChangeText={date => setFormData({ ...formData, date })}
+        />
+        {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
+
+        <Text style={[styles.label, styles.labelMargin]}>Time *</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="HH:MM (e.g., 14:30)"
+          placeholderTextColor={themeColors.text.muted}
+          value={formData.time}
+          onChangeText={time => setFormData({ ...formData, time })}
+        />
+      </View>
+
+      {/* Location */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Location</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.locationId}
+            onValueChange={locationId =>
+              setFormData({ ...formData, locationId })
             }
-            multiline
-            numberOfLines={4}
-          />
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="Select location..." value="" />
+            {locations.map(location => (
+              <Picker.Item
+                key={location.id}
+                label={location.name}
+                value={location.id}
+              />
+            ))}
+          </Picker>
         </View>
+      </View>
 
-        {/* Date and Time */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Date *</Text>
-          <TextInput
-            style={[styles.input, errors.date && styles.inputError]}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.date}
-            onChangeText={date => setFormData({ ...formData, date })}
-          />
-          {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
-
-          <Text style={[styles.label, styles.labelMargin]}>Time *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="HH:MM (e.g., 14:30)"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.time}
-            onChangeText={time => setFormData({ ...formData, time })}
-          />
-        </View>
-
-        {/* Location */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Location</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.locationId}
-              onValueChange={locationId =>
-                setFormData({ ...formData, locationId })
-              }
-              style={styles.picker}
-              dropdownIconColor={themeColors.text.secondary}
-            >
-              <Picker.Item label="Select location..." value="" />
-              {locations.map(location => (
+      {/* Characters */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Characters Involved</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue=""
+            onValueChange={addCharacter}
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="Select character to add..." value="" />
+            {characters
+              .filter(c => !formData.characterIds.includes(c.id))
+              .map(character => (
                 <Picker.Item
-                  key={location.id}
-                  label={location.name}
-                  value={location.id}
+                  key={character.id}
+                  label={character.name}
+                  value={character.id}
                 />
               ))}
-            </Picker>
-          </View>
+          </Picker>
         </View>
-
-        {/* Characters */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Characters Involved</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue=""
-              onValueChange={addCharacter}
-              style={styles.picker}
-              dropdownIconColor={themeColors.text.secondary}
-            >
-              <Picker.Item label="Select character to add..." value="" />
-              {characters
-                .filter(c => !formData.characterIds.includes(c.id))
-                .map(character => (
-                  <Picker.Item
-                    key={character.id}
-                    label={character.name}
-                    value={character.id}
-                  />
-                ))}
-            </Picker>
-          </View>
-          <View style={styles.selectedList}>
-            {formData.characterIds.map(characterId => {
-              const character = characters.find(c => c.id === characterId);
-              return character ? (
-                <View key={characterId} style={styles.selectedChip}>
-                  <Text style={styles.selectedChipText}>{character.name}</Text>
-                  <TouchableOpacity
-                    onPress={() => removeCharacter(characterId)}
-                  >
-                    <Text style={styles.removeButton}>×</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : null;
-            })}
-          </View>
-        </View>
-
-        {/* Factions */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Factions Involved</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue=""
-              onValueChange={addFaction}
-              style={styles.picker}
-              dropdownIconColor={themeColors.text.secondary}
-            >
-              <Picker.Item label="Select faction to add..." value="" />
-              {factions
-                .filter(f => !formData.factionNames.includes(f))
-                .map(faction => (
-                  <Picker.Item key={faction} label={faction} value={faction} />
-                ))}
-            </Picker>
-          </View>
-          <View style={styles.selectedList}>
-            {formData.factionNames.map((faction, index) => (
-              <View key={index} style={styles.selectedChip}>
-                <Text style={styles.selectedChipText}>{faction}</Text>
-                <TouchableOpacity onPress={() => removeFaction(faction)}>
+        <View style={styles.selectedList}>
+          {formData.characterIds.map(characterId => {
+            const character = characters.find(c => c.id === characterId);
+            return character ? (
+              <View key={characterId} style={styles.selectedChip}>
+                <Text style={styles.selectedChipText}>{character.name}</Text>
+                <TouchableOpacity onPress={() => removeCharacter(characterId)}>
                   <Text style={styles.removeButton}>×</Text>
                 </TouchableOpacity>
               </View>
-            ))}
-          </View>
+            ) : null;
+          })}
         </View>
+      </View>
 
-        {/* Notes */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Notes</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Additional notes about the event"
-            placeholderTextColor={themeColors.text.muted}
-            value={formData.notes}
-            onChangeText={notes => setFormData({ ...formData, notes })}
-            multiline
-            numberOfLines={4}
-          />
+      {/* Factions */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Factions Involved</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue=""
+            onValueChange={addFaction}
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="Select faction to add..." value="" />
+            {factions
+              .filter(f => !formData.factionNames.includes(f))
+              .map(faction => (
+                <Picker.Item key={faction} label={faction} value={faction} />
+              ))}
+          </Picker>
         </View>
-
-        {/* Images */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Event Photos</Text>
-          {formData.imageUris && formData.imageUris.length > 0 ? (
-            <View style={styles.imageGalleryContainer}>
-              <View style={styles.imageGrid}>
-                {formData.imageUris.map((uri, index) => (
-                  <View key={index} style={styles.imageItemContainer}>
-                    <Image source={{ uri }} style={styles.imageThumbnail} />
-                    <TouchableOpacity
-                      style={styles.removeImageIconButton}
-                      onPress={() => removeImage(index)}
-                    >
-                      <Text style={styles.removeImageIconText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-              <TouchableOpacity
-                style={styles.addImageButton}
-                onPress={pickImage}
-              >
-                <Text style={styles.addImageButtonText}>Add Another Photo</Text>
+        <View style={styles.selectedList}>
+          {formData.factionNames.map((faction, index) => (
+            <View key={index} style={styles.selectedChip}>
+              <Text style={styles.selectedChipText}>{faction}</Text>
+              <TouchableOpacity onPress={() => removeFaction(faction)}>
+                <Text style={styles.removeButton}>×</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Text style={styles.uploadButtonText}>Choose Photo</Text>
-            </TouchableOpacity>
-          )}
+          ))}
         </View>
+      </View>
 
-        {/* Submit Button */}
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            isSubmitting && styles.submitButtonDisabled,
-          ]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          <Text style={styles.submitButtonText}>
-            {isSubmitting
-              ? 'Saving...'
-              : event
-                ? 'Update Event'
-                : 'Create Event'}
-          </Text>
-        </TouchableOpacity>
+      {/* Notes */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Notes</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Additional notes about the event"
+          placeholderTextColor={themeColors.text.muted}
+          value={formData.notes}
+          onChangeText={notes => setFormData({ ...formData, notes })}
+          multiline
+          numberOfLines={4}
+        />
+      </View>
 
-        <View style={styles.footer} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      {/* Images */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Event Photos</Text>
+        {formData.imageUris && formData.imageUris.length > 0 ? (
+          <View style={styles.imageGalleryContainer}>
+            <View style={styles.imageGrid}>
+              {formData.imageUris.map((uri, index) => (
+                <View key={index} style={styles.imageItemContainer}>
+                  <Image source={{ uri }} style={styles.imageThumbnail} />
+                  <TouchableOpacity
+                    style={styles.removeImageIconButton}
+                    onPress={() => removeImage(index)}
+                  >
+                    <Text style={styles.removeImageIconText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <Text style={styles.addImageButtonText}>Add Another Photo</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+            <Text style={styles.uploadButtonText}>Choose Photo</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Submit Button */}
+      <TouchableOpacity
+        style={[
+          styles.submitButton,
+          isSubmitting && styles.submitButtonDisabled,
+        ]}
+        onPress={handleSubmit}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.submitButtonText}>
+          {isSubmitting ? 'Saving...' : event ? 'Update Event' : 'Create Event'}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.footer} />
+    </BaseFormScreen>
   );
 };
 
@@ -591,7 +570,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   removeImageIconText: {
-    color: '#FFFFFF',
+    color: themeColors.text.primary,
     fontSize: 16,
     fontWeight: '700',
     lineHeight: 20,

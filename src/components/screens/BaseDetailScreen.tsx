@@ -1,0 +1,144 @@
+import React, { ReactNode, useLayoutEffect, useCallback } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  ViewStyle,
+  ScrollViewProps,
+  TouchableOpacity,
+  Text,
+  Alert,
+  Platform,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { commonStyles } from '@/styles/commonStyles';
+import { HeaderEditButton } from '@/components/common/HeaderEditButton';
+import { colors as themeColors } from '@/styles/theme';
+
+export interface BaseDetailScreenProps {
+  children: ReactNode;
+  contentContainerStyle?: ViewStyle;
+  scrollViewProps?: Partial<ScrollViewProps>;
+  headerRight?: ReactNode;
+  onEditPress?: () => void;
+  deleteConfig?: {
+    itemName: string;
+    onDelete: () => Promise<void>;
+    confirmTitle?: string;
+    confirmMessage?: string;
+  };
+}
+
+export function BaseDetailScreen({
+  children,
+  contentContainerStyle,
+  scrollViewProps = {},
+  headerRight,
+  onEditPress,
+  deleteConfig,
+}: BaseDetailScreenProps) {
+  const navigation = useNavigation();
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteConfig) return;
+
+    const confirmDelete = (): Promise<boolean> => {
+      const title = deleteConfig.confirmTitle || 'Delete Item';
+      const message =
+        deleteConfig.confirmMessage ||
+        `Are you sure you want to delete ${deleteConfig.itemName}? This action cannot be undone.`;
+
+      if (Platform.OS === 'web') {
+        return Promise.resolve(window.confirm(message));
+      } else {
+        return new Promise<boolean>(resolve => {
+          Alert.alert(title, message, [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+              onPress: () => resolve(false),
+            },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: () => resolve(true),
+            },
+          ]);
+        });
+      }
+    };
+
+    const shouldDelete = await confirmDelete();
+    if (shouldDelete) {
+      await deleteConfig.onDelete();
+      navigation.goBack();
+    }
+  }, [deleteConfig, navigation]);
+
+  // Set up the header with the provided headerRight component, or edit/delete buttons
+  useLayoutEffect(() => {
+    if (headerRight) {
+      navigation.setOptions({
+        headerRight: () => <>{headerRight}</>,
+      });
+    } else if (onEditPress || deleteConfig) {
+      navigation.setOptions({
+        headerRight: () => (
+          <View style={headerStyles.container}>
+            {onEditPress && <HeaderEditButton onPress={onEditPress} />}
+            {deleteConfig && (
+              <TouchableOpacity
+                style={headerStyles.deleteButton}
+                onPress={handleDelete}
+              >
+                <Text style={headerStyles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ),
+      });
+    }
+  }, [navigation, headerRight, onEditPress, deleteConfig, handleDelete]);
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
+        showsVerticalScrollIndicator={true}
+        {...scrollViewProps}
+      >
+        {children}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    height: 882,
+    overflow: 'scroll',
+  },
+  scrollView: commonStyles.layout.scrollView,
+  contentContainer: commonStyles.layout.contentContainer,
+});
+
+const headerStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  deleteButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    backgroundColor: themeColors.status.error,
+    borderRadius: 6,
+  },
+  deleteButtonText: {
+    color: themeColors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+});

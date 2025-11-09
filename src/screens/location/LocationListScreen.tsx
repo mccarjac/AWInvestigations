@@ -1,19 +1,7 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Alert,
-  TextInput,
-  Text,
-} from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { GameCharacter, GameLocation } from '@models/types';
-import {
-  loadCharacters,
-  loadLocations,
-  deleteLocationCompletely,
-} from '@utils/characterStorage';
+import { loadCharacters, loadLocations } from '@utils/characterStorage';
 import {
   useNavigation,
   useFocusEffect,
@@ -22,8 +10,8 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
-import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseListScreen, HeaderAddButton } from '@/components';
 
 type LocationNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Locations'>,
@@ -109,28 +97,6 @@ export const LocationListScreen: React.FC = () => {
     [getFilteredLocations]
   );
 
-  // Set up the header with a plus button
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity
-            style={styles.headerMapButton}
-            onPress={handleViewMap}
-          >
-            <Text style={styles.headerMapButtonText}>🗺️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerAddButton}
-            onPress={handleCreateLocation}
-          >
-            <Text style={styles.headerAddButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [navigation]);
-
   const handleLocationSelect = (locationInfo: LocationInfo) => {
     navigation.navigate('LocationDetails', {
       locationId: locationInfo.location.id,
@@ -145,57 +111,7 @@ export const LocationListScreen: React.FC = () => {
     navigation.navigate('LocationMap');
   };
 
-  const handleDeleteLocation = async (
-    locationId: string,
-    locationName: string
-  ) => {
-    Alert.alert(
-      'Delete Location',
-      `Are you sure you want to delete "${locationName}"? This will remove it from all characters and cannot be undone.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const result = await deleteLocationCompletely(locationId);
-
-              if (result.success) {
-                // Refresh the location list
-                await loadData();
-
-                // Show success message
-                const message =
-                  result.charactersUpdated > 0
-                    ? `Location "${locationName}" deleted successfully. Removed from ${result.charactersUpdated} character(s).`
-                    : `Location "${locationName}" deleted successfully.`;
-
-                Alert.alert('Success', message, [{ text: 'OK' }]);
-              } else {
-                Alert.alert(
-                  'Error',
-                  'Failed to delete location. Please try again.',
-                  [{ text: 'OK' }]
-                );
-              }
-            } catch {
-              Alert.alert(
-                'Error',
-                'An unexpected error occurred while deleting the location.',
-                [{ text: 'OK' }]
-              );
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const renderLocationItem = ({ item }: { item: LocationInfo }) => (
+  const renderLocationItem = (item: LocationInfo) => (
     <View style={styles.locationCard}>
       <TouchableOpacity
         style={styles.locationContent}
@@ -221,68 +137,34 @@ export const LocationListScreen: React.FC = () => {
           )}
         </View>
       </TouchableOpacity>
+    </View>
+  );
 
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() =>
-          handleDeleteLocation(item.location.id, item.location.name)
-        }
-      >
-        <Text style={styles.deleteText}>Delete</Text>
+  const renderHeaderRight = () => (
+    <View style={styles.headerButtons}>
+      <TouchableOpacity style={styles.headerMapButton} onPress={handleViewMap}>
+        <Text style={styles.headerMapButtonText}>🗺️</Text>
       </TouchableOpacity>
+      <HeaderAddButton onPress={handleCreateLocation} />
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search locations by name..."
-          placeholderTextColor={themeColors.text.muted}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          blurOnSubmit={false}
-          autoFocus={false}
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity
-            style={styles.clearSearchButton}
-            onPress={() => setSearchQuery('')}
-          >
-            <Text style={styles.clearSearchText}>✕</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <FlatList
-        data={filteredLocations}
-        renderItem={renderLocationItem}
-        keyExtractor={item => item.location.id}
-        style={styles.locationList}
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No locations found</Text>
-            <Text style={styles.emptySubText}>
-              Create a location to get started
-            </Text>
-          </View>
-        }
-      />
-    </View>
+    <BaseListScreen
+      data={filteredLocations}
+      renderItem={renderLocationItem}
+      keyExtractor={(item: LocationInfo) => item.location.id}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      searchPlaceholder="Search locations by name..."
+      emptyStateTitle="No locations found"
+      emptyStateSubtitle="Create a location to get started"
+      headerRight={renderHeaderRight()}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: commonStyles.layout.container,
-  contentContainer: commonStyles.layout.contentContainer,
-  locationList: {
-    flex: 1,
-  },
   locationCard: commonStyles.card.base,
   locationContent: {
     flex: 1,
@@ -312,11 +194,12 @@ const styles = StyleSheet.create({
   presentText: commonStyles.text.caption,
   locationDescription: {
     ...commonStyles.text.body,
-    color: themeColors.text.secondary,
     lineHeight: 20,
   },
-  headerAddButton: commonStyles.headerButton.add,
-  headerAddButtonText: commonStyles.headerButton.addText,
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   headerMapButton: {
     ...commonStyles.headerButton.add,
     marginRight: 4,
@@ -324,31 +207,5 @@ const styles = StyleSheet.create({
   headerMapButtonText: {
     ...commonStyles.headerButton.addText,
     fontSize: 20,
-  },
-  deleteButton: {
-    ...commonStyles.button.small,
-    ...commonStyles.button.danger,
-    marginTop: 12,
-    alignSelf: 'flex-end',
-  },
-  deleteText: commonStyles.button.textSmall,
-  searchContainer: commonStyles.search.container,
-  searchInput: commonStyles.search.input,
-  clearSearchButton: commonStyles.search.clearButton,
-  clearSearchText: commonStyles.search.clearText,
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    ...commonStyles.text.h2,
-    color: themeColors.text.muted,
-    marginBottom: 8,
-  },
-  emptySubText: {
-    ...commonStyles.text.body,
-    color: themeColors.text.muted,
   },
 });

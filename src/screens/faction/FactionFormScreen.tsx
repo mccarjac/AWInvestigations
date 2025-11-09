@@ -4,11 +4,8 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -22,6 +19,7 @@ import {
 } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseFormScreen } from '@/components';
 
 type FactionFormNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -205,96 +203,88 @@ export const FactionFormScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Faction Information</Text>
+    <BaseFormScreen>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Faction Information</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>
-              Faction Name <Text style={styles.required}>*</Text>
-            </Text>
-            <TextInput
-              style={[styles.textInput, errors.name && styles.inputError]}
-              value={formData.name}
-              onChangeText={text => {
-                setFormData({ ...formData, name: text });
-                if (errors.name) {
-                  setErrors({ ...errors, name: '' });
-                }
-              }}
-              placeholder="Enter faction name"
-              placeholderTextColor={themeColors.text.muted}
-              maxLength={50}
-            />
-            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Faction Images</Text>
-            <View style={styles.imageGalleryContainer}>
-              {formData.imageUris && formData.imageUris.length > 0 ? (
-                <View style={styles.imageGrid}>
-                  {formData.imageUris.map((uri, index) => (
-                    <View key={index} style={styles.imageItemContainer}>
-                      <Image
-                        source={{ uri }}
-                        style={styles.factionImageThumbnail}
-                      />
-                      <TouchableOpacity
-                        style={styles.removeImageButton}
-                        onPress={() => removeImage(index)}
-                      >
-                        <Text style={styles.removeImageButtonText}>×</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.placeholderImage}>
-                  <Text style={styles.placeholderText}>No images selected</Text>
-                </View>
-              )}
-              <TouchableOpacity
-                style={styles.imagePickerButton}
-                onPress={pickImage}
-              >
-                <Text style={styles.imagePickerButtonText}>
-                  {formData.imageUris && formData.imageUris.length > 0
-                    ? 'Add Another Image'
-                    : 'Add Image'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Description</Text>
-            <TextInput
-              style={[styles.textArea]}
-              value={formData.description}
-              onChangeText={text =>
-                setFormData({ ...formData, description: text })
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>
+            Faction Name <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.textInput, errors.name && styles.inputError]}
+            value={formData.name}
+            onChangeText={text => {
+              setFormData({ ...formData, name: text });
+              if (errors.name) {
+                setErrors({ ...errors, name: '' });
               }
-              placeholder="Enter faction description, goals, or background"
-              placeholderTextColor={themeColors.text.muted}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              maxLength={500}
-            />
-            <Text style={styles.characterCount}>
-              {formData.description.length}/500 characters
-            </Text>
+            }}
+            placeholder="Enter faction name"
+            placeholderTextColor={themeColors.text.muted}
+            maxLength={50}
+          />
+          {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Faction Images</Text>
+          <View style={styles.imageGalleryContainer}>
+            {formData.imageUris && formData.imageUris.length > 0 ? (
+              <View style={styles.imageGrid}>
+                {formData.imageUris.map((uri, index) => (
+                  <View key={index} style={styles.imageItemContainer}>
+                    <Image
+                      source={{ uri }}
+                      style={styles.factionImageThumbnail}
+                    />
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => removeImage(index)}
+                    >
+                      <Text style={styles.removeImageButtonText}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Text style={styles.placeholderText}>No images selected</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.imagePickerButton}
+              onPress={pickImage}
+            >
+              <Text style={styles.imagePickerButtonText}>
+                {formData.imageUris && formData.imageUris.length > 0
+                  ? 'Add Another Image'
+                  : 'Add Image'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Description</Text>
+          <TextInput
+            style={[styles.textArea]}
+            value={formData.description}
+            onChangeText={text =>
+              setFormData({ ...formData, description: text })
+            }
+            placeholder="Enter faction description, goals, or background"
+            placeholderTextColor={themeColors.text.muted}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            maxLength={500}
+          />
+          <Text style={styles.characterCount}>
+            {formData.description.length}/500 characters
+          </Text>
+        </View>
+      </View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -325,22 +315,11 @@ export const FactionFormScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </BaseFormScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.primary,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 20,
-  },
   section: {
     marginBottom: 24,
   },

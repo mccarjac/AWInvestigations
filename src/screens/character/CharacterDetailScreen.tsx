@@ -1,11 +1,11 @@
-import React, { useState, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
-  ScrollView,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
+  ScrollView,
 } from 'react-native';
 import {
   RouteProp,
@@ -22,9 +22,14 @@ import {
 } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
 import { GameCharacter, GameLocation } from '@/models/types';
-import { loadCharacters, loadLocations } from '@/utils/characterStorage';
+import {
+  loadCharacters,
+  loadLocations,
+  deleteCharacter,
+} from '@/utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { BaseDetailScreen, Section } from '@/components';
 
 type CharacterDetailRouteProp = RouteProp<
   RootStackParamList,
@@ -88,21 +93,8 @@ export const CharacterDetailScreen: React.FC = () => {
 
   const derivedStats = calculateDerivedStats(character);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() =>
-            navigation.navigate('CharacterForm', {
-              character,
-            })
-          }
-        >
-          <Text style={styles.editButtonText}>Edit</Text>
-        </TouchableOpacity>
-      ),
-    });
+  const handleEdit = useCallback(() => {
+    navigation.navigate('CharacterForm', { character });
   }, [navigation, character]);
 
   const renderTagScores = () => {
@@ -110,8 +102,7 @@ export const CharacterDetailScreen: React.FC = () => {
     if (!tagScores || tagScores.size === 0) return null;
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tag Scores</Text>
+      <Section title="Tag Scores">
         <View style={styles.tagScoresContainer}>
           {Array.from(tagScores.entries()).map(([tag, score]) => (
             <View key={tag} style={styles.tagScoreItem}>
@@ -120,13 +111,12 @@ export const CharacterDetailScreen: React.FC = () => {
             </View>
           ))}
         </View>
-      </View>
+      </Section>
     );
   };
 
   const renderPerks = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Perks</Text>
+    <Section title="Perks">
       {AVAILABLE_PERKS.filter(perk => character.perkIds.includes(perk.id)).map(
         perk => (
           <View key={perk.id} style={styles.itemContainer}>
@@ -162,12 +152,11 @@ export const CharacterDetailScreen: React.FC = () => {
           </View>
         )
       )}
-    </View>
+    </Section>
   );
 
   const renderDistinctions = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Distinctions</Text>
+    <Section title="Distinctions">
       {AVAILABLE_DISTINCTIONS.filter(distinction =>
         character.distinctionIds.includes(distinction.id)
       ).map(distinction => (
@@ -176,12 +165,11 @@ export const CharacterDetailScreen: React.FC = () => {
           <Text style={styles.descriptionText}>{distinction.description}</Text>
         </View>
       ))}
-    </View>
+    </Section>
   );
 
   const renderFactions = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Factions</Text>
+    <Section title="Factions">
       {character.factions.map((faction, index) => (
         <View key={index} style={styles.itemContainer}>
           <View style={styles.headerContainer}>
@@ -190,7 +178,7 @@ export const CharacterDetailScreen: React.FC = () => {
           </View>
         </View>
       ))}
-    </View>
+    </Section>
   );
 
   const renderRelationships = () => {
@@ -199,8 +187,7 @@ export const CharacterDetailScreen: React.FC = () => {
     }
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Relationships</Text>
+      <Section title="Relationships">
         {character.relationships.map((relationship, index) => {
           const targetCharacter = findCharacterByName(
             relationship.characterName
@@ -247,7 +234,7 @@ export const CharacterDetailScreen: React.FC = () => {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </Section>
     );
   };
 
@@ -257,8 +244,7 @@ export const CharacterDetailScreen: React.FC = () => {
     }
 
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Cyberware</Text>
+      <Section title="Cyberware">
         {character.cyberware.map((cyber, index) => (
           <View key={index} style={styles.itemContainer}>
             <Text style={styles.titleText}>{cyber.name}</Text>
@@ -308,85 +294,85 @@ export const CharacterDetailScreen: React.FC = () => {
             )}
           </View>
         ))}
-      </View>
+      </Section>
     );
   };
 
   return (
-    <View style={{ height: 882, overflow: 'scroll' }}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={true}
-      >
-        <View style={styles.header}>
-          {((character.imageUris && character.imageUris.length > 0) ||
-            character.imageUri) && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.imageGallery}
-              contentContainerStyle={styles.imageGalleryContent}
-            >
-              {(character.imageUris && character.imageUris.length > 0
-                ? character.imageUris
-                : character.imageUri
-                  ? [character.imageUri]
-                  : []
-              ).map((uri, index) => (
-                <View key={index} style={styles.imageContainer}>
-                  <Image source={{ uri }} style={styles.characterImage} />
-                </View>
-              ))}
-            </ScrollView>
-          )}
-          <Text style={styles.name}>{character.name}</Text>
-          <View style={styles.headerInfo}>
-            <Text style={styles.subheader}>
-              Species: {character.species} / Location:{' '}
-              {getLocationName(character.locationId)}
-            </Text>
-            {character.occupation && (
-              <Text style={styles.subheader}>
-                Occupation: {character.occupation}
-              </Text>
-            )}
-            {character.retired && (
-              <View style={styles.retiredBadge}>
-                <Text style={styles.retiredText}>RETIRED</Text>
+    <BaseDetailScreen
+      onEditPress={handleEdit}
+      deleteConfig={{
+        itemName: character.name,
+        onDelete: async () => {
+          await deleteCharacter(character.id);
+        },
+      }}
+    >
+      <View style={styles.header}>
+        {((character.imageUris && character.imageUris.length > 0) ||
+          character.imageUri) && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.imageGallery}
+            contentContainerStyle={styles.imageGalleryContent}
+          >
+            {(character.imageUris && character.imageUris.length > 0
+              ? character.imageUris
+              : character.imageUri
+                ? [character.imageUri]
+                : []
+            ).map((uri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri }} style={styles.characterImage} />
               </View>
-            )}
-            <View style={styles.statsContainer}>
-              <Text style={styles.statItem}>
-                Max Health:{' '}
-                <Text style={styles.statValue}>{derivedStats.maxHealth}</Text>
-              </Text>
-              <Text style={styles.statItem}>
-                Max Limit:{' '}
-                <Text style={styles.statValue}>{derivedStats.maxLimit}</Text>
-              </Text>
+            ))}
+          </ScrollView>
+        )}
+        <Text style={styles.name}>{character.name}</Text>
+        <View style={styles.headerInfo}>
+          <Text style={styles.subheader}>
+            Species: {character.species} / Location:{' '}
+            {getLocationName(character.locationId)}
+          </Text>
+          {character.occupation && (
+            <Text style={styles.subheader}>
+              Occupation: {character.occupation}
+            </Text>
+          )}
+          {character.retired && (
+            <View style={styles.retiredBadge}>
+              <Text style={styles.retiredText}>RETIRED</Text>
             </View>
+          )}
+          <View style={styles.statsContainer}>
+            <Text style={styles.statItem}>
+              Max Health:{' '}
+              <Text style={styles.statValue}>{derivedStats.maxHealth}</Text>
+            </Text>
+            <Text style={styles.statItem}>
+              Max Limit:{' '}
+              <Text style={styles.statValue}>{derivedStats.maxLimit}</Text>
+            </Text>
           </View>
         </View>
-        {renderTagScores()}
-        {renderPerks()}
-        {renderDistinctions()}
-        {renderCyberware()}
-        {renderFactions()}
-        {renderRelationships()}
-        {character.notes && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notes</Text>
-            <Text style={styles.notes}>{character.notes}</Text>
-          </View>
-        )}
-      </ScrollView>
-    </View>
+      </View>
+      {renderTagScores()}
+      {renderPerks()}
+      {renderDistinctions()}
+      {renderCyberware()}
+      {renderFactions()}
+      {renderRelationships()}
+      {character.notes && (
+        <Section title="Notes">
+          <Text style={styles.notes}>{character.notes}</Text>
+        </Section>
+      )}
+    </BaseDetailScreen>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: commonStyles.layout.scrollView,
   imageGallery: {
     marginBottom: 16,
   },
@@ -448,7 +434,6 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     marginBottom: 4,
   },
-  contentContainer: commonStyles.layout.contentContainer,
   header: {
     padding: 20,
     backgroundColor: themeColors.surface,
@@ -493,8 +478,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontWeight: '500',
   },
-  section: commonStyles.layout.section,
-  sectionTitle: commonStyles.text.h2,
   itemContainer: {
     marginBottom: 16,
     paddingBottom: 16,
@@ -552,8 +535,6 @@ const styles = StyleSheet.create({
     ...commonStyles.text.description,
     lineHeight: 22,
   },
-  editButton: commonStyles.headerButton.edit,
-  editButtonText: commonStyles.headerButton.text,
   statsContainer: commonStyles.status.container,
   statItem: commonStyles.status.item,
   statValue: commonStyles.status.value,
