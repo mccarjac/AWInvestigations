@@ -1,12 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useLayoutEffect } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
-  TextInput,
   Text,
+  Image,
 } from 'react-native';
 import {
   GameCharacter,
@@ -19,8 +19,8 @@ import {
   loadCharacters,
   updateCharacter,
   getFactionDescription,
-  saveFactionDescription,
   migrateFactionDescriptions,
+  loadFactions,
 } from '@utils/characterStorage';
 import {
   useNavigation,
@@ -50,8 +50,7 @@ export const FactionDetailsScreen: React.FC = () => {
   const [nonMembers, setNonMembers] = useState<GameCharacter[]>([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [factionDescription, setFactionDescription] = useState<string>('');
-  const [editingDescription, setEditingDescription] = useState(false);
-  const [tempDescription, setTempDescription] = useState<string>('');
+  const [factionImageUris, setFactionImageUris] = useState<string[]>([]);
 
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)
@@ -82,9 +81,18 @@ export const FactionDetailsScreen: React.FC = () => {
       factionNonMembers.sort((a, b) => a.name.localeCompare(b.name))
     );
 
-    // Get the faction description from centralized faction storage
+    // Get the faction description and images from centralized faction storage
     const description = await getFactionDescription(factionName);
     setFactionDescription(description);
+
+    // Load faction images
+    const factions = await loadFactions();
+    const faction = factions.find(f => f.name === factionName);
+    if (faction && faction.imageUris) {
+      setFactionImageUris(faction.imageUris);
+    } else {
+      setFactionImageUris([]);
+    }
   }, [factionName]);
 
   useFocusEffect(
@@ -92,6 +100,23 @@ export const FactionDetailsScreen: React.FC = () => {
       loadData();
     }, [loadData])
   );
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.headerEditButton}
+          onPress={() =>
+            navigation.navigate('FactionForm', {
+              factionName: factionName,
+            })
+          }
+        >
+          <Text style={styles.headerEditButtonText}>Edit</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, factionName]);
 
   const handleRemoveMember = async (character: GameCharacter) => {
     Alert.alert(
@@ -144,16 +169,6 @@ export const FactionDetailsScreen: React.FC = () => {
     character: GameCharacter,
     standing: RelationshipStanding
   ) => {
-    // Ensure the faction exists in central storage (this will create it if it doesn't exist)
-    const currentDescription = await getFactionDescription(factionName);
-    if (!currentDescription && factionDescription) {
-      // If no central description but we have a local one, save it
-      await saveFactionDescription(factionName, factionDescription);
-    } else if (!currentDescription) {
-      // Create with empty description if none exists
-      await saveFactionDescription(factionName, '');
-    }
-
     const newFaction: Faction = {
       name: factionName,
       standing,
@@ -213,41 +228,6 @@ export const FactionDetailsScreen: React.FC = () => {
         'Failed to update relationship standing. Please try again.'
       );
     }
-  };
-
-  const handleEditDescription = () => {
-    setTempDescription(factionDescription);
-    setEditingDescription(true);
-  };
-
-  const handleSaveDescription = async () => {
-    try {
-      // Save description to centralized faction storage
-      await saveFactionDescription(factionName, tempDescription);
-
-      // Update local state to reflect the changes immediately
-      setFactionDescription(tempDescription);
-      setEditingDescription(false);
-
-      // Update the members array to reflect the new description for UI consistency
-      setMembers(prevMembers =>
-        prevMembers.map(member => ({
-          ...member,
-          faction: { ...member.faction, description: tempDescription },
-        }))
-      );
-    } catch (error) {
-      console.error('Failed to save faction description:', error);
-      Alert.alert(
-        'Error',
-        'Failed to save faction description. Please try again.'
-      );
-    }
-  };
-
-  const handleCancelEditDescription = () => {
-    setTempDescription('');
-    setEditingDescription(false);
   };
 
   const getStandingStyle = (standing: string) => {
@@ -449,51 +429,33 @@ export const FactionDetailsScreen: React.FC = () => {
         <View style={styles.factionHeader}>
           <Text style={styles.factionName}>{factionName}</Text>
 
-          <View style={styles.descriptionSection}>
-            <View style={styles.descriptionHeader}>
-              <Text style={styles.descriptionLabel}>Description</Text>
-              {!editingDescription && (
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={handleEditDescription}
-                >
-                  <Text style={styles.editButtonText}>Edit</Text>
-                </TouchableOpacity>
-              )}
+          {/* Faction Images */}
+          {factionImageUris && factionImageUris.length > 0 && (
+            <View style={styles.imageGallerySection}>
+              <Text style={styles.imageGalleryLabel}>Faction Images</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.imageGallery}
+              >
+                {factionImageUris.map((uri, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri }}
+                    style={styles.factionImage}
+                  />
+                ))}
+              </ScrollView>
             </View>
+          )}
 
-            {editingDescription ? (
-              <View style={styles.descriptionEditContainer}>
-                <TextInput
-                  style={styles.descriptionInput}
-                  value={tempDescription}
-                  onChangeText={setTempDescription}
-                  placeholder="Enter faction description..."
-                  multiline
-                  numberOfLines={4}
-                />
-                <View style={styles.descriptionActions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.cancelButton]}
-                    onPress={handleCancelEditDescription}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.saveButton]}
-                    onPress={handleSaveDescription}
-                  >
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View style={styles.descriptionDisplay}>
-                <Text style={styles.descriptionText}>
-                  {factionDescription || 'No description provided'}
-                </Text>
-              </View>
-            )}
+          <View style={styles.descriptionSection}>
+            <Text style={styles.descriptionLabel}>Description</Text>
+            <View style={styles.descriptionDisplay}>
+              <Text style={styles.descriptionText}>
+                {factionDescription || 'No description provided'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -858,28 +820,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  // Header Button Styles
+  headerEditButton: {
+    marginRight: 16,
+    padding: 8,
+  },
+  headerEditButtonText: {
+    color: themeColors.accent.primary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
   // Description Styles
   descriptionSection: {
     marginTop: 8,
   },
-  descriptionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
   descriptionLabel: {
     ...commonStyles.text.label,
-  },
-  editButton: {
-    ...commonStyles.button.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  editButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
+    marginBottom: 12,
   },
   descriptionDisplay: {
     backgroundColor: themeColors.elevated,
@@ -894,40 +852,24 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
     lineHeight: 20,
   },
-  descriptionEditContainer: {
-    gap: 12,
+
+  // Image Gallery Styles
+  imageGallerySection: {
+    marginTop: 16,
+    marginBottom: 16,
   },
-  descriptionInput: {
-    ...commonStyles.input.base,
-    textAlignVertical: 'top',
-    minHeight: 100,
+  imageGalleryLabel: {
+    ...commonStyles.text.label,
+    marginBottom: 12,
   },
-  descriptionActions: {
+  imageGallery: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
   },
-  actionButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  saveButton: {
-    backgroundColor: themeColors.accent.primary,
-  },
-  cancelButton: {
-    ...commonStyles.button.secondary,
-  },
-  saveButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  cancelButtonText: {
-    color: themeColors.text.muted,
-    fontSize: 14,
-    fontWeight: '600',
+  factionImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 12,
+    marginRight: 12,
+    backgroundColor: themeColors.surface,
   },
 });

@@ -13,7 +13,7 @@ export type RootDrawerParamList = {
 export type RootStackParamList = {
   Main: undefined;
   FactionDetails: { factionName: string };
-  FactionForm: undefined;
+  FactionForm: { factionName?: string };
   LocationDetails: { locationId: string };
   LocationForm: { location?: GameLocation };
   LocationMap: undefined;
