@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -17,8 +17,13 @@ import {
 } from '@utils/exportImport';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { ProgressBar } from '@/components';
 
 export const DataManagementScreen: React.FC = () => {
+  const [progressVisible, setProgressVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
+
   const handleClearAll = async () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
@@ -55,42 +60,74 @@ export const DataManagementScreen: React.FC = () => {
   };
 
   const handleExport = async () => {
-    await exportCharacterData();
+    try {
+      setProgressVisible(true);
+      setProgress(0);
+      setProgressMessage('Starting export...');
+
+      await exportCharacterData((progress, message) => {
+        setProgress(progress);
+        setProgressMessage(message);
+      });
+    } finally {
+      // Keep progress visible for a moment to show completion
+      setTimeout(() => {
+        setProgressVisible(false);
+      }, 500);
+    }
   };
 
   const handleImport = async () => {
     console.log('Import button clicked');
     try {
-      const success = await importCharacterData();
+      setProgressVisible(true);
+      setProgress(0);
+      setProgressMessage('Starting import...');
+
+      const success = await importCharacterData((progress, message) => {
+        setProgress(progress);
+        setProgressMessage(message);
+      });
+
       console.log('Import result:', success);
       if (success) {
         console.log('Import successful');
-        Alert.alert(
-          'Success',
-          'Character and faction data imported successfully.',
-          [{ text: 'OK' }]
-        );
+        // Alert is already shown in importCharacterData
       }
     } catch (error) {
       console.error('Import error:', error);
+    } finally {
+      // Keep progress visible for a moment to show completion
+      setTimeout(() => {
+        setProgressVisible(false);
+      }, 500);
     }
   };
 
   const handleMerge = async () => {
     console.log('Merge button clicked');
     try {
-      const success = await mergeCharacterData();
+      setProgressVisible(true);
+      setProgress(0);
+      setProgressMessage('Starting merge...');
+
+      const success = await mergeCharacterData((progress, message) => {
+        setProgress(progress);
+        setProgressMessage(message);
+      });
+
       console.log('Merge result:', success);
       if (success) {
         console.log('Merge successful');
-        Alert.alert(
-          'Success',
-          'Character and faction data merged successfully.',
-          [{ text: 'OK' }]
-        );
+        // Alert is already shown in mergeCharacterData
       }
     } catch (error) {
       console.error('Merge error:', error);
+    } finally {
+      // Keep progress visible for a moment to show completion
+      setTimeout(() => {
+        setProgressVisible(false);
+      }, 500);
     }
   };
 
@@ -199,6 +236,11 @@ export const DataManagementScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <ProgressBar
+        visible={progressVisible}
+        progress={progress}
+        message={progressMessage}
+      />
     </View>
   );
 };

@@ -136,10 +136,10 @@ export const EventsFormScreen: React.FC = () => {
       const newImageUri = result.assets[0].uri;
       const currentImages = formData.imageUris || [];
       const newImages = [...currentImages, newImageUri];
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         imageUris: newImages,
-        imageUri: newImages[0] // Keep first image for backward compatibility
+        imageUri: newImages[0], // Keep first image for backward compatibility
       });
     }
   };
@@ -147,10 +147,10 @@ export const EventsFormScreen: React.FC = () => {
   const removeImage = (index: number) => {
     const currentImages = formData.imageUris || [];
     const newImages = currentImages.filter((_, i) => i !== index);
-    setFormData({ 
-      ...formData, 
+    setFormData({
+      ...formData,
       imageUris: newImages,
-      imageUri: newImages.length > 0 ? newImages[0] : undefined
+      imageUri: newImages.length > 0 ? newImages[0] : undefined,
     });
   };
 
@@ -420,7 +420,10 @@ export const EventsFormScreen: React.FC = () => {
                   </View>
                 ))}
               </View>
-              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={pickImage}
+              >
                 <Text style={styles.addImageButtonText}>Add Another Photo</Text>
               </TouchableOpacity>
             </View>

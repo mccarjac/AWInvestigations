@@ -16,6 +16,11 @@ import { GameCharacter, Species, RelationshipStanding } from '../models/types';
 import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '../models/gameData';
 
 /**
+ * Progress callback type for import/export operations
+ */
+export type ProgressCallback = (progress: number, message: string) => void;
+
+/**
  * Extract image data from a data URI
  */
 const extractImageData = (
@@ -82,17 +87,30 @@ const handleMergeConflicts = async (
 /**
  * Export character and faction data for native platforms (creates zip with images)
  */
-const exportCharacterDataNative = async (): Promise<void> => {
+const exportCharacterDataNative = async (
+  onProgress?: ProgressCallback
+): Promise<void> => {
   try {
+    onProgress?.(5, 'Loading data...');
+
     // Get the character data as JSON string
     const jsonData = await exportDataset();
     const dataset = JSON.parse(jsonData);
+
+    onProgress?.(10, 'Creating archive...');
 
     // Create a new ZIP file
     const zip = new JSZip();
 
     // Track image references and replace URIs with file paths
     let imageCounter = 0;
+
+    // Count total images for progress calculation
+    const totalCharacters = dataset.characters?.length || 0;
+    const totalLocations = dataset.locations?.length || 0;
+    const totalEvents = dataset.events?.length || 0;
+    const totalItems = totalCharacters + totalLocations + totalEvents;
+    let processedItems = 0;
 
     // Process character images
     if (dataset.characters) {
@@ -173,6 +191,14 @@ const exportCharacterDataNative = async (): Promise<void> => {
               // Image file not accessible, skip
             }
           }
+        }
+        processedItems++;
+        if (totalItems > 0) {
+          const progress = 10 + Math.floor((processedItems / totalItems) * 60);
+          onProgress?.(
+            progress,
+            `Processing characters (${processedItems}/${totalItems})...`
+          );
         }
       }
     }
@@ -257,6 +283,14 @@ const exportCharacterDataNative = async (): Promise<void> => {
             }
           }
         }
+        processedItems++;
+        if (totalItems > 0) {
+          const progress = 10 + Math.floor((processedItems / totalItems) * 60);
+          onProgress?.(
+            progress,
+            `Processing locations (${processedItems}/${totalItems})...`
+          );
+        }
       }
     }
 
@@ -340,14 +374,28 @@ const exportCharacterDataNative = async (): Promise<void> => {
             }
           }
         }
+        processedItems++;
+        if (totalItems > 0) {
+          const progress = 10 + Math.floor((processedItems / totalItems) * 60);
+          onProgress?.(
+            progress,
+            `Processing events (${processedItems}/${totalItems})...`
+          );
+        }
       }
     }
+
+    onProgress?.(75, 'Creating archive...');
 
     // Add the modified JSON to the zip
     zip.file('data.json', JSON.stringify(dataset, null, 2));
 
+    onProgress?.(85, 'Generating archive...');
+
     // Generate the zip file as base64
     const zipBase64 = await zip.generateAsync({ type: 'base64' });
+
+    onProgress?.(95, 'Saving file...');
 
     // Create a filename with timestamp
     const timestamp = new Date()
@@ -363,6 +411,8 @@ const exportCharacterDataNative = async (): Promise<void> => {
     await FileSystem.writeAsStringAsync(fileUri, zipBase64, {
       encoding: FileSystem.EncodingType.Base64,
     });
+
+    onProgress?.(100, 'Complete!');
 
     // Check if sharing is available
     if (await Sharing.isAvailableAsync()) {
@@ -390,15 +440,21 @@ const exportCharacterDataNative = async (): Promise<void> => {
 /**
  * Export character and faction data to a JSON file and share it
  */
-export const exportCharacterData = async (): Promise<void> => {
-  await exportCharacterDataNative();
+export const exportCharacterData = async (
+  onProgress?: ProgressCallback
+): Promise<void> => {
+  await exportCharacterDataNative(onProgress);
 };
 
 /**
  * Import character data for native platforms (supports both JSON and ZIP files)
  */
-const importCharacterDataNative = async (): Promise<boolean> => {
+const importCharacterDataNative = async (
+  onProgress?: ProgressCallback
+): Promise<boolean> => {
   try {
+    onProgress?.(5, 'Opening file picker...');
+
     // Pick a document
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/json', 'application/zip'],
@@ -409,6 +465,8 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       return false;
     }
 
+    onProgress?.(10, 'Reading file...');
+
     const fileUri = result.assets[0].uri;
     const fileName = result.assets[0].name;
     const isZip = fileName.endsWith('.zip');
@@ -418,6 +476,8 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       const base64Content = await FileSystem.readAsStringAsync(fileUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
+
+      onProgress?.(20, 'Extracting archive...');
 
       const zip = new JSZip();
       const zipContent = await zip.loadAsync(base64Content, { base64: true });
@@ -431,11 +491,17 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         return false;
       }
 
+      onProgress?.(30, 'Reading data...');
+
       const jsonContent = await dataFile.async('text');
       const dataset = JSON.parse(jsonContent);
 
+      onProgress?.(40, 'Extracting images...');
+
       // Extract and restore images
       const allFiles = Object.keys(zipContent.files);
+      const imageFiles = allFiles.filter(f => f.startsWith('images/'));
+      let processedImages = 0;
 
       // Group images by entity ID
       const imagesByEntity: Record<string, Record<number, string>> = {};
@@ -484,8 +550,19 @@ const importCharacterDataNative = async (): Promise<boolean> => {
               }
             }
           }
+          processedImages++;
+          if (imageFiles.length > 0) {
+            const progress =
+              40 + Math.floor((processedImages / imageFiles.length) * 40);
+            onProgress?.(
+              progress,
+              `Processing images (${processedImages}/${imageFiles.length})...`
+            );
+          }
         }
       }
+
+      onProgress?.(85, 'Applying images to entities...');
 
       // Apply grouped images to entities
       for (const [entityKey, images] of Object.entries(imagesByEntity)) {
@@ -520,10 +597,13 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         }
       }
 
+      onProgress?.(90, 'Importing data...');
+
       // Import the dataset
       const success = await importDataset(JSON.stringify(dataset));
 
       if (success) {
+        onProgress?.(100, 'Complete!');
         Alert.alert(
           'Import Successful',
           'Character and faction data has been imported successfully. All existing data has been replaced.',
@@ -540,8 +620,12 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       }
     } else {
       // Handle JSON file (without images - strip imageUri fields)
+      onProgress?.(30, 'Reading JSON file...');
+
       const fileContent = await FileSystem.readAsStringAsync(fileUri);
       const dataset = JSON.parse(fileContent);
+
+      onProgress?.(60, 'Processing data...');
 
       // Strip imageUri from all characters
       if (dataset.characters) {
@@ -557,9 +641,12 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         });
       }
 
+      onProgress?.(90, 'Importing data...');
+
       const success = await importDataset(JSON.stringify(dataset));
 
       if (success) {
+        onProgress?.(100, 'Complete!');
         Alert.alert(
           'Import Successful',
           'Character and faction data has been imported successfully (without images). All existing data has been replaced.',
@@ -589,15 +676,21 @@ const importCharacterDataNative = async (): Promise<boolean> => {
 /**
  * Import character data from a JSON file (replaces existing data)
  */
-export const importCharacterData = async (): Promise<boolean> => {
-  return await importCharacterDataNative();
+export const importCharacterData = async (
+  onProgress?: ProgressCallback
+): Promise<boolean> => {
+  return await importCharacterDataNative(onProgress);
 };
 
 /**
  * Merge character and faction data for native platforms (supports both JSON and ZIP files)
  */
-const mergeCharacterDataNative = async (): Promise<boolean> => {
+const mergeCharacterDataNative = async (
+  onProgress?: ProgressCallback
+): Promise<boolean> => {
   try {
+    onProgress?.(5, 'Opening file picker...');
+
     // Pick a document
     const result = await DocumentPicker.getDocumentAsync({
       type: ['application/json', 'application/zip'],
@@ -607,6 +700,8 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     if (result.canceled) {
       return false;
     }
+
+    onProgress?.(10, 'Reading file...');
 
     const fileUri = result.assets[0].uri;
     const fileName = result.assets[0].name;
@@ -620,6 +715,8 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
         encoding: FileSystem.EncodingType.Base64,
       });
 
+      onProgress?.(20, 'Extracting archive...');
+
       const zip = new JSZip();
       const zipContent = await zip.loadAsync(base64Content, { base64: true });
 
@@ -632,11 +729,17 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
         return false;
       }
 
+      onProgress?.(30, 'Reading data...');
+
       const jsonContent = await dataFile.async('text');
       const dataset = JSON.parse(jsonContent);
 
+      onProgress?.(40, 'Extracting images...');
+
       // Extract and restore images
       const allFiles = Object.keys(zipContent.files);
+      const imageFiles = allFiles.filter(f => f.startsWith('images/'));
+      let processedImages = 0;
 
       // Group images by entity ID
       const imagesByEntity: Record<string, Record<number, string>> = {};
@@ -685,8 +788,19 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
               }
             }
           }
+          processedImages++;
+          if (imageFiles.length > 0) {
+            const progress =
+              40 + Math.floor((processedImages / imageFiles.length) * 40);
+            onProgress?.(
+              progress,
+              `Processing images (${processedImages}/${imageFiles.length})...`
+            );
+          }
         }
       }
+
+      onProgress?.(85, 'Applying images to entities...');
 
       // Apply grouped images to entities
       for (const [entityKey, images] of Object.entries(imagesByEntity)) {
@@ -724,8 +838,12 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       fileContent = JSON.stringify(dataset);
     } else {
       // Handle JSON file (without images - strip imageUri fields)
+      onProgress?.(30, 'Reading JSON file...');
+
       const jsonContent = await FileSystem.readAsStringAsync(fileUri);
       const dataset = JSON.parse(jsonContent);
+
+      onProgress?.(60, 'Processing data...');
 
       // Strip imageUri from all characters
       if (dataset.characters) {
@@ -744,10 +862,14 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       fileContent = JSON.stringify(dataset);
     }
 
+    onProgress?.(90, 'Merging data...');
+
     // Merge the data with conflict resolution
     const result_merge = await mergeDatasetWithConflictResolution(fileContent);
 
     if (result_merge.success) {
+      onProgress?.(100, 'Complete!');
+
       if (result_merge.conflicts.length > 0) {
         Alert.alert(
           'Conflicts Found',
@@ -807,8 +929,10 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
 /**
  * Import and merge character and faction data from a JSON file (keeps existing data)
  */
-export const mergeCharacterData = async (): Promise<boolean> => {
-  return await mergeCharacterDataNative();
+export const mergeCharacterData = async (
+  onProgress?: ProgressCallback
+): Promise<boolean> => {
+  return await mergeCharacterDataNative(onProgress);
 };
 
 /**

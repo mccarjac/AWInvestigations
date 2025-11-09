@@ -164,15 +164,15 @@ export const EventsDetailScreen: React.FC = () => {
     >
       {/* Event Images */}
       {((event.imageUris && event.imageUris.length > 0) || event.imageUri) && (
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.imageGallery}
           contentContainerStyle={styles.imageGalleryContent}
         >
-          {(event.imageUris && event.imageUris.length > 0 
-            ? event.imageUris 
-            : event.imageUri 
+          {(event.imageUris && event.imageUris.length > 0
+            ? event.imageUris
+            : event.imageUri
               ? [event.imageUri]
               : []
           ).map((uri, index) => (
