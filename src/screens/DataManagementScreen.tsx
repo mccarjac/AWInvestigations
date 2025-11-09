@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -17,8 +17,17 @@ import {
 } from '@utils/exportImport';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
+import { ProgressModal } from './components/ProgressModal';
 
 export const DataManagementScreen: React.FC = () => {
+  const [progressVisible, setProgressVisible] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
+
+  const handleProgress = (progressValue: number, message: string) => {
+    setProgress(progressValue);
+    setProgressMessage(message);
+  };
   const handleClearAll = async () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
@@ -55,15 +64,35 @@ export const DataManagementScreen: React.FC = () => {
   };
 
   const handleExport = async () => {
-    await exportCharacterData();
+    try {
+      setProgressVisible(true);
+      setProgress(0);
+      setProgressMessage('Starting export...');
+
+      await exportCharacterData(handleProgress);
+
+      // Keep the modal visible for a brief moment to show completion
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } catch (error) {
+      console.error('Export error:', error);
+    } finally {
+      setProgressVisible(false);
+    }
   };
 
   const handleImport = async () => {
     console.log('Import button clicked');
     try {
-      const success = await importCharacterData();
+      setProgressVisible(true);
+      setProgress(0);
+      setProgressMessage('Selecting file...');
+
+      const success = await importCharacterData(handleProgress);
       console.log('Import result:', success);
+
+      // Keep the modal visible for a brief moment to show completion
       if (success) {
+        await new Promise(resolve => setTimeout(resolve, 300));
         console.log('Import successful');
         Alert.alert(
           'Success',
@@ -73,15 +102,24 @@ export const DataManagementScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Import error:', error);
+    } finally {
+      setProgressVisible(false);
     }
   };
 
   const handleMerge = async () => {
     console.log('Merge button clicked');
     try {
-      const success = await mergeCharacterData();
+      setProgressVisible(true);
+      setProgress(0);
+      setProgressMessage('Selecting file...');
+
+      const success = await mergeCharacterData(handleProgress);
       console.log('Merge result:', success);
+
+      // Keep the modal visible for a brief moment to show completion
       if (success) {
+        await new Promise(resolve => setTimeout(resolve, 300));
         console.log('Merge successful');
         Alert.alert(
           'Success',
@@ -91,6 +129,8 @@ export const DataManagementScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Merge error:', error);
+    } finally {
+      setProgressVisible(false);
     }
   };
 
@@ -112,6 +152,12 @@ export const DataManagementScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <ProgressModal
+        visible={progressVisible}
+        progress={progress}
+        message={progressMessage}
+      />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
