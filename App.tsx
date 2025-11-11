@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { StyleSheet } from 'react-native';
 import {
   RootStackParamList,
   RootDrawerParamList,
@@ -23,6 +24,7 @@ import { EventsTimelineScreen } from './src/screens/events/EventsListScreen';
 import { EventsFormScreen } from './src/screens/events/EventsFormScreen';
 import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ErrorBoundary } from './src/components';
 
 // Dark theme for navigation
 const DarkTheme = {
@@ -132,87 +134,99 @@ function MainDrawer() {
   );
 }
 
+const appStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+});
+
 // Root stack navigator for the entire app
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer theme={DarkTheme}>
-        <Stack.Navigator
-          initialRouteName="Main"
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: '#262647',
-              borderBottomWidth: 1,
-              borderBottomColor: '#404066',
-            },
-            headerTintColor: '#FFFFFF',
-            headerTitleStyle: {
-              fontWeight: '600',
-              fontSize: 18,
-              letterSpacing: 0.3,
-            },
-            cardStyle: {
-              backgroundColor: '#0F0F23',
-            },
-          }}
-        >
-          <Stack.Screen
-            name="Main"
-            component={MainDrawer}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="CharacterDetail"
-            component={CharacterDetailScreen}
-            options={({ route }) => ({ title: route.params.character.name })}
-          />
-          <Stack.Screen
-            name="CharacterForm"
-            component={CharacterFormScreen}
-            options={{ title: 'Character Form' }}
-          />
-          <Stack.Screen
-            name="FactionDetails"
-            component={FactionDetailsScreen}
-            options={({ route }) => ({ title: route.params.factionName })}
-          />
-          <Stack.Screen
-            name="FactionForm"
-            component={FactionFormScreen}
-            options={{ title: 'Create Faction' }}
-          />
-          <Stack.Screen
-            name="LocationDetails"
-            component={LocationDetailsScreen}
-            options={{ title: 'Location Details' }}
-          />
-          <Stack.Screen
-            name="LocationForm"
-            component={LocationFormScreen}
-            options={{ title: 'Create Location' }}
-          />
-          <Stack.Screen
-            name="LocationMap"
-            component={LocationMapScreen}
-            options={{ title: 'Junktown Map' }}
-          />
-          <Stack.Screen
-            name="EventsTimeline"
-            component={EventsTimelineScreen}
-            options={{ title: 'Events Timeline' }}
-          />
-          <Stack.Screen
-            name="EventsForm"
-            component={EventsFormScreen}
-            options={{ title: 'Event Form' }}
-          />
-          <Stack.Screen
-            name="EventsDetail"
-            component={EventsDetailScreen}
-            options={{ title: 'Event Details' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={appStyles.root}>
+        <NavigationContainer theme={DarkTheme}>
+          <Stack.Navigator
+            initialRouteName="Main"
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#262647',
+                borderBottomWidth: 1,
+                borderBottomColor: '#404066',
+              },
+              headerTintColor: '#FFFFFF',
+              headerTitleStyle: {
+                fontWeight: '600',
+                fontSize: 18,
+                letterSpacing: 0.3,
+              },
+              cardStyle: {
+                backgroundColor: '#0F0F23',
+              },
+            }}
+          >
+            <Stack.Screen
+              name="Main"
+              component={MainDrawer}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CharacterDetail"
+              component={CharacterDetailScreen}
+              options={({ route }) => ({
+                title: route.params?.character?.name || 'Character Detail',
+              })}
+            />
+            <Stack.Screen
+              name="CharacterForm"
+              component={CharacterFormScreen}
+              options={{ title: 'Character Form' }}
+            />
+            <Stack.Screen
+              name="FactionDetails"
+              component={FactionDetailsScreen}
+              options={({ route }) => ({
+                title: route.params?.factionName || 'Faction Details',
+              })}
+            />
+            <Stack.Screen
+              name="FactionForm"
+              component={FactionFormScreen}
+              options={{ title: 'Create Faction' }}
+            />
+            <Stack.Screen
+              name="LocationDetails"
+              component={LocationDetailsScreen}
+              options={{ title: 'Location Details' }}
+            />
+            <Stack.Screen
+              name="LocationForm"
+              component={LocationFormScreen}
+              options={{ title: 'Create Location' }}
+            />
+            <Stack.Screen
+              name="LocationMap"
+              component={LocationMapScreen}
+              options={{ title: 'Junktown Map' }}
+            />
+            <Stack.Screen
+              name="EventsTimeline"
+              component={EventsTimelineScreen}
+              options={{ title: 'Events Timeline' }}
+            />
+            <Stack.Screen
+              name="EventsForm"
+              component={EventsFormScreen}
+              options={{ title: 'Event Form' }}
+            />
+            <Stack.Screen
+              name="EventsDetail"
+              component={EventsDetailScreen}
+              options={{ title: 'Event Details' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }

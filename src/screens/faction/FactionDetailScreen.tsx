@@ -46,13 +46,22 @@ interface FactionMemberInfo {
 export const FactionDetailsScreen: React.FC = () => {
   const route = useRoute<FactionDetailsRouteProp>();
   const navigation = useNavigation<FactionDetailsNavigationProp>();
-  const { factionName } = route.params;
+  const { factionName } = route.params || {};
 
   const [members, setMembers] = useState<FactionMemberInfo[]>([]);
   const [nonMembers, setNonMembers] = useState<GameCharacter[]>([]);
   const [showAddMember, setShowAddMember] = useState(false);
   const [factionDescription, setFactionDescription] = useState<string>('');
   const [factionImageUris, setFactionImageUris] = useState<string[]>([]);
+
+  // Guard against missing factionName param
+  React.useEffect(() => {
+    if (!factionName) {
+      Alert.alert('Error', 'Faction name is missing. Please try again.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    }
+  }, [factionName, navigation]);
 
   const loadData = useCallback(async () => {
     // Run migration on first load (idempotent operation)

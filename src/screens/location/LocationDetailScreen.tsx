@@ -35,12 +35,23 @@ type LocationDetailsNavigationProp = StackNavigationProp<RootStackParamList>;
 export const LocationDetailsScreen: React.FC = () => {
   const route = useRoute<LocationDetailsRouteProp>();
   const navigation = useNavigation<LocationDetailsNavigationProp>();
-  const { locationId } = route.params;
+  const { locationId } = route.params || {};
 
   const [location, setLocation] = useState<GameLocation | null>(null);
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
 
+  // Guard against missing locationId param
+  React.useEffect(() => {
+    if (!locationId) {
+      Alert.alert('Error', 'Location ID is missing. Please try again.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    }
+  }, [locationId, navigation]);
+
   const loadData = useCallback(async () => {
+    if (!locationId) return;
+
     const locationData = await getLocation(locationId);
     if (!locationData) {
       Alert.alert('Error', 'Location not found', [

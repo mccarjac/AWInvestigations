@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   CharacterDataset,
   GameCharacter,
@@ -8,6 +7,7 @@ import {
   EventDataset,
 } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
+import { SafeAsyncStorageJSONParser } from './safeAsyncStorageJSONParser';
 
 interface StoredFaction {
   name: string;
@@ -37,14 +37,14 @@ export const saveCharacters = async (
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataset));
+  await SafeAsyncStorageJSONParser.setItem(STORAGE_KEY, dataset);
 };
 
 export const loadCharacters = async (): Promise<GameCharacter[]> => {
-  const data = await AsyncStorage.getItem(STORAGE_KEY);
-  if (!data) return [];
+  const dataset =
+    await SafeAsyncStorageJSONParser.getItem<CharacterDataset>(STORAGE_KEY);
+  if (!dataset || !dataset.characters) return [];
 
-  const dataset: CharacterDataset = JSON.parse(data);
   // Handle backward compatibility - set defaults for missing properties
   return dataset.characters.map(character => ({
     ...character,
@@ -103,23 +103,35 @@ export const deleteCharacter = async (id: string): Promise<boolean> => {
 };
 
 export const exportDataset = async (): Promise<string> => {
-  const characterData = await AsyncStorage.getItem(STORAGE_KEY);
-  const factionData = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
-  const locationData = await AsyncStorage.getItem(LOCATION_STORAGE_KEY);
-  const eventData = await AsyncStorage.getItem(EVENT_STORAGE_KEY);
+  const characterData =
+    await SafeAsyncStorageJSONParser.getItem<CharacterDataset>(STORAGE_KEY);
+  const factionData =
+    await SafeAsyncStorageJSONParser.getItem<FactionDataset>(
+      FACTION_STORAGE_KEY
+    );
+  const locationData =
+    await SafeAsyncStorageJSONParser.getItem<LocationDataset>(
+      LOCATION_STORAGE_KEY
+    );
+  const eventData =
+    await SafeAsyncStorageJSONParser.getItem<EventDataset>(EVENT_STORAGE_KEY);
 
-  const characters = characterData
-    ? JSON.parse(characterData)
-    : { characters: [], version: '1.0', lastUpdated: '' };
-  const factions = factionData
-    ? JSON.parse(factionData)
-    : { factions: [], version: '1.0', lastUpdated: '' };
-  const locations = locationData
-    ? JSON.parse(locationData)
-    : { locations: [], version: '1.0', lastUpdated: '' };
-  const events = eventData
-    ? JSON.parse(eventData)
-    : { events: [], version: '1.0', lastUpdated: '' };
+  const characters = characterData || {
+    characters: [],
+    version: '1.0',
+    lastUpdated: '',
+  };
+  const factions = factionData || {
+    factions: [],
+    version: '1.0',
+    lastUpdated: '',
+  };
+  const locations = locationData || {
+    locations: [],
+    version: '1.0',
+    lastUpdated: '',
+  };
+  const events = eventData || { events: [], version: '1.0', lastUpdated: '' };
 
   const combinedDataset = {
     characters: characters.characters || [],
@@ -325,7 +337,7 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
       version: dataset.version || '1.0',
       lastUpdated: dataset.lastUpdated || new Date().toISOString(),
     };
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(characterDataset));
+    await SafeAsyncStorageJSONParser.setItem(STORAGE_KEY, characterDataset);
     console.log(
       `[importDataset] Saved ${characterDataset.characters.length} characters`
     );
@@ -338,9 +350,9 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
         version: dataset.version || '1.0',
         lastUpdated: dataset.lastUpdated || new Date().toISOString(),
       };
-      await AsyncStorage.setItem(
+      await SafeAsyncStorageJSONParser.setItem(
         FACTION_STORAGE_KEY,
-        JSON.stringify(factionDataset)
+        factionDataset
       );
       console.log(`[importDataset] Saved ${dataset.factions.length} factions`);
     }
@@ -353,10 +365,7 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
         version: dataset.version || '1.0',
         lastUpdated: dataset.lastUpdated || new Date().toISOString(),
       };
-      await AsyncStorage.setItem(
-        EVENT_STORAGE_KEY,
-        JSON.stringify(eventDataset)
-      );
+      await SafeAsyncStorageJSONParser.setItem(EVENT_STORAGE_KEY, eventDataset);
       console.log(`[importDataset] Saved ${dataset.events.length} events`);
     }
 
@@ -759,10 +768,10 @@ export const resetAllPresentStatus = async (): Promise<void> => {
 };
 
 export const clearStorage = async (): Promise<void> => {
-  await AsyncStorage.removeItem(STORAGE_KEY);
-  await AsyncStorage.removeItem(FACTION_STORAGE_KEY);
-  await AsyncStorage.removeItem(LOCATION_STORAGE_KEY);
-  await AsyncStorage.removeItem(EVENT_STORAGE_KEY);
+  await SafeAsyncStorageJSONParser.removeItem(STORAGE_KEY);
+  await SafeAsyncStorageJSONParser.removeItem(FACTION_STORAGE_KEY);
+  await SafeAsyncStorageJSONParser.removeItem(LOCATION_STORAGE_KEY);
+  await SafeAsyncStorageJSONParser.removeItem(EVENT_STORAGE_KEY);
 };
 
 // Faction management functions
@@ -774,14 +783,16 @@ export const saveFactions = async (
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
-  await AsyncStorage.setItem(FACTION_STORAGE_KEY, JSON.stringify(dataset));
+  await SafeAsyncStorageJSONParser.setItem(FACTION_STORAGE_KEY, dataset);
 };
 
 export const loadFactions = async (): Promise<StoredFaction[]> => {
-  const data = await AsyncStorage.getItem(FACTION_STORAGE_KEY);
-  if (!data) return [];
+  const dataset =
+    await SafeAsyncStorageJSONParser.getItem<FactionDataset>(
+      FACTION_STORAGE_KEY
+    );
+  if (!dataset) return [];
 
-  const dataset: FactionDataset = JSON.parse(data);
   return dataset.factions || [];
 };
 
@@ -1030,14 +1041,16 @@ export const saveLocations = async (
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
-  await AsyncStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(dataset));
+  await SafeAsyncStorageJSONParser.setItem(LOCATION_STORAGE_KEY, dataset);
 };
 
 export const loadLocations = async (): Promise<GameLocation[]> => {
-  const data = await AsyncStorage.getItem(LOCATION_STORAGE_KEY);
-  if (!data) return [];
+  const dataset =
+    await SafeAsyncStorageJSONParser.getItem<LocationDataset>(
+      LOCATION_STORAGE_KEY
+    );
+  if (!dataset) return [];
 
-  const dataset: LocationDataset = JSON.parse(data);
   return dataset.locations || [];
 };
 
@@ -1160,15 +1173,15 @@ export const saveEvents = async (events: GameEvent[]): Promise<void> => {
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
-  await AsyncStorage.setItem(EVENT_STORAGE_KEY, JSON.stringify(dataset));
+  await SafeAsyncStorageJSONParser.setItem(EVENT_STORAGE_KEY, dataset);
 };
 
 export const loadEvents = async (): Promise<GameEvent[]> => {
-  const data = await AsyncStorage.getItem(EVENT_STORAGE_KEY);
-  if (!data) return [];
+  const dataset =
+    await SafeAsyncStorageJSONParser.getItem<EventDataset>(EVENT_STORAGE_KEY);
+  if (!dataset) return [];
 
-  const dataset: EventDataset = JSON.parse(data);
-  return dataset.events;
+  return dataset.events || [];
 };
 
 export const createEvent = async (

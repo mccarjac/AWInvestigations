@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {
   RouteProp,
@@ -38,34 +39,79 @@ type CharacterDetailRouteProp = RouteProp<
 type CharacterDetailNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export const CharacterDetailScreen: React.FC = () => {
+  // eslint-disable-next-line no-console
+  console.log('[CharacterDetail] Component rendering...');
+
   const route = useRoute<CharacterDetailRouteProp>();
   const navigation = useNavigation<CharacterDetailNavigationProp>();
-  const { character } = route.params;
+  const { character } = route.params || {};
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
   const [locations, setLocations] = useState<GameLocation[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isValidating, setIsValidating] = useState(true);
+
+  // Guard against missing character param
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('[CharacterDetail] Validating character param...');
+
+    if (!character) {
+      // eslint-disable-next-line no-console
+      console.error('[CharacterDetail] Character param is missing!');
+      Alert.alert('Error', 'Character data is missing. Please try again.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+      return;
+    }
+
+    // Validate character has required properties to prevent crashes
+    if (!character.id || !character.name) {
+      // eslint-disable-next-line no-console
+      console.error(
+        '[CharacterDetail] Character missing required properties:',
+        character
+      );
+      Alert.alert('Error', 'Character data is corrupted. Please try again.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+      return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `[CharacterDetail] Character validated: ${character.name} (${character.id})`
+    );
+    setIsValidating(false);
+  }, [character, navigation]);
 
   const loadAllCharacters = useCallback(async () => {
     try {
+      // eslint-disable-next-line no-console
+      console.log('[CharacterDetail] Loading characters and locations...');
       const characters = await loadCharacters();
+      // eslint-disable-next-line no-console
+      console.log(`[CharacterDetail] Loaded ${characters.length} characters`);
+
       const locs = await loadLocations();
+      // eslint-disable-next-line no-console
+      console.log(`[CharacterDetail] Loaded ${locs.length} locations`);
+
       setAllCharacters(characters);
       setLocations(locs);
 
       // Update the current character with the latest data
-      const updatedCurrentChar = characters.find(
-        char => char.id === character.id
-      );
-      if (
-        updatedCurrentChar &&
-        JSON.stringify(updatedCurrentChar) !== JSON.stringify(character)
-      ) {
-        // Update the route params with the fresh character data
-        navigation.setParams({ character: updatedCurrentChar });
-      }
+      // Note: We don't update navigation params here to avoid infinite loop
+      // The character object is already in state via allCharacters
+      // eslint-disable-next-line no-console
+      console.log('[CharacterDetail] Data load complete');
     } catch (error) {
-      console.error('Failed to load characters:', error);
+      // eslint-disable-next-line no-console
+      console.error('[CharacterDetail] Failed to load characters:', error);
+      Alert.alert('Error', 'Failed to load character data. Please try again.', [
+        { text: 'OK' },
+      ]);
     }
-  }, [character, navigation]);
+  }, []);
 
   // Refresh character data when screen comes back into focus
   useFocusEffect(
@@ -87,15 +133,45 @@ export const CharacterDetailScreen: React.FC = () => {
   const handleRelationshipPress = (characterName: string) => {
     const targetCharacter = findCharacterByName(characterName);
     if (targetCharacter) {
+      // eslint-disable-next-line no-console
+      console.log(`[CharacterDetail] Navigating to: ${targetCharacter.name}`);
       navigation.push('CharacterDetail', { character: targetCharacter });
     }
   };
 
-  const derivedStats = calculateDerivedStats(character);
-
   const handleEdit = useCallback(() => {
+    if (!character) return;
+    // eslint-disable-next-line no-console
+    console.log('[CharacterDetail] Opening edit form');
     navigation.navigate('CharacterForm', { character });
   }, [navigation, character]);
+
+  // Safety check before rendering - prevent crashes if character is invalid
+  if (!character || !character.id || !character.name) {
+    // eslint-disable-next-line no-console
+    console.warn('[CharacterDetail] Invalid character, returning early');
+    return null;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`[CharacterDetail] Rendering character: ${character.name}`);
+
+  // Calculate derived stats with error handling
+  let derivedStats;
+  try {
+    derivedStats = calculateDerivedStats(character);
+    // eslint-disable-next-line no-console
+    console.log('[CharacterDetail] Derived stats calculated successfully');
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[CharacterDetail] Error calculating derived stats:', error);
+    // Return a safe minimal render instead of crashing
+    derivedStats = {
+      maxHealth: 0,
+      maxLimit: 0,
+      tagScores: new Map(),
+    };
+  }
 
   const renderTagScores = () => {
     const tagScores = derivedStats.tagScores;
@@ -304,7 +380,19 @@ export const CharacterDetailScreen: React.FC = () => {
       deleteConfig={{
         itemName: character.name,
         onDelete: async () => {
-          await deleteCharacter(character.id);
+          try {
+            // eslint-disable-next-line no-console
+            console.log(
+              `[CharacterDetail] Deleting character: ${character.id}`
+            );
+            await deleteCharacter(character.id);
+            // eslint-disable-next-line no-console
+            console.log('[CharacterDetail] Delete successful');
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error('[CharacterDetail] Delete failed:', error);
+            throw error;
+          }
         },
       }}
     >
