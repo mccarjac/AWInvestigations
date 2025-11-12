@@ -191,10 +191,16 @@ export const CharacterDetailScreen: React.FC = () => {
     );
   };
 
-  const renderPerks = () => (
-    <Section title="Perks">
-      {AVAILABLE_PERKS.filter(perk => character.perkIds.includes(perk.id)).map(
-        perk => (
+  const renderPerks = () => {
+    if (!character.perkIds || character.perkIds.length === 0) {
+      return null;
+    }
+
+    return (
+      <Section title="Perks">
+        {AVAILABLE_PERKS.filter(perk =>
+          character.perkIds.includes(perk.id)
+        ).map(perk => (
           <View key={perk.id} style={styles.itemContainer}>
             <Text style={styles.titleText}>{perk.name}</Text>
             <Text style={styles.descriptionText}>{perk.description}</Text>
@@ -226,36 +232,50 @@ export const CharacterDetailScreen: React.FC = () => {
               </View>
             )}
           </View>
-        )
-      )}
-    </Section>
-  );
+        ))}
+      </Section>
+    );
+  };
 
-  const renderDistinctions = () => (
-    <Section title="Distinctions">
-      {AVAILABLE_DISTINCTIONS.filter(distinction =>
-        character.distinctionIds.includes(distinction.id)
-      ).map(distinction => (
-        <View key={distinction.id} style={styles.itemContainer}>
-          <Text style={styles.titleText}>{distinction.name}</Text>
-          <Text style={styles.descriptionText}>{distinction.description}</Text>
-        </View>
-      ))}
-    </Section>
-  );
+  const renderDistinctions = () => {
+    if (!character.distinctionIds || character.distinctionIds.length === 0) {
+      return null;
+    }
 
-  const renderFactions = () => (
-    <Section title="Factions">
-      {character.factions.map((faction, index) => (
-        <View key={index} style={styles.itemContainer}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.titleText}>{faction.name}</Text>
-            <Text style={styles.standingText}>{faction.standing}</Text>
+    return (
+      <Section title="Distinctions">
+        {AVAILABLE_DISTINCTIONS.filter(distinction =>
+          character.distinctionIds.includes(distinction.id)
+        ).map(distinction => (
+          <View key={distinction.id} style={styles.itemContainer}>
+            <Text style={styles.titleText}>{distinction.name}</Text>
+            <Text style={styles.descriptionText}>
+              {distinction.description}
+            </Text>
           </View>
-        </View>
-      ))}
-    </Section>
-  );
+        ))}
+      </Section>
+    );
+  };
+
+  const renderFactions = () => {
+    if (!character.factions || character.factions.length === 0) {
+      return null;
+    }
+
+    return (
+      <Section title="Factions">
+        {character.factions.map((faction, index) => (
+          <View key={index} style={styles.itemContainer}>
+            <View style={styles.headerContainer}>
+              <Text style={styles.titleText}>{faction.name}</Text>
+              <Text style={styles.standingText}>{faction.standing}</Text>
+            </View>
+          </View>
+        ))}
+      </Section>
+    );
+  };
 
   const renderRelationships = () => {
     if (!character.relationships || character.relationships.length === 0) {
