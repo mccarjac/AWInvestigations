@@ -160,6 +160,11 @@ export default function App() {
                 fontSize: 18,
                 letterSpacing: 0.3,
               },
+              headerTitleContainerStyle: {
+                left: 60,
+                right: 120,
+              },
+              headerTitleAlign: 'center',
               cardStyle: {
                 backgroundColor: '#0F0F23',
               },
