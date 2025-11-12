@@ -310,6 +310,15 @@ export const headerButtonStyles = StyleSheet.create({
     ...shadows.small,
   },
 
+  delete: {
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.md,
+    backgroundColor: colors.accent.danger,
+    borderRadius: borderRadius.sm,
+    ...shadows.small,
+  },
+
   text: {
     color: colors.text.primary,
     fontSize: typography.fontSize.base,

@@ -5,15 +5,13 @@ import {
   StyleSheet,
   ViewStyle,
   ScrollViewProps,
-  TouchableOpacity,
-  Text,
   Alert,
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { commonStyles } from '@/styles/commonStyles';
 import { HeaderEditButton } from '@/components/common/HeaderEditButton';
-import { colors as themeColors } from '@/styles/theme';
+import { HeaderDeleteButton } from '@/components/common/HeaderDeleteButton';
 
 export interface BaseDetailScreenProps {
   children: ReactNode;
@@ -86,14 +84,7 @@ export function BaseDetailScreen({
         headerRight: () => (
           <View style={headerStyles.container}>
             {onEditPress && <HeaderEditButton onPress={onEditPress} />}
-            {deleteConfig && (
-              <TouchableOpacity
-                style={headerStyles.deleteButton}
-                onPress={handleDelete}
-              >
-                <Text style={headerStyles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            )}
+            {deleteConfig && <HeaderDeleteButton onPress={handleDelete} />}
           </View>
         ),
       });
@@ -128,17 +119,5 @@ const headerStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  deleteButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    backgroundColor: themeColors.status.error,
-    borderRadius: 6,
-  },
-  deleteButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
