@@ -22,7 +22,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseListScreen } from '@/components';
+import { BaseListScreen, HeaderAddButton } from '@/components';
 
 type NavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'CharacterList'>,
@@ -88,6 +88,10 @@ export const CharacterListScreen: React.FC = () => {
       await loadData();
     }
   }, [loadData]);
+
+  const handleSearchPress = useCallback(() => {
+    navigation.navigate('CharacterSearch');
+  }, [navigation]);
 
   const getFilteredCharacters = React.useCallback(() => {
     // First filter out retired characters
@@ -169,6 +173,20 @@ export const CharacterListScreen: React.FC = () => {
     </View>
   );
 
+  const renderHeaderRight = () => (
+    <View style={styles.headerRight}>
+      <TouchableOpacity
+        style={styles.headerSearchButton}
+        onPress={handleSearchPress}
+      >
+        <Text style={styles.headerSearchButtonText}>🔍</Text>
+      </TouchableOpacity>
+      <HeaderAddButton
+        onPress={() => navigation.navigate('CharacterForm', {})}
+      />
+    </View>
+  );
+
   return (
     <BaseListScreen
       data={filteredCharacters}
@@ -178,7 +196,7 @@ export const CharacterListScreen: React.FC = () => {
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search characters by name..."
       ListHeaderComponent={renderHeaderButtons()}
-      onAddPress={() => navigation.navigate('CharacterForm', {})}
+      headerRight={renderHeaderRight()}
       emptyStateTitle="No characters found"
       emptyStateSubtitle="Create a character to get started"
       contentContainerStyle={styles.listContentContainer}
@@ -227,4 +245,16 @@ const styles = StyleSheet.create({
   presentButtonActive: commonStyles.badge.present,
   presentText: commonStyles.badge.textMuted,
   presentTextActive: commonStyles.badge.text,
+  headerRight: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerSearchButton: {
+    ...commonStyles.headerButton.add,
+    marginRight: 4,
+  },
+  headerSearchButtonText: {
+    ...commonStyles.headerButton.addText,
+    fontSize: 20,
+  },
 });

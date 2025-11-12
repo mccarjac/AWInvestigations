@@ -115,14 +115,6 @@ function MainDrawer() {
         }}
       />
       <Drawer.Screen
-        name="CharacterSearch"
-        component={CharacterSearchScreen}
-        options={{
-          title: 'Search',
-          drawerLabel: 'Search Characters',
-        }}
-      />
-      <Drawer.Screen
         name="DataManagement"
         component={DataManagementScreen}
         options={{
@@ -186,6 +178,11 @@ export default function App() {
               name="CharacterForm"
               component={CharacterFormScreen}
               options={{ title: 'Character Form' }}
+            />
+            <Stack.Screen
+              name="CharacterSearch"
+              component={CharacterSearchScreen}
+              options={{ title: 'Search Characters' }}
             />
             <Stack.Screen
               name="FactionDetails"
