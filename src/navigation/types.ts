@@ -7,6 +7,7 @@ export type RootDrawerParamList = {
   Factions: undefined;
   Locations: undefined;
   Events: undefined;
+  InfluenceReport: undefined;
 };
 
 export type RootStackParamList = {

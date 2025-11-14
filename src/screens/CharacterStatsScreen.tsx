@@ -296,33 +296,6 @@ export const CharacterStatsScreen = () => {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionHeader}>Faction Membership</Text>
-              {Object.entries(stats.factionDistribution).map(
-                ([factionName, count]) => (
-                  <Text key={factionName} style={styles.factionMembershipText}>
-                    {factionName}: {count} characters
-                  </Text>
-                )
-              )}
-            </View>
-
-            <View style={styles.section}>
-              <Text style={styles.sectionHeader}>Faction Standings</Text>
-              {Object.entries(stats.factionStandings).map(
-                ([faction, standings]) => (
-                  <View key={faction} style={styles.factionItem}>
-                    <Text style={styles.factionName}>{faction}</Text>
-                    {Object.entries(standings).map(([standing, count]) => (
-                      <Text key={standing} style={styles.standingText}>
-                        {standing}: {count} character{count !== 1 ? 's' : ''}
-                      </Text>
-                    ))}
-                  </View>
-                )
-              )}
-            </View>
-
-            <View style={styles.section}>
               <Text style={styles.sectionHeader}>Most Common Perks</Text>
               {stats.commonPerks.map(({ name, count }) => (
                 <Text key={name} style={styles.listItemText}>
@@ -411,27 +384,6 @@ const styles = StyleSheet.create({
     ...commonStyles.text.h2,
     marginBottom: 16,
   },
-  factionItem: {
-    marginVertical: 12,
-    paddingLeft: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: themeColors.accent.primary,
-    backgroundColor: themeColors.elevated,
-    padding: 12,
-    borderRadius: 8,
-  },
-  factionName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: themeColors.text.primary,
-  },
-  standingText: {
-    fontSize: 14,
-    color: themeColors.text.secondary,
-    marginLeft: 8,
-    marginVertical: 2,
-  },
   chartContainer: {
     alignItems: 'center',
     marginVertical: 16,
@@ -519,12 +471,6 @@ const styles = StyleSheet.create({
   legendTextSelected: {
     fontWeight: '600',
     color: themeColors.text.primary,
-  },
-  factionMembershipText: {
-    fontSize: 15,
-    color: themeColors.text.primary,
-    marginVertical: 4,
-    fontWeight: '500',
   },
   listItemText: {
     fontSize: 15,

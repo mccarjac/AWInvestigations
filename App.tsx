@@ -23,6 +23,7 @@ import { LocationMapScreen } from './src/screens/location/LocationMapScreen';
 import { EventsTimelineScreen } from './src/screens/events/EventsListScreen';
 import { EventsFormScreen } from './src/screens/events/EventsFormScreen';
 import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
+import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from './src/components';
 
@@ -112,6 +113,14 @@ function MainDrawer() {
         options={{
           title: 'Statistics',
           drawerLabel: 'Statistics',
+        }}
+      />
+      <Drawer.Screen
+        name="InfluenceReport"
+        component={InfluenceReportScreen}
+        options={{
+          title: 'Influence Report',
+          drawerLabel: 'Influence Report',
         }}
       />
       <Drawer.Screen
