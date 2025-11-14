@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import {
   RootStackParamList,
   RootDrawerParamList,
@@ -134,6 +134,20 @@ const appStyles = StyleSheet.create({
 
 // Root stack navigator for the entire app
 export default function App() {
+  const { width: screenWidth } = useWindowDimensions();
+
+  // Calculate max title width dynamically based on screen size
+  // Reserve space for: back button (~44px), right buttons (~90px), padding (~40px)
+  const headerTitleMaxWidth = useMemo(() => {
+    const BACK_BUTTON_WIDTH = 44;
+    const RIGHT_BUTTONS_WIDTH = 90;
+    const PADDING_MARGINS = 100;
+    const reservedSpace =
+      BACK_BUTTON_WIDTH + RIGHT_BUTTONS_WIDTH + PADDING_MARGINS;
+
+    return screenWidth - reservedSpace;
+  }, [screenWidth]);
+
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={appStyles.root}>
@@ -151,12 +165,9 @@ export default function App() {
                 fontWeight: '600',
                 fontSize: 18,
                 letterSpacing: 0.3,
+                maxWidth: headerTitleMaxWidth,
               },
-              headerTitleContainerStyle: {
-                left: 60,
-                right: 120,
-              },
-              headerTitleAlign: 'center',
+              headerTitleAlign: 'left',
               cardStyle: {
                 backgroundColor: '#0F0F23',
               },

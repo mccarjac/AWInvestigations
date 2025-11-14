@@ -77,14 +77,18 @@ export function BaseDetailScreen({
   useLayoutEffect(() => {
     if (headerRight) {
       navigation.setOptions({
-        headerRight: () => <>{headerRight}</>,
+        headerRight: () => (
+          <View style={headerStyles.rightContainer}>{headerRight}</View>
+        ),
       });
     } else if (onEditPress || deleteConfig) {
       navigation.setOptions({
         headerRight: () => (
-          <View style={headerStyles.container}>
-            {onEditPress && <HeaderEditButton onPress={onEditPress} />}
-            {deleteConfig && <HeaderDeleteButton onPress={handleDelete} />}
+          <View style={headerStyles.rightContainer}>
+            <View style={headerStyles.container}>
+              {onEditPress && <HeaderEditButton onPress={onEditPress} />}
+              {deleteConfig && <HeaderDeleteButton onPress={handleDelete} />}
+            </View>
           </View>
         ),
       });
@@ -115,6 +119,12 @@ const styles = StyleSheet.create({
 });
 
 const headerStyles = StyleSheet.create({
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 8,
+    minWidth: 90,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
