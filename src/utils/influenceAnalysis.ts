@@ -111,15 +111,27 @@ export const getTopInfluencers = (
 
 /**
  * Analyze faction influence based on members and their connections
+ * Excludes retired factions from the analysis
  */
-export const analyzeFactionInfluence = (
+export const analyzeFactionInfluence = async (
   characters: GameCharacter[]
-): FactionInfluence[] => {
+): Promise<FactionInfluence[]> => {
+  // Load factions to check retirement status
+  const { loadFactions } = await import('@utils/characterStorage');
+  const storedFactions = await loadFactions();
+  const retiredFactions = new Set(
+    storedFactions.filter(f => f.retired).map(f => f.name)
+  );
+
   const factionMap = new Map<string, GameCharacter[]>();
 
-  // Group characters by faction
+  // Group characters by faction, excluding retired factions
   characters.forEach(char => {
     char.factions?.forEach(faction => {
+      // Skip retired factions
+      if (retiredFactions.has(faction.name)) {
+        return;
+      }
       if (!factionMap.has(faction.name)) {
         factionMap.set(faction.name, []);
       }
