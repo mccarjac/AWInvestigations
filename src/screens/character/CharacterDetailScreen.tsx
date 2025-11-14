@@ -547,7 +547,6 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.surface,
     borderBottomWidth: 2,
     borderBottomColor: themeColors.border,
-    marginHorizontal: 16,
     borderRadius: 16,
     marginBottom: 16,
     borderWidth: 1,

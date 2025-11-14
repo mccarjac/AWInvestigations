@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -34,14 +34,13 @@ const getAllTags = (): PerkTag[] => {
   const tagSet = new Set(AVAILABLE_PERKS.map(perk => perk.tag));
   return Array.from(tagSet);
 };
-import { loadCharacters, loadFactions } from '@/utils/characterStorage';
+import { loadCharacters } from '@/utils/characterStorage';
 
 interface SearchCriteria {
   perkId?: PerkId;
   distinctionId?: DistinctionId;
   tag?: PerkTag;
   minTagScore?: number;
-  factionName?: string;
   factionStanding?: RelationshipStanding;
   recipeId?: RecipeId;
   presentStatus?: 'present' | 'absent' | 'any';
@@ -55,17 +54,6 @@ export const CharacterSearchScreen: React.FC = () => {
     retiredStatus: 'active', // Default to searching only active (non-retired) characters
   });
   const [searchResults, setSearchResults] = useState<GameCharacter[]>([]);
-  const [availableFactions, setAvailableFactions] = useState<string[]>([]);
-
-  // Load factions on mount
-  useEffect(() => {
-    const loadAvailableFactions = async () => {
-      const factions = await loadFactions();
-      const factionNames = factions.map(f => f.name).sort();
-      setAvailableFactions(factionNames);
-    };
-    loadAvailableFactions();
-  }, []);
 
   const calculateTagScore = (
     character: GameCharacter,
@@ -114,28 +102,6 @@ export const CharacterSearchScreen: React.FC = () => {
       if (searchCriteria.tag && searchCriteria.minTagScore) {
         const tagScore = calculateTagScore(character, searchCriteria.tag);
         if (tagScore < searchCriteria.minTagScore) {
-          return false;
-        }
-      }
-
-      // Check faction
-      if (searchCriteria.factionName || searchCriteria.factionStanding) {
-        const matchingFaction = character.factions.find(faction => {
-          if (
-            searchCriteria.factionName &&
-            faction.name !== searchCriteria.factionName
-          ) {
-            return false;
-          }
-          if (
-            searchCriteria.factionStanding &&
-            faction.standing !== searchCriteria.factionStanding
-          ) {
-            return false;
-          }
-          return true;
-        });
-        if (!matchingFaction) {
           return false;
         }
       }
@@ -278,46 +244,6 @@ export const CharacterSearchScreen: React.FC = () => {
         </View>
 
         <View style={styles.criteriaItem}>
-          <Text style={styles.label}>Faction</Text>
-          <View style={styles.factionContainer}>
-            <Picker
-              selectedValue={searchCriteria.factionName}
-              style={[styles.picker, { flex: 2 }]}
-              onValueChange={value =>
-                setSearchCriteria(prev => ({
-                  ...prev,
-                  factionName: value || undefined,
-                }))
-              }
-            >
-              <Picker.Item label="Any Faction" value="" />
-              {availableFactions.map(factionName => (
-                <Picker.Item
-                  key={factionName}
-                  label={factionName}
-                  value={factionName}
-                />
-              ))}
-            </Picker>
-            <Picker
-              selectedValue={searchCriteria.factionStanding}
-              style={[styles.picker, { flex: 1 }]}
-              onValueChange={value =>
-                setSearchCriteria(prev => ({
-                  ...prev,
-                  factionStanding: value || undefined,
-                }))
-              }
-            >
-              <Picker.Item label="Any Standing" value="" />
-              {Object.values(RelationshipStanding).map(standing => (
-                <Picker.Item key={standing} label={standing} value={standing} />
-              ))}
-            </Picker>
-          </View>
-        </View>
-
-        <View style={styles.criteriaItem}>
           <Text style={styles.label}>Present Status</Text>
           <Picker
             selectedValue={searchCriteria.presentStatus || 'any'}
@@ -432,11 +358,6 @@ const styles = StyleSheet.create({
   },
   input: commonStyles.input.base,
   tagScoreContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  factionContainer: {
     flexDirection: 'row',
     gap: 12,
     alignItems: 'center',

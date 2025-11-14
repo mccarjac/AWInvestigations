@@ -120,9 +120,13 @@ export const EventsDetailScreen: React.FC = () => {
         </View>
       )}
 
+      <Section title="Title">
+        <Text style={styles.bodyText}>{event.title}</Text>
+      </Section>
+
       {/* Date and Time */}
       <Section title="Date & Time">
-        <Text style={styles.dateText}>
+        <Text style={styles.bodyText}>
           {formatDate(event.date, event.time)}
         </Text>
       </Section>
@@ -218,12 +222,6 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 12,
     backgroundColor: themeColors.elevated,
-  },
-  dateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: themeColors.text.primary,
-    lineHeight: 24,
   },
   bodyText: {
     fontSize: 16,

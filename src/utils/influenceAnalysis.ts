@@ -67,14 +67,6 @@ export const calculateCharacterInfluence = (
   const factionCount = character.factions?.length || 0;
   influenceScore += factionCount * 5; // Each faction adds 5 points
 
-  // Being referenced by other characters adds influence (reverse relationships)
-  /*
-  const referencedByCount = allCharacters.filter(otherChar =>
-    otherChar.relationships?.some(rel => rel.characterName === character.name)
-  ).length;
-  influenceScore += referencedByCount * 4; // Being referenced is worth 4 points
-  */
-
   // Get list of all connections (people they know or who know them)
   const connections = new Set<string>();
   character.relationships?.forEach(rel => {
