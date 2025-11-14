@@ -86,7 +86,13 @@ export const EventsFormScreen: React.FC = () => {
       setLocations(
         loadedLocations.sort((a, b) => a.name.localeCompare(b.name))
       );
-      setFactions(loadedFactions.map(f => f.name).sort());
+      // Exclude retired factions from events
+      setFactions(
+        loadedFactions
+          .filter(f => !f.retired)
+          .map(f => f.name)
+          .sort()
+      );
     };
     loadData();
   }, []);

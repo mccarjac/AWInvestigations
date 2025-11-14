@@ -35,11 +35,13 @@ interface FactionInfo {
   totalCount: number;
   presentCount: number;
   standingCounts: Record<string, number>;
+  retired?: boolean;
 }
 
 export const FactionListScreen: React.FC = () => {
   const [factionInfos, setFactionInfos] = useState<FactionInfo[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showRetired, setShowRetired] = useState<boolean>(false);
   const navigation = useNavigation<FactionNavigationProp>();
 
   const loadData = useCallback(async () => {
@@ -60,7 +62,9 @@ export const FactionListScreen: React.FC = () => {
 
     // First, load centralized factions to ensure all created factions appear
     const storedFactions = await loadFactions();
+    const factionRetiredMap = new Map<string, boolean>();
     storedFactions.forEach(storedFaction => {
+      factionRetiredMap.set(storedFaction.name, storedFaction.retired ?? false);
       if (!factionMap.has(storedFaction.name)) {
         factionMap.set(storedFaction.name, {
           faction: {
@@ -118,6 +122,7 @@ export const FactionListScreen: React.FC = () => {
           totalCount: data.characters.length,
           presentCount: data.characters.filter(c => c.present === true).length,
           standingCounts: data.standings,
+          retired: factionRetiredMap.get(name) ?? false,
         };
       })
     );
@@ -139,6 +144,13 @@ export const FactionListScreen: React.FC = () => {
   const getFilteredFactions = useCallback(() => {
     let filtered = factionInfos;
 
+    // Filter by retired status
+    if (showRetired) {
+      filtered = filtered.filter(factionInfo => factionInfo.retired === true);
+    } else {
+      filtered = filtered.filter(factionInfo => !factionInfo.retired);
+    }
+
     // Filter by search query if provided
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
@@ -154,7 +166,7 @@ export const FactionListScreen: React.FC = () => {
     return filtered.sort((a, b) =>
       a.faction.name.localeCompare(b.faction.name)
     );
-  }, [factionInfos, searchQuery]);
+  }, [factionInfos, searchQuery, showRetired]);
 
   const filteredFactions = React.useMemo(
     () => getFilteredFactions(),
@@ -242,6 +254,28 @@ export const FactionListScreen: React.FC = () => {
     return styles.standingTextDark;
   };
 
+  const renderHeaderRight = () => (
+    <View style={styles.headerRight}>
+      <TouchableOpacity
+        style={[
+          styles.toggleButton,
+          showRetired ? styles.toggleButtonActive : styles.toggleButtonInactive,
+        ]}
+        onPress={() => setShowRetired(!showRetired)}
+      >
+        <Text style={styles.toggleButtonText}>
+          {showRetired ? 'Retired' : 'Active'}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate('FactionForm', {})}
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <BaseListScreen
       data={filteredFactions}
@@ -251,12 +285,52 @@ export const FactionListScreen: React.FC = () => {
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search factions by name..."
       emptyStateTitle="No factions found"
-      onAddPress={() => navigation.navigate('FactionForm', {})}
+      headerRight={renderHeaderRight()}
     />
   );
 };
 
 const styles = StyleSheet.create({
+  headerRight: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  toggleButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#6C5CE7',
+    borderColor: '#6C5CE7',
+  },
+  toggleButtonInactive: {
+    backgroundColor: 'transparent',
+    borderColor: '#6C5CE7',
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6C5CE7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonText: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 28,
+  },
   factionCard: commonStyles.card.base,
   factionContent: {
     flex: 1,

@@ -14,6 +14,7 @@ interface StoredFaction {
   description: string;
   imageUri?: string; // Deprecated: Use imageUris instead
   imageUris?: string[];
+  retired?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -793,7 +794,11 @@ export const loadFactions = async (): Promise<StoredFaction[]> => {
     );
   if (!dataset) return [];
 
-  return dataset.factions || [];
+  // Handle backward compatibility - set defaults for missing properties
+  return (dataset.factions || []).map(faction => ({
+    ...faction,
+    retired: faction.retired ?? false,
+  }));
 };
 
 export const getFactionDescription = async (
@@ -976,6 +981,24 @@ export const updateFaction = async (
   }
 
   return updatedFaction;
+};
+
+export const toggleFactionRetired = async (
+  factionName: string
+): Promise<boolean> => {
+  const factions = await loadFactions();
+  const index = factions.findIndex(f => f.name === factionName);
+
+  if (index === -1) return false;
+
+  factions[index] = {
+    ...factions[index],
+    retired: !factions[index].retired,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveFactions(factions);
+  return true;
 };
 
 // Migration function to move faction descriptions from character data to centralized storage

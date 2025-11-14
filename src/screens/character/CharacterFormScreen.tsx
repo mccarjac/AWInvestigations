@@ -112,10 +112,13 @@ export const CharacterFormScreen: React.FC = () => {
         });
       });
 
-      // Also load factions from centralized storage
+      // Also load factions from centralized storage (exclude retired)
       const storedFactions = await loadFactions();
       storedFactions.forEach(faction => {
-        factionNames.add(faction.name);
+        // Only add non-retired factions to available list
+        if (!faction.retired) {
+          factionNames.add(faction.name);
+        }
       });
 
       setAvailableFactions(Array.from(factionNames).sort());
