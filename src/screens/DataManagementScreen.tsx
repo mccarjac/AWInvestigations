@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,8 @@ import {
   Platform,
   ScrollView,
   Text,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { clearStorage } from '@utils/characterStorage';
 import {
@@ -18,7 +20,29 @@ import {
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
+interface ProgressState {
+  visible: boolean;
+  message: string;
+  operation: 'export' | 'import' | 'merge' | 'csv' | null;
+}
+
 export const DataManagementScreen: React.FC = () => {
+  const [progress, setProgress] = useState<ProgressState>({
+    visible: false,
+    message: '',
+    operation: null,
+  });
+
+  const showProgress = (
+    operation: 'export' | 'import' | 'merge' | 'csv',
+    message: string
+  ) => {
+    setProgress({ visible: true, message, operation });
+  };
+
+  const hideProgress = () => {
+    setProgress({ visible: false, message: '', operation: null });
+  };
   const handleClearAll = async () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
@@ -55,58 +79,75 @@ export const DataManagementScreen: React.FC = () => {
   };
 
   const handleExport = async () => {
-    await exportCharacterData();
+    showProgress('export', 'Exporting data...');
+    try {
+      await exportCharacterData();
+    } finally {
+      hideProgress();
+    }
   };
 
   const handleImport = async () => {
-    console.log('Import button clicked');
+    showProgress('import', 'Importing data...');
     try {
       const success = await importCharacterData();
-      console.log('Import result:', success);
+      hideProgress();
       if (success) {
-        console.log('Import successful');
         Alert.alert(
           'Success',
           'Character and faction data imported successfully.',
           [{ text: 'OK' }]
         );
       }
-    } catch (error) {
-      console.error('Import error:', error);
+    } catch {
+      hideProgress();
+      Alert.alert(
+        'Import Failed',
+        'An unexpected error occurred during import.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const handleMerge = async () => {
-    console.log('Merge button clicked');
+    showProgress('merge', 'Merging data...');
     try {
       const success = await mergeCharacterData();
-      console.log('Merge result:', success);
+      hideProgress();
       if (success) {
-        console.log('Merge successful');
         Alert.alert(
           'Success',
           'Character and faction data merged successfully.',
           [{ text: 'OK' }]
         );
       }
-    } catch (error) {
-      console.error('Merge error:', error);
+    } catch {
+      hideProgress();
+      Alert.alert(
+        'Merge Failed',
+        'An unexpected error occurred during merge.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const handleCSVImport = async () => {
-    console.log('CSV Import button clicked');
+    showProgress('csv', 'Importing CSV data...');
     try {
       const success = await importCSVCharacters();
-      console.log('CSV Import result:', success);
+      hideProgress();
       if (success) {
-        console.log('CSV Import successful');
         Alert.alert('Success', 'CSV data imported successfully.', [
           { text: 'OK' },
         ]);
       }
-    } catch (error) {
-      console.error('CSV Import error:', error);
+    } catch {
+      hideProgress();
+      Alert.alert(
+        'CSV Import Failed',
+        'An unexpected error occurred during CSV import.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -199,6 +240,25 @@ export const DataManagementScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Progress Modal */}
+      <Modal
+        visible={progress.visible}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator
+              size="large"
+              color={themeColors.accent.primary}
+            />
+            <Text style={styles.modalText}>{progress.message}</Text>
+            <Text style={styles.modalSubText}>Please wait...</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -235,4 +295,30 @@ const styles = StyleSheet.create({
   },
   clearButton: commonStyles.button.danger,
   buttonText: commonStyles.button.text,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: themeColors.surface,
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 280,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  modalText: {
+    ...commonStyles.text.h3,
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  modalSubText: {
+    ...commonStyles.text.body,
+    marginTop: 8,
+    textAlign: 'center',
+    color: themeColors.text.muted,
+  },
 });
