@@ -9,6 +9,7 @@ import {
   Text,
   Modal,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { clearStorage, importDataset } from '@utils/characterStorage';
 import {
@@ -20,8 +21,10 @@ import {
 import {
   exportToGitHub,
   importFromGitHub,
-  showGitHubTokenDialog,
   isGitHubConfigured,
+  verifyGitHubToken,
+  saveGitHubConfig,
+  getGitHubConfig,
 } from '@utils/gitIntegration';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -46,6 +49,9 @@ export const DataManagementScreen: React.FC = () => {
     operation: null,
   });
   const [gitHubConfigured, setGitHubConfigured] = useState<boolean>(false);
+  const [tokenDialogVisible, setTokenDialogVisible] = useState<boolean>(false);
+  const [tokenInput, setTokenInput] = useState<string>('');
+  const [tokenValidating, setTokenValidating] = useState<boolean>(false);
 
   // Check GitHub configuration on mount
   React.useEffect(() => {
@@ -180,11 +186,42 @@ export const DataManagementScreen: React.FC = () => {
     }
   };
 
-  const handleGitHubSetup = async () => {
-    const token = await showGitHubTokenDialog();
-    if (token) {
-      setGitHubConfigured(true);
+  const handleGitHubSetup = () => {
+    setTokenInput('');
+    setTokenDialogVisible(true);
+  };
+
+  const handleTokenSave = async () => {
+    if (!tokenInput.trim()) {
+      Alert.alert('Error', 'Please enter a valid token.', [{ text: 'OK' }]);
+      return;
     }
+
+    setTokenValidating(true);
+    const isValid = await verifyGitHubToken(tokenInput.trim());
+
+    if (isValid) {
+      const config = await getGitHubConfig();
+      await saveGitHubConfig({ ...config, token: tokenInput.trim() });
+      setTokenValidating(false);
+      setTokenDialogVisible(false);
+      setGitHubConfigured(true);
+      Alert.alert('Success', 'GitHub token saved successfully!', [
+        { text: 'OK' },
+      ]);
+    } else {
+      setTokenValidating(false);
+      Alert.alert(
+        'Invalid Token',
+        'The token you entered is invalid. Please check and try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleTokenCancel = () => {
+    setTokenInput('');
+    setTokenDialogVisible(false);
   };
 
   const handleGitHubExport = async () => {
@@ -434,6 +471,65 @@ export const DataManagementScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* GitHub Token Input Modal */}
+      <Modal
+        visible={tokenDialogVisible}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.tokenModalContent}>
+            <Text style={styles.modalTitle}>GitHub Personal Access Token</Text>
+            <Text style={styles.tokenModalDescription}>
+              Enter your GitHub Personal Access Token with repo permissions. You
+              can create one at:
+            </Text>
+            <Text style={styles.tokenModalLink}>
+              https://github.com/settings/tokens
+            </Text>
+
+            <TextInput
+              style={styles.tokenInput}
+              value={tokenInput}
+              onChangeText={setTokenInput}
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              placeholderTextColor={themeColors.text.muted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={true}
+              editable={!tokenValidating}
+            />
+
+            {tokenValidating && (
+              <ActivityIndicator
+                size="small"
+                color={themeColors.accent.primary}
+                style={styles.tokenValidatingSpinner}
+              />
+            )}
+
+            <View style={styles.tokenModalButtons}>
+              <TouchableOpacity
+                style={[styles.tokenModalButton, styles.tokenModalCancelButton]}
+                onPress={handleTokenCancel}
+                disabled={tokenValidating}
+              >
+                <Text style={styles.tokenModalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.tokenModalButton, styles.tokenModalSaveButton]}
+                onPress={handleTokenSave}
+                disabled={tokenValidating}
+              >
+                <Text style={styles.tokenModalButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -508,5 +604,74 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
     color: themeColors.text.muted,
+  },
+  tokenModalContent: {
+    backgroundColor: themeColors.surface,
+    borderRadius: 16,
+    padding: 24,
+    minWidth: 320,
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  modalTitle: {
+    ...commonStyles.text.h3,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  tokenModalDescription: {
+    ...commonStyles.text.body,
+    marginBottom: 8,
+    textAlign: 'center',
+    color: themeColors.text.secondary,
+    lineHeight: 20,
+  },
+  tokenModalLink: {
+    ...commonStyles.text.body,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: themeColors.accent.info,
+    fontSize: 12,
+  },
+  tokenInput: {
+    backgroundColor: themeColors.elevated,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: themeColors.text.primary,
+    marginBottom: 16,
+    width: '100%',
+  },
+  tokenValidatingSpinner: {
+    marginBottom: 16,
+  },
+  tokenModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  tokenModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tokenModalCancelButton: {
+    backgroundColor: themeColors.elevated,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  tokenModalSaveButton: {
+    backgroundColor: themeColors.accent.primary,
+  },
+  tokenModalButtonText: {
+    ...commonStyles.text.body,
+    fontWeight: '600',
+    color: themeColors.text.primary,
   },
 });
