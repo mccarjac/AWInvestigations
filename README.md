@@ -1,5 +1,16 @@
 # AWIntelligence
 
+A React Native mobile application for managing tabletop RPG game data, including characters, factions, locations, and events.
+
+## Features
+
+- **Character Management**: Track character stats, skills, perks, and relationships
+- **Faction System**: Manage factions and character affiliations
+- **Location Tracking**: Create and assign locations to characters
+- **Event Timeline**: Track important game events
+- **Import/Export**: Share data via JSON, ZIP, or CSV files
+- **GitHub Integration**: Sync data with other users via GitHub repository (see [GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md))
+
 ## PRE-REQS
 
 - A linux based terminal (Linux subservice for Windows should suffice)

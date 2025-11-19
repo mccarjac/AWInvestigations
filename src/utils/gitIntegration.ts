@@ -74,6 +74,41 @@ export const verifyGitHubToken = async (token: string): Promise<boolean> => {
 };
 
 /**
+ * Check if the data repository exists and is accessible
+ */
+const verifyRepository = async (
+  octokit: Octokit
+): Promise<{ exists: boolean; error?: string }> => {
+  try {
+    await octokit.rest.repos.get({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+    });
+    return { exists: true };
+  } catch (error) {
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = (error as { status: number }).status;
+      if (status === 404) {
+        return {
+          exists: false,
+          error: `Repository ${DATA_REPO_OWNER}/${DATA_REPO_NAME} not found. Please ensure the repository exists and your token has access to it.`,
+        };
+      }
+      if (status === 403) {
+        return {
+          exists: false,
+          error: 'Access denied. Please check your token permissions.',
+        };
+      }
+    }
+    return {
+      exists: false,
+      error: 'Failed to verify repository access.',
+    };
+  }
+};
+
+/**
  * Export data to GitHub repository by creating a Pull Request
  */
 export const exportToGitHub = async (): Promise<{
@@ -87,6 +122,15 @@ export const exportToGitHub = async (): Promise<{
       return {
         success: false,
         error: 'GitHub token not configured. Please set up your token first.',
+      };
+    }
+
+    // Verify repository exists and is accessible
+    const repoCheck = await verifyRepository(octokit);
+    if (!repoCheck.exists) {
+      return {
+        success: false,
+        error: repoCheck.error || 'Repository verification failed.',
       };
     }
 
@@ -204,6 +248,15 @@ export const importFromGitHub = async (): Promise<{
       return {
         success: false,
         error: 'GitHub token not configured. Please set up your token first.',
+      };
+    }
+
+    // Verify repository exists and is accessible
+    const repoCheck = await verifyRepository(octokit);
+    if (!repoCheck.exists) {
+      return {
+        success: false,
+        error: repoCheck.error || 'Repository verification failed.',
       };
     }
 
