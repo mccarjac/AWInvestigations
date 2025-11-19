@@ -10,20 +10,33 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { clearStorage } from '@utils/characterStorage';
+import { clearStorage, importDataset } from '@utils/characterStorage';
 import {
   exportCharacterData,
   importCharacterData,
   mergeCharacterData,
   importCSVCharacters,
 } from '@utils/exportImport';
+import {
+  exportToGitHub,
+  importFromGitHub,
+  showGitHubTokenDialog,
+  isGitHubConfigured,
+} from '@utils/gitIntegration';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
 interface ProgressState {
   visible: boolean;
   message: string;
-  operation: 'export' | 'import' | 'merge' | 'csv' | null;
+  operation:
+    | 'export'
+    | 'import'
+    | 'merge'
+    | 'csv'
+    | 'git-export'
+    | 'git-import'
+    | null;
 }
 
 export const DataManagementScreen: React.FC = () => {
@@ -32,9 +45,25 @@ export const DataManagementScreen: React.FC = () => {
     message: '',
     operation: null,
   });
+  const [gitHubConfigured, setGitHubConfigured] = useState<boolean>(false);
+
+  // Check GitHub configuration on mount
+  React.useEffect(() => {
+    const checkConfig = async () => {
+      const configured = await isGitHubConfigured();
+      setGitHubConfigured(configured);
+    };
+    checkConfig();
+  }, []);
 
   const showProgress = (
-    operation: 'export' | 'import' | 'merge' | 'csv',
+    operation:
+      | 'export'
+      | 'import'
+      | 'merge'
+      | 'csv'
+      | 'git-export'
+      | 'git-import',
     message: string
   ) => {
     setProgress({ visible: true, message, operation });
@@ -151,6 +180,107 @@ export const DataManagementScreen: React.FC = () => {
     }
   };
 
+  const handleGitHubSetup = async () => {
+    const token = await showGitHubTokenDialog();
+    if (token) {
+      setGitHubConfigured(true);
+    }
+  };
+
+  const handleGitHubExport = async () => {
+    if (!gitHubConfigured) {
+      Alert.alert(
+        'GitHub Not Configured',
+        'Please set up your GitHub token first.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Set Up', onPress: handleGitHubSetup },
+        ]
+      );
+      return;
+    }
+
+    showProgress('git-export', 'Exporting to GitHub...');
+    try {
+      const result = await exportToGitHub();
+      hideProgress();
+
+      if (result.success && result.prUrl) {
+        Alert.alert(
+          'Export Successful',
+          `A pull request has been created with your data. You can review it at:\n\n${result.prUrl}`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Export Failed',
+          result.error || 'An unexpected error occurred',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      hideProgress();
+      Alert.alert(
+        'Export Failed',
+        `An unexpected error occurred during export: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleGitHubImport = async () => {
+    if (!gitHubConfigured) {
+      Alert.alert(
+        'GitHub Not Configured',
+        'Please set up your GitHub token first.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Set Up', onPress: handleGitHubSetup },
+        ]
+      );
+      return;
+    }
+
+    showProgress('git-import', 'Importing from GitHub...');
+    try {
+      const result = await importFromGitHub();
+
+      if (result.success && result.data) {
+        // Import the data
+        const importSuccess = await importDataset(result.data);
+        hideProgress();
+
+        if (importSuccess) {
+          Alert.alert(
+            'Import Successful',
+            'Data has been imported from the GitHub repository.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert(
+            'Import Failed',
+            'Failed to import the data. Please check the file format.',
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        hideProgress();
+        Alert.alert(
+          'Import Failed',
+          result.error || 'An unexpected error occurred',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      hideProgress();
+      Alert.alert(
+        'Import Failed',
+        `An unexpected error occurred during import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -224,6 +354,51 @@ export const DataManagementScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* GitHub Integration Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>GitHub Repository Sync</Text>
+          <Text style={styles.sectionDescription}>
+            Share data with other users through the AWInvestigationsDataLibrary
+            GitHub repository. Exports create pull requests for review.
+          </Text>
+
+          {!gitHubConfigured && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.setupButton]}
+              onPress={handleGitHubSetup}
+            >
+              <Text style={styles.buttonText}>Set Up GitHub Token</Text>
+            </TouchableOpacity>
+          )}
+
+          {gitHubConfigured && (
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.gitExportButton]}
+                onPress={handleGitHubExport}
+              >
+                <Text style={styles.buttonText}>
+                  Export to GitHub (Create PR)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.gitImportButton]}
+                onPress={handleGitHubImport}
+              >
+                <Text style={styles.buttonText}>Import from GitHub</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.setupButton]}
+                onPress={handleGitHubSetup}
+              >
+                <Text style={styles.buttonText}>Update GitHub Token</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
         {/* Danger Zone */}
         <View style={[styles.section, styles.dangerSection]}>
           <Text style={[styles.sectionTitle, styles.dangerTitle]}>
@@ -292,6 +467,19 @@ const styles = StyleSheet.create({
   csvImportButton: {
     backgroundColor: themeColors.elevated,
     borderColor: themeColors.accent.primary,
+  },
+  setupButton: {
+    backgroundColor: themeColors.elevated,
+    borderColor: themeColors.accent.secondary,
+    marginBottom: 12,
+  },
+  gitExportButton: {
+    backgroundColor: themeColors.accent.success,
+    marginBottom: 12,
+  },
+  gitImportButton: {
+    backgroundColor: themeColors.accent.info,
+    marginBottom: 12,
   },
   clearButton: commonStyles.button.danger,
   buttonText: commonStyles.button.text,
