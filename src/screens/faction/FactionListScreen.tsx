@@ -22,7 +22,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseListScreen } from '@/components';
+import { BaseListScreen, HeaderAddButton } from '@/components';
 
 type FactionNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Factions'>,
@@ -267,12 +267,9 @@ export const FactionListScreen: React.FC = () => {
           {showRetired ? 'Retired' : 'Active'}
         </Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.addButton}
+      <HeaderAddButton
         onPress={() => navigation.navigate('FactionForm', {})}
-      >
-        <Text style={styles.addButtonText}>+</Text>
-      </TouchableOpacity>
+      />
     </View>
   );
 
@@ -316,20 +313,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#6C5CE7',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    lineHeight: 28,
   },
   factionCard: commonStyles.card.base,
   factionContent: {
