@@ -40,7 +40,7 @@ export const InfluenceReportScreen: React.FC = () => {
 
       // Calculate all analyses
       const influencers = getTopInfluencers(loadedCharacters, 10);
-      const factions = analyzeFactionInfluence(loadedCharacters);
+      const factions = await analyzeFactionInfluence(loadedCharacters);
       const connectors = findKeyConnectors(loadedCharacters, 5);
       const centers = findPowerCenters(loadedCharacters, 5);
 
