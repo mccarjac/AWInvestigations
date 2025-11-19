@@ -9,21 +9,37 @@ import {
   Text,
   Modal,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
-import { clearStorage } from '@utils/characterStorage';
+import { clearStorage, importDataset } from '@utils/characterStorage';
 import {
   exportCharacterData,
   importCharacterData,
   mergeCharacterData,
   importCSVCharacters,
 } from '@utils/exportImport';
+import {
+  exportToGitHub,
+  importFromGitHub,
+  isGitHubConfigured,
+  verifyGitHubToken,
+  saveGitHubConfig,
+  getGitHubConfig,
+} from '@utils/gitIntegration';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
 interface ProgressState {
   visible: boolean;
   message: string;
-  operation: 'export' | 'import' | 'merge' | 'csv' | null;
+  operation:
+    | 'export'
+    | 'import'
+    | 'merge'
+    | 'csv'
+    | 'git-export'
+    | 'git-import'
+    | null;
 }
 
 export const DataManagementScreen: React.FC = () => {
@@ -32,9 +48,28 @@ export const DataManagementScreen: React.FC = () => {
     message: '',
     operation: null,
   });
+  const [gitHubConfigured, setGitHubConfigured] = useState<boolean>(false);
+  const [tokenDialogVisible, setTokenDialogVisible] = useState<boolean>(false);
+  const [tokenInput, setTokenInput] = useState<string>('');
+  const [tokenValidating, setTokenValidating] = useState<boolean>(false);
+
+  // Check GitHub configuration on mount
+  React.useEffect(() => {
+    const checkConfig = async () => {
+      const configured = await isGitHubConfigured();
+      setGitHubConfigured(configured);
+    };
+    checkConfig();
+  }, []);
 
   const showProgress = (
-    operation: 'export' | 'import' | 'merge' | 'csv',
+    operation:
+      | 'export'
+      | 'import'
+      | 'merge'
+      | 'csv'
+      | 'git-export'
+      | 'git-import',
     message: string
   ) => {
     setProgress({ visible: true, message, operation });
@@ -151,6 +186,138 @@ export const DataManagementScreen: React.FC = () => {
     }
   };
 
+  const handleGitHubSetup = () => {
+    setTokenInput('');
+    setTokenDialogVisible(true);
+  };
+
+  const handleTokenSave = async () => {
+    if (!tokenInput.trim()) {
+      Alert.alert('Error', 'Please enter a valid token.', [{ text: 'OK' }]);
+      return;
+    }
+
+    setTokenValidating(true);
+    const isValid = await verifyGitHubToken(tokenInput.trim());
+
+    if (isValid) {
+      const config = await getGitHubConfig();
+      await saveGitHubConfig({ ...config, token: tokenInput.trim() });
+      setTokenValidating(false);
+      setTokenDialogVisible(false);
+      setGitHubConfigured(true);
+      Alert.alert('Success', 'GitHub token saved successfully!', [
+        { text: 'OK' },
+      ]);
+    } else {
+      setTokenValidating(false);
+      Alert.alert(
+        'Invalid Token',
+        'The token you entered is invalid. Please check and try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleTokenCancel = () => {
+    setTokenInput('');
+    setTokenDialogVisible(false);
+  };
+
+  const handleGitHubExport = async () => {
+    if (!gitHubConfigured) {
+      Alert.alert(
+        'GitHub Not Configured',
+        'Please set up your GitHub token first.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Set Up', onPress: handleGitHubSetup },
+        ]
+      );
+      return;
+    }
+
+    showProgress('git-export', 'Exporting to GitHub...');
+    try {
+      const result = await exportToGitHub();
+      hideProgress();
+
+      if (result.success && result.prUrl) {
+        Alert.alert(
+          'Export Successful',
+          `A pull request has been created with your data. You can review it at:\n\n${result.prUrl}`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Export Failed',
+          result.error || 'An unexpected error occurred',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      hideProgress();
+      Alert.alert(
+        'Export Failed',
+        `An unexpected error occurred during export: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleGitHubImport = async () => {
+    if (!gitHubConfigured) {
+      Alert.alert(
+        'GitHub Not Configured',
+        'Please set up your GitHub token first.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Set Up', onPress: handleGitHubSetup },
+        ]
+      );
+      return;
+    }
+
+    showProgress('git-import', 'Importing from GitHub...');
+    try {
+      const result = await importFromGitHub();
+
+      if (result.success && result.data) {
+        // Import the data
+        const importSuccess = await importDataset(result.data);
+        hideProgress();
+
+        if (importSuccess) {
+          Alert.alert(
+            'Import Successful',
+            'Data has been imported from the GitHub repository.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          Alert.alert(
+            'Import Failed',
+            'Failed to import the data. Please check the file format.',
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        hideProgress();
+        Alert.alert(
+          'Import Failed',
+          result.error || 'An unexpected error occurred',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      hideProgress();
+      Alert.alert(
+        'Import Failed',
+        `An unexpected error occurred during import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -224,6 +391,51 @@ export const DataManagementScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* GitHub Integration Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>GitHub Repository Sync</Text>
+          <Text style={styles.sectionDescription}>
+            Share data with other users through the AWInvestigationsDataLibrary
+            GitHub repository. Exports create pull requests for review.
+          </Text>
+
+          {!gitHubConfigured && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.setupButton]}
+              onPress={handleGitHubSetup}
+            >
+              <Text style={styles.buttonText}>Set Up GitHub Token</Text>
+            </TouchableOpacity>
+          )}
+
+          {gitHubConfigured && (
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.gitExportButton]}
+                onPress={handleGitHubExport}
+              >
+                <Text style={styles.buttonText}>
+                  Export to GitHub (Create PR)
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.gitImportButton]}
+                onPress={handleGitHubImport}
+              >
+                <Text style={styles.buttonText}>Import from GitHub</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.setupButton]}
+                onPress={handleGitHubSetup}
+              >
+                <Text style={styles.buttonText}>Update GitHub Token</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
         {/* Danger Zone */}
         <View style={[styles.section, styles.dangerSection]}>
           <Text style={[styles.sectionTitle, styles.dangerTitle]}>
@@ -256,6 +468,65 @@ export const DataManagementScreen: React.FC = () => {
             />
             <Text style={styles.modalText}>{progress.message}</Text>
             <Text style={styles.modalSubText}>Please wait...</Text>
+          </View>
+        </View>
+      </Modal>
+
+      {/* GitHub Token Input Modal */}
+      <Modal
+        visible={tokenDialogVisible}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.tokenModalContent}>
+            <Text style={styles.modalTitle}>GitHub Personal Access Token</Text>
+            <Text style={styles.tokenModalDescription}>
+              Enter your GitHub Personal Access Token with repo permissions. You
+              can create one at:
+            </Text>
+            <Text style={styles.tokenModalLink}>
+              https://github.com/settings/tokens
+            </Text>
+
+            <TextInput
+              style={styles.tokenInput}
+              value={tokenInput}
+              onChangeText={setTokenInput}
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+              placeholderTextColor={themeColors.text.muted}
+              autoCapitalize="none"
+              autoCorrect={false}
+              secureTextEntry={true}
+              editable={!tokenValidating}
+            />
+
+            {tokenValidating && (
+              <ActivityIndicator
+                size="small"
+                color={themeColors.accent.primary}
+                style={styles.tokenValidatingSpinner}
+              />
+            )}
+
+            <View style={styles.tokenModalButtons}>
+              <TouchableOpacity
+                style={[styles.tokenModalButton, styles.tokenModalCancelButton]}
+                onPress={handleTokenCancel}
+                disabled={tokenValidating}
+              >
+                <Text style={styles.tokenModalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.tokenModalButton, styles.tokenModalSaveButton]}
+                onPress={handleTokenSave}
+                disabled={tokenValidating}
+              >
+                <Text style={styles.tokenModalButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -293,6 +564,19 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.elevated,
     borderColor: themeColors.accent.primary,
   },
+  setupButton: {
+    backgroundColor: themeColors.elevated,
+    borderColor: themeColors.accent.secondary,
+    marginBottom: 12,
+  },
+  gitExportButton: {
+    backgroundColor: themeColors.accent.success,
+    marginBottom: 12,
+  },
+  gitImportButton: {
+    backgroundColor: themeColors.accent.info,
+    marginBottom: 12,
+  },
   clearButton: commonStyles.button.danger,
   buttonText: commonStyles.button.text,
   modalOverlay: {
@@ -320,5 +604,74 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
     color: themeColors.text.muted,
+  },
+  tokenModalContent: {
+    backgroundColor: themeColors.surface,
+    borderRadius: 16,
+    padding: 24,
+    minWidth: 320,
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  modalTitle: {
+    ...commonStyles.text.h3,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  tokenModalDescription: {
+    ...commonStyles.text.body,
+    marginBottom: 8,
+    textAlign: 'center',
+    color: themeColors.text.secondary,
+    lineHeight: 20,
+  },
+  tokenModalLink: {
+    ...commonStyles.text.body,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: themeColors.accent.info,
+    fontSize: 12,
+  },
+  tokenInput: {
+    backgroundColor: themeColors.elevated,
+    borderColor: themeColors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: themeColors.text.primary,
+    marginBottom: 16,
+    width: '100%',
+  },
+  tokenValidatingSpinner: {
+    marginBottom: 16,
+  },
+  tokenModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  tokenModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tokenModalCancelButton: {
+    backgroundColor: themeColors.elevated,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  tokenModalSaveButton: {
+    backgroundColor: themeColors.accent.primary,
+  },
+  tokenModalButtonText: {
+    ...commonStyles.text.body,
+    fontWeight: '600',
+    color: themeColors.text.primary,
   },
 });
