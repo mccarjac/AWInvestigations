@@ -12,6 +12,22 @@ const DATA_REPO_NAME = 'AWInvestigationsDataLibrary';
 const DATA_REPO_BRANCH = 'main';
 
 /**
+ * Extract image data from a data URI
+ */
+const extractImageData = (
+  dataUri: string
+): { mimeType: string; base64Data: string; extension: string } | null => {
+  const matches = dataUri.match(/^data:([^;]+);base64,(.+)$/);
+  if (!matches) return null;
+
+  const mimeType = matches[1];
+  const base64Data = matches[2];
+  const extension = mimeType.split('/')[1] || 'jpg';
+
+  return { mimeType, base64Data, extension };
+};
+
+/**
  * GitHub configuration storage keys
  */
 const GITHUB_CONFIG_KEY = '@github_config';
@@ -179,19 +195,210 @@ export const exportToGitHub = async (): Promise<{
       // File doesn't exist, that's fine
     }
 
-    // Create or update the file
+    // Process and upload images
+    const imageFiles: Array<{
+      path: string;
+      content: string;
+      entityType: string;
+      entityId: string;
+    }> = [];
+
+    // Helper function to process images for an entity
+    const processEntityImages = async (
+      entity: any,
+      entityType: 'characters' | 'locations' | 'events' | 'factions',
+      entityId: string
+    ) => {
+      const images: string[] = [];
+
+      // Handle multiple images
+      if (entity.imageUris && entity.imageUris.length > 0) {
+        for (let i = 0; i < entity.imageUris.length; i++) {
+          const uri = entity.imageUris[i];
+          if (uri) {
+            if (uri.startsWith('data:')) {
+              // Handle base64 data URI
+              const imageData = extractImageData(uri);
+              if (imageData) {
+                const filename = `images/${entityType}/${entityId}_${i}.${imageData.extension}`;
+                imageFiles.push({
+                  path: filename,
+                  content: imageData.base64Data,
+                  entityType,
+                  entityId,
+                });
+                images.push(filename);
+              }
+            } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+              // Handle file URI - read file and convert to base64
+              try {
+                const fileUri = uri.startsWith('file://')
+                  ? uri
+                  : `file://${uri}`;
+                const base64Data = await FileSystem.readAsStringAsync(fileUri, {
+                  encoding: FileSystem.EncodingType.Base64,
+                });
+                const extension = uri.split('.').pop()?.toLowerCase() || 'jpg';
+                const filename = `images/${entityType}/${entityId}_${i}.${extension}`;
+                imageFiles.push({
+                  path: filename,
+                  content: base64Data,
+                  entityType,
+                  entityId,
+                });
+                images.push(filename);
+              } catch (error) {
+                console.error(`Failed to read image file: ${uri}`, error);
+                // Skip this image if we can't read it
+              }
+            }
+          }
+        }
+      }
+      // Handle legacy single image
+      else if (entity.imageUri) {
+        const uri = entity.imageUri;
+        if (uri.startsWith('data:')) {
+          const imageData = extractImageData(uri);
+          if (imageData) {
+            const filename = `images/${entityType}/${entityId}.${imageData.extension}`;
+            imageFiles.push({
+              path: filename,
+              content: imageData.base64Data,
+              entityType,
+              entityId,
+            });
+            images.push(filename);
+          }
+        } else if (uri.startsWith('file://') || uri.startsWith('/')) {
+          try {
+            const fileUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+            const base64Data = await FileSystem.readAsStringAsync(fileUri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            const extension = uri.split('.').pop()?.toLowerCase() || 'jpg';
+            const filename = `images/${entityType}/${entityId}.${extension}`;
+            imageFiles.push({
+              path: filename,
+              content: base64Data,
+              entityType,
+              entityId,
+            });
+            images.push(filename);
+          } catch (error) {
+            console.error(`Failed to read image file: ${uri}`, error);
+          }
+        }
+      }
+
+      return images;
+    };
+
+    // Process images for all entities
+    let totalImages = 0;
+    if (dataset.characters) {
+      for (const character of dataset.characters) {
+        const images = await processEntityImages(
+          character,
+          'characters',
+          character.id
+        );
+        if (images.length > 0) {
+          character.imageUris = images;
+          character.imageUri = images[0];
+          totalImages += images.length;
+        }
+      }
+    }
+
+    if (dataset.locations) {
+      for (const location of dataset.locations) {
+        const images = await processEntityImages(
+          location,
+          'locations',
+          location.id
+        );
+        if (images.length > 0) {
+          location.imageUris = images;
+          location.imageUri = images[0];
+          totalImages += images.length;
+        }
+      }
+    }
+
+    if (dataset.events) {
+      for (const event of dataset.events) {
+        const images = await processEntityImages(event, 'events', event.id);
+        if (images.length > 0) {
+          event.imageUris = images;
+          event.imageUri = images[0];
+          totalImages += images.length;
+        }
+      }
+    }
+
+    if (dataset.factions) {
+      for (const faction of dataset.factions) {
+        const safeName = faction.name.replace(/[^a-zA-Z0-9]/g, '_');
+        const images = await processEntityImages(faction, 'factions', safeName);
+        if (images.length > 0) {
+          faction.imageUris = images;
+          faction.imageUri = images[0];
+          totalImages += images.length;
+        }
+      }
+    }
+
+    // Update data.json with modified paths
+    const updatedDataContent = Buffer.from(
+      JSON.stringify(dataset, null, 2)
+    ).toString('base64');
+
+    // Create or update the data.json file
     await octokit.rest.repos.createOrUpdateFileContents({
       owner: DATA_REPO_OWNER,
       repo: DATA_REPO_NAME,
       path: 'data.json',
       message: `Data export by ${user.login} on ${new Date().toISOString()}`,
-      content: dataContent,
+      content: updatedDataContent,
       branch: branchName,
       sha: fileSha,
     });
 
-    // TODO: Handle image files - for now, we'll just export the JSON data
-    // Images could be uploaded separately or as a zip file
+    // Upload all image files to the repository
+    for (const imageFile of imageFiles) {
+      try {
+        // Check if file already exists
+        let imageSha: string | undefined;
+        try {
+          const { data: existingImage } = await octokit.rest.repos.getContent({
+            owner: DATA_REPO_OWNER,
+            repo: DATA_REPO_NAME,
+            path: imageFile.path,
+            ref: branchName,
+          });
+          if ('sha' in existingImage) {
+            imageSha = existingImage.sha;
+          }
+        } catch {
+          // File doesn't exist, that's fine
+        }
+
+        // Upload the image
+        await octokit.rest.repos.createOrUpdateFileContents({
+          owner: DATA_REPO_OWNER,
+          repo: DATA_REPO_NAME,
+          path: imageFile.path,
+          message: `Add image for ${imageFile.entityType}/${imageFile.entityId}`,
+          content: imageFile.content,
+          branch: branchName,
+          sha: imageSha,
+        });
+      } catch (error) {
+        console.error(`Failed to upload image ${imageFile.path}:`, error);
+        // Continue with other images even if one fails
+      }
+    }
 
     // Create Pull Request
     const { data: pr } = await octokit.rest.pulls.create({
@@ -209,6 +416,7 @@ export const exportToGitHub = async (): Promise<{
 - Factions: ${dataset.factions?.length || 0}
 - Locations: ${dataset.locations?.length || 0}
 - Events: ${dataset.events?.length || 0}
+- Images: ${totalImages}
 
 Please review the changes before merging.`,
     });
@@ -270,6 +478,139 @@ export const importFromGitHub = async (): Promise<{
 
     if ('content' in file) {
       const content = Buffer.from(file.content, 'base64').toString('utf-8');
+      const dataset = JSON.parse(content);
+
+      // Create permanent image directories
+      const permanentImageDir = FileSystem.documentDirectory + 'images/';
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'characters/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'locations/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'events/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'factions/', {
+        intermediates: true,
+      });
+
+      // Helper function to download and save images
+      const downloadImages = async (
+        imagePaths: string[]
+      ): Promise<string[]> => {
+        const localPaths: string[] = [];
+
+        for (const imagePath of imagePaths) {
+          try {
+            // Fetch image from GitHub
+            const { data: imageFile } = await octokit.rest.repos.getContent({
+              owner: DATA_REPO_OWNER,
+              repo: DATA_REPO_NAME,
+              path: imagePath,
+              ref: DATA_REPO_BRANCH,
+            });
+
+            if ('content' in imageFile) {
+              // Save to local permanent storage
+              const filename = imagePath.split('/').pop() || 'image.jpg';
+              const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
+              const localPath = permanentImageDir + entityType + '/' + filename;
+
+              await FileSystem.writeAsStringAsync(
+                localPath,
+                imageFile.content,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+
+              localPaths.push(localPath);
+            }
+          } catch (error) {
+            console.error(`Failed to download image ${imagePath}:`, error);
+            // Continue with other images even if one fails
+          }
+        }
+
+        return localPaths;
+      };
+
+      // Process images for characters
+      if (dataset.characters) {
+        for (const character of dataset.characters) {
+          if (character.imageUris && character.imageUris.length > 0) {
+            const localPaths = await downloadImages(character.imageUris);
+            if (localPaths.length > 0) {
+              character.imageUris = localPaths;
+              character.imageUri = localPaths[0];
+            }
+          } else if (character.imageUri) {
+            const localPaths = await downloadImages([character.imageUri]);
+            if (localPaths.length > 0) {
+              character.imageUri = localPaths[0];
+              character.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Process images for locations
+      if (dataset.locations) {
+        for (const location of dataset.locations) {
+          if (location.imageUris && location.imageUris.length > 0) {
+            const localPaths = await downloadImages(location.imageUris);
+            if (localPaths.length > 0) {
+              location.imageUris = localPaths;
+              location.imageUri = localPaths[0];
+            }
+          } else if (location.imageUri) {
+            const localPaths = await downloadImages([location.imageUri]);
+            if (localPaths.length > 0) {
+              location.imageUri = localPaths[0];
+              location.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Process images for events
+      if (dataset.events) {
+        for (const event of dataset.events) {
+          if (event.imageUris && event.imageUris.length > 0) {
+            const localPaths = await downloadImages(event.imageUris);
+            if (localPaths.length > 0) {
+              event.imageUris = localPaths;
+              event.imageUri = localPaths[0];
+            }
+          } else if (event.imageUri) {
+            const localPaths = await downloadImages([event.imageUri]);
+            if (localPaths.length > 0) {
+              event.imageUri = localPaths[0];
+              event.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Process images for factions
+      if (dataset.factions) {
+        for (const faction of dataset.factions) {
+          if (faction.imageUris && faction.imageUris.length > 0) {
+            const localPaths = await downloadImages(faction.imageUris);
+            if (localPaths.length > 0) {
+              faction.imageUris = localPaths;
+              faction.imageUri = localPaths[0];
+            }
+          } else if (faction.imageUri) {
+            const localPaths = await downloadImages([faction.imageUri]);
+            if (localPaths.length > 0) {
+              faction.imageUri = localPaths[0];
+              faction.imageUris = localPaths;
+            }
+          }
+        }
+      }
 
       // Update last sync time
       const config = await getGitHubConfig();
@@ -280,7 +621,7 @@ export const importFromGitHub = async (): Promise<{
 
       return {
         success: true,
-        data: content,
+        data: JSON.stringify(dataset),
       };
     } else {
       return {
