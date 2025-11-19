@@ -366,25 +366,11 @@ export const exportToGitHub = async (): Promise<{
     });
 
     // Upload all image files to the repository
+    // Note: Since we're always creating a new branch, files won't exist yet,
+    // so we don't need to check for existing SHAs
     for (const imageFile of imageFiles) {
       try {
-        // Check if file already exists
-        let imageSha: string | undefined;
-        try {
-          const { data: existingImage } = await octokit.rest.repos.getContent({
-            owner: DATA_REPO_OWNER,
-            repo: DATA_REPO_NAME,
-            path: imageFile.path,
-            ref: branchName,
-          });
-          if ('sha' in existingImage) {
-            imageSha = existingImage.sha;
-          }
-        } catch {
-          // File doesn't exist, that's fine
-        }
-
-        // Upload the image
+        // Upload the image (no SHA needed for new files)
         await octokit.rest.repos.createOrUpdateFileContents({
           owner: DATA_REPO_OWNER,
           repo: DATA_REPO_NAME,
@@ -392,7 +378,6 @@ export const exportToGitHub = async (): Promise<{
           message: `Add image for ${imageFile.entityType}/${imageFile.entityId}`,
           content: imageFile.content,
           branch: branchName,
-          sha: imageSha,
         });
       } catch (error) {
         console.error(`Failed to upload image ${imageFile.path}:`, error);
