@@ -14,7 +14,7 @@ import {
 import {
   clearStorage,
   importDataset,
-  mergeDatasetWithConflictResolution,
+  threeWayMergeDataset,
 } from '@utils/characterStorage';
 import {
   exportCharacterData,
@@ -350,36 +350,54 @@ export const DataManagementScreen: React.FC = () => {
 
     showProgress('git-sync', 'Syncing from GitHub...');
     try {
+      // Get the last synced data for three-way merge
+      const config = await getGitHubConfig();
       const result = await syncFromGitHub();
 
       if (result.success && result.data) {
-        // Merge the data with conflict resolution
-        const mergeResult = await mergeDatasetWithConflictResolution(
+        // Use three-way merge with the last synced data as base
+        const mergeResult = await threeWayMergeDataset(
+          config.lastSyncedData,
           result.data
         );
         hideProgress();
 
         if (mergeResult.success) {
+          // Save the newly synced data as the base for next sync
+          await saveGitHubConfig({
+            ...config,
+            lastSyncedData: result.data,
+          });
+
           // Clear the update badge
           clearUpdateBadge();
 
-          if (mergeResult.conflicts.length > 0) {
+          const totalChanges = mergeResult.added + mergeResult.updated;
+          if (totalChanges > 0) {
             Alert.alert(
-              'Sync Complete with Conflicts',
-              `Successfully synced ${mergeResult.added.length} new items. Found ${mergeResult.conflicts.length} conflicts that were resolved automatically by merging compatible properties. Your local changes have been preserved.`,
+              'Sync Successful',
+              `Successfully synced from GitHub:\n• ${mergeResult.added} new items added\n• ${mergeResult.updated} items updated\n\nYour local changes have been preserved.`,
               [{ text: 'OK' }]
             );
           } else {
             Alert.alert(
-              'Sync Successful',
-              `Successfully synced ${mergeResult.added.length} new items from GitHub. Your local changes have been preserved.`,
+              'Sync Complete',
+              'Your data is already up to date with GitHub.',
               [{ text: 'OK' }]
             );
           }
         } else {
+          // Conflicts detected - user needs to export and merge manually
+          const conflictList = mergeResult.conflicts
+            .map(
+              c =>
+                `• ${c.entityName} (${c.entityType}): ${c.conflictingProperties.join(', ')}`
+            )
+            .join('\n');
+
           Alert.alert(
-            'Sync Failed',
-            'Failed to sync the data. Please check the file format.',
+            'Sync Conflicts Detected',
+            `Cannot automatically sync due to conflicts. Both you and the remote repository have modified the same data:\n\n${conflictList}\n\nTo resolve:\n1. Export your data to GitHub (creates a Pull Request)\n2. Have an administrator review and merge the changes\n3. Then import to get the merged data`,
             [{ text: 'OK' }]
           );
         }

@@ -36,6 +36,7 @@ interface GitHubConfig {
   token?: string;
   lastSync?: string;
   lastCommitSha?: string;
+  lastSyncedData?: string; // Store the data that was last synced for three-way merge
 }
 
 /**
@@ -601,17 +602,19 @@ export const importFromGitHub = async (): Promise<{
         }
       }
 
-      // Update last sync time and commit SHA
+      // Update last sync time, commit SHA, and store the synced data for three-way merge
+      const dataString = JSON.stringify(dataset);
       const config = await getGitHubConfig();
       await saveGitHubConfig({
         ...config,
         lastSync: new Date().toISOString(),
         lastCommitSha: latestCommitSha,
+        lastSyncedData: dataString,
       });
 
       return {
         success: true,
-        data: JSON.stringify(dataset),
+        data: dataString,
       };
     } else {
       return {
@@ -919,6 +922,7 @@ export const syncFromGitHub = async (): Promise<{
         }
       }
 
+      // Note: We don't update lastSyncedData here yet - that happens after successful merge
       // Update last sync time and commit SHA
       const config = await getGitHubConfig();
       await saveGitHubConfig({
