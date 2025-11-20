@@ -35,6 +35,7 @@ const GITHUB_CONFIG_KEY = '@github_config';
 interface GitHubConfig {
   token?: string;
   lastSync?: string;
+  lastCommitSha?: string;
 }
 
 /**
@@ -173,11 +174,6 @@ export const exportToGitHub = async (): Promise<{
     // Export all data
     const jsonData = await exportDataset();
     const dataset = JSON.parse(jsonData);
-
-    // Create/update data.json file
-    const dataContent = Buffer.from(JSON.stringify(dataset, null, 2)).toString(
-      'base64'
-    );
 
     // Check if file exists
     let fileSha: string | undefined;
@@ -453,6 +449,14 @@ export const importFromGitHub = async (): Promise<{
       };
     }
 
+    // Get the latest commit SHA from the main branch
+    const { data: ref } = await octokit.rest.git.getRef({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      ref: `heads/${DATA_REPO_BRANCH}`,
+    });
+    const latestCommitSha = ref.object.sha;
+
     // Fetch data.json from the main branch
     const { data: file } = await octokit.rest.repos.getContent({
       owner: DATA_REPO_OWNER,
@@ -597,11 +601,12 @@ export const importFromGitHub = async (): Promise<{
         }
       }
 
-      // Update last sync time
+      // Update last sync time and commit SHA
       const config = await getGitHubConfig();
       await saveGitHubConfig({
         ...config,
         lastSync: new Date().toISOString(),
+        lastCommitSha: latestCommitSha,
       });
 
       return {
@@ -675,4 +680,270 @@ export const showGitHubTokenDialog = (): Promise<string | null> => {
 export const isGitHubConfigured = async (): Promise<boolean> => {
   const config = await getGitHubConfig();
   return !!config.token;
+};
+
+/**
+ * Check if there are updates available on GitHub
+ */
+export const checkForGitHubUpdates = async (): Promise<{
+  hasUpdates: boolean;
+  latestCommitSha?: string;
+  error?: string;
+}> => {
+  try {
+    const octokit = await getOctokit();
+    if (!octokit) {
+      return {
+        hasUpdates: false,
+        error: 'GitHub token not configured.',
+      };
+    }
+
+    const config = await getGitHubConfig();
+    if (!config.lastCommitSha) {
+      // No previous sync, can't check for updates
+      return {
+        hasUpdates: false,
+      };
+    }
+
+    // Verify repository exists and is accessible
+    const repoCheck = await verifyRepository(octokit);
+    if (!repoCheck.exists) {
+      return {
+        hasUpdates: false,
+        error: repoCheck.error || 'Repository verification failed.',
+      };
+    }
+
+    // Get the latest commit SHA from the main branch
+    const { data: ref } = await octokit.rest.git.getRef({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      ref: `heads/${DATA_REPO_BRANCH}`,
+    });
+    const latestCommitSha = ref.object.sha;
+
+    // Check if there's a new commit
+    const hasUpdates = latestCommitSha !== config.lastCommitSha;
+
+    return {
+      hasUpdates,
+      latestCommitSha,
+    };
+  } catch (error) {
+    console.error('Check for updates failed:', error);
+    return {
+      hasUpdates: false,
+      error:
+        error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+};
+
+/**
+ * Sync data from GitHub repository (merges with local data instead of replacing)
+ */
+export const syncFromGitHub = async (): Promise<{
+  success: boolean;
+  data?: string;
+  error?: string;
+}> => {
+  try {
+    const octokit = await getOctokit();
+    if (!octokit) {
+      return {
+        success: false,
+        error: 'GitHub token not configured. Please set up your token first.',
+      };
+    }
+
+    // Verify repository exists and is accessible
+    const repoCheck = await verifyRepository(octokit);
+    if (!repoCheck.exists) {
+      return {
+        success: false,
+        error: repoCheck.error || 'Repository verification failed.',
+      };
+    }
+
+    // Get the latest commit SHA from the main branch
+    const { data: ref } = await octokit.rest.git.getRef({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      ref: `heads/${DATA_REPO_BRANCH}`,
+    });
+    const latestCommitSha = ref.object.sha;
+
+    // Fetch data.json from the main branch
+    const { data: file } = await octokit.rest.repos.getContent({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      path: 'data.json',
+      ref: DATA_REPO_BRANCH,
+    });
+
+    if ('content' in file) {
+      const content = Buffer.from(file.content, 'base64').toString('utf-8');
+      const dataset = JSON.parse(content);
+
+      // Create permanent image directories
+      const permanentImageDir = FileSystem.documentDirectory + 'images/';
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'characters/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'locations/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'events/', {
+        intermediates: true,
+      });
+      await FileSystem.makeDirectoryAsync(permanentImageDir + 'factions/', {
+        intermediates: true,
+      });
+
+      // Helper function to download and save images
+      const downloadImages = async (
+        imagePaths: string[]
+      ): Promise<string[]> => {
+        const localPaths: string[] = [];
+
+        for (const imagePath of imagePaths) {
+          try {
+            // Fetch image from GitHub
+            const { data: imageFile } = await octokit.rest.repos.getContent({
+              owner: DATA_REPO_OWNER,
+              repo: DATA_REPO_NAME,
+              path: imagePath,
+              ref: DATA_REPO_BRANCH,
+            });
+
+            if ('content' in imageFile) {
+              // Save to local permanent storage
+              const filename = imagePath.split('/').pop() || 'image.jpg';
+              const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
+              const localPath = permanentImageDir + entityType + '/' + filename;
+
+              await FileSystem.writeAsStringAsync(
+                localPath,
+                imageFile.content,
+                {
+                  encoding: FileSystem.EncodingType.Base64,
+                }
+              );
+
+              localPaths.push(localPath);
+            }
+          } catch (error) {
+            console.error(`Failed to download image ${imagePath}:`, error);
+            // Continue with other images even if one fails
+          }
+        }
+
+        return localPaths;
+      };
+
+      // Process images for characters
+      if (dataset.characters) {
+        for (const character of dataset.characters) {
+          if (character.imageUris && character.imageUris.length > 0) {
+            const localPaths = await downloadImages(character.imageUris);
+            if (localPaths.length > 0) {
+              character.imageUris = localPaths;
+              character.imageUri = localPaths[0];
+            }
+          } else if (character.imageUri) {
+            const localPaths = await downloadImages([character.imageUri]);
+            if (localPaths.length > 0) {
+              character.imageUri = localPaths[0];
+              character.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Process images for locations
+      if (dataset.locations) {
+        for (const location of dataset.locations) {
+          if (location.imageUris && location.imageUris.length > 0) {
+            const localPaths = await downloadImages(location.imageUris);
+            if (localPaths.length > 0) {
+              location.imageUris = localPaths;
+              location.imageUri = localPaths[0];
+            }
+          } else if (location.imageUri) {
+            const localPaths = await downloadImages([location.imageUri]);
+            if (localPaths.length > 0) {
+              location.imageUri = localPaths[0];
+              location.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Process images for events
+      if (dataset.events) {
+        for (const event of dataset.events) {
+          if (event.imageUris && event.imageUris.length > 0) {
+            const localPaths = await downloadImages(event.imageUris);
+            if (localPaths.length > 0) {
+              event.imageUris = localPaths;
+              event.imageUri = localPaths[0];
+            }
+          } else if (event.imageUri) {
+            const localPaths = await downloadImages([event.imageUri]);
+            if (localPaths.length > 0) {
+              event.imageUri = localPaths[0];
+              event.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Process images for factions
+      if (dataset.factions) {
+        for (const faction of dataset.factions) {
+          if (faction.imageUris && faction.imageUris.length > 0) {
+            const localPaths = await downloadImages(faction.imageUris);
+            if (localPaths.length > 0) {
+              faction.imageUris = localPaths;
+              faction.imageUri = localPaths[0];
+            }
+          } else if (faction.imageUri) {
+            const localPaths = await downloadImages([faction.imageUri]);
+            if (localPaths.length > 0) {
+              faction.imageUri = localPaths[0];
+              faction.imageUris = localPaths;
+            }
+          }
+        }
+      }
+
+      // Update last sync time and commit SHA
+      const config = await getGitHubConfig();
+      await saveGitHubConfig({
+        ...config,
+        lastSync: new Date().toISOString(),
+        lastCommitSha: latestCommitSha,
+      });
+
+      // Return data for merging (not direct import)
+      return {
+        success: true,
+        data: JSON.stringify(dataset),
+      };
+    } else {
+      return {
+        success: false,
+        error: 'File not found or is a directory',
+      };
+    }
+  } catch (error) {
+    console.error('Sync from GitHub failed:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
 };
