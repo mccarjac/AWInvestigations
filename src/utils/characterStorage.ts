@@ -738,6 +738,421 @@ export const mergeDatasetWithConflictResolution = async (
   }
 };
 
+/**
+ * Three-way merge for syncing with GitHub
+ * Compares current local state, previous synced state (base), and new remote state
+ * Returns conflicts that require manual resolution
+ */
+export const threeWayMergeDataset = async (
+  baseDataJson: string | undefined,
+  remoteDataJson: string
+): Promise<{
+  success: boolean;
+  conflicts: Array<{
+    entityType: 'character' | 'faction' | 'location' | 'event';
+    entityId: string;
+    entityName: string;
+    conflictingProperties: string[];
+  }>;
+  added: number;
+  updated: number;
+}> => {
+  try {
+    const currentData = await loadCharacters();
+    const currentFactions = await loadFactions();
+    const currentLocations = await loadLocations();
+    const currentEvents = await loadEvents();
+
+    const remoteData = JSON.parse(remoteDataJson);
+    const baseData = baseDataJson ? JSON.parse(baseDataJson) : null;
+
+    const conflicts: Array<{
+      entityType: 'character' | 'faction' | 'location' | 'event';
+      entityId: string;
+      entityName: string;
+      conflictingProperties: string[];
+    }> = [];
+
+    let added = 0;
+    let updated = 0;
+
+    // Helper to detect if a property changed
+    const hasChanged = (baseValue: any, currentValue: any): boolean => {
+      if (Array.isArray(baseValue) && Array.isArray(currentValue)) {
+        return JSON.stringify(baseValue) !== JSON.stringify(currentValue);
+      }
+      return baseValue !== currentValue;
+    };
+
+    // Helper to find conflicts in simple properties
+    const findPropertyConflicts = (
+      base: any,
+      local: any,
+      remote: any,
+      properties: string[]
+    ): string[] => {
+      const conflicting: string[] = [];
+
+      for (const prop of properties) {
+        const baseVal = base?.[prop];
+        const localVal = local[prop];
+        const remoteVal = remote[prop];
+
+        // Skip if values are the same
+        if (
+          JSON.stringify(localVal) === JSON.stringify(remoteVal) ||
+          JSON.stringify(localVal) === JSON.stringify(baseVal)
+        ) {
+          continue;
+        }
+
+        // Check if both local and remote changed from base
+        const localChanged = hasChanged(baseVal, localVal);
+        const remoteChanged = hasChanged(baseVal, remoteVal);
+
+        if (localChanged && remoteChanged) {
+          conflicting.push(prop);
+        }
+      }
+
+      return conflicting;
+    };
+
+    // Process characters
+    const mergedCharacters = [...currentData];
+    const baseCharacters = baseData?.characters || [];
+    const remoteCharacters = remoteData.characters || [];
+
+    // Auto-create any missing locations
+    if (remoteCharacters.length > 0) {
+      await migrateOldLocationData(remoteCharacters);
+      await ensureLocationsExist(remoteCharacters);
+    }
+
+    for (const remoteChar of remoteCharacters) {
+      const localIndex = currentData.findIndex(c => c.id === remoteChar.id);
+      const baseChar = baseCharacters.find(
+        (c: GameCharacter) => c.id === remoteChar.id
+      );
+
+      if (localIndex === -1) {
+        // New character from remote - add it
+        mergedCharacters.push(remoteChar);
+        added++;
+      } else {
+        const localChar = currentData[localIndex];
+
+        // Check for conflicts
+        const simpleProps = [
+          'name',
+          'species',
+          'locationId',
+          'notes',
+          'occupation',
+          'imageUri',
+        ];
+        const conflictingProps = findPropertyConflicts(
+          baseChar,
+          localChar,
+          remoteChar,
+          simpleProps
+        );
+
+        if (conflictingProps.length > 0) {
+          conflicts.push({
+            entityType: 'character',
+            entityId: remoteChar.id,
+            entityName: localChar.name || remoteChar.name,
+            conflictingProperties: conflictingProps,
+          });
+          // Keep local version when there's a conflict
+          // User must export and have admin merge
+        } else {
+          // No conflicts - merge intelligently
+          const merged: GameCharacter = { ...localChar };
+          let hasAnyChanges = false;
+
+          // For each property, prefer: remote if changed, else local
+          for (const prop of simpleProps) {
+            const baseVal = baseChar?.[prop as keyof GameCharacter];
+            const localVal = localChar[prop as keyof GameCharacter];
+            const remoteVal = remoteChar[prop as keyof GameCharacter];
+
+            const localChanged = hasChanged(baseVal, localVal);
+            const remoteChanged = hasChanged(baseVal, remoteVal);
+
+            if (remoteChanged && !localChanged) {
+              // Only remote changed - use remote
+              (merged as any)[prop] = remoteVal;
+              hasAnyChanges = true;
+            }
+            // Else use local (either local changed or neither changed)
+          }
+
+          // Handle imageUris separately (it's an array but needs special handling)
+          const baseImageUris = baseChar?.imageUris || [];
+          const localImageUris = localChar.imageUris || [];
+          const remoteImageUris = remoteChar.imageUris || [];
+
+          const localImageChanged = hasChanged(baseImageUris, localImageUris);
+          const remoteImageChanged = hasChanged(baseImageUris, remoteImageUris);
+
+          if (remoteImageChanged && !localImageChanged) {
+            // Only remote changed - use remote images
+            merged.imageUris = remoteImageUris;
+            merged.imageUri = remoteImageUris[0] || undefined;
+            hasAnyChanges = true;
+          } else if (!remoteImageChanged && localImageChanged) {
+            // Only local changed - keep local
+            merged.imageUris = localImageUris;
+            merged.imageUri = localImageUris[0] || undefined;
+          } else if (remoteImageChanged && localImageChanged) {
+            // Both changed - keep local (conflicts already checked)
+            merged.imageUris = localImageUris;
+            merged.imageUri = localImageUris[0] || undefined;
+          }
+
+          // Merge arrays intelligently - prefer remote if only remote changed
+          const basePerkIds = new Set<string>(baseChar?.perkIds || []);
+          const localPerkIds = new Set<string>(localChar.perkIds || []);
+          const remotePerkIds = new Set<string>(remoteChar.perkIds || []);
+
+          const localPerksChanged = hasChanged(
+            Array.from(basePerkIds),
+            Array.from(localPerkIds)
+          );
+          const remotePerksChanged = hasChanged(
+            Array.from(basePerkIds),
+            Array.from(remotePerkIds)
+          );
+
+          if (remotePerksChanged && !localPerksChanged) {
+            // Only remote changed - use remote
+            merged.perkIds = Array.from(remotePerkIds);
+            hasAnyChanges = true;
+          } else if (!remotePerksChanged && localPerksChanged) {
+            // Only local changed - use local
+            merged.perkIds = Array.from(localPerkIds);
+          } else if (remotePerksChanged && localPerksChanged) {
+            // Both changed - merge by combining both
+            const combinedPerks = new Set<string>([
+              ...localPerkIds,
+              ...remotePerkIds,
+            ]);
+            merged.perkIds = Array.from(combinedPerks);
+            hasAnyChanges = true;
+          }
+
+          // Handle distinctionIds
+          const baseDistIds = new Set<string>(baseChar?.distinctionIds || []);
+          const localDistIds = new Set<string>(localChar.distinctionIds || []);
+          const remoteDistIds = new Set<string>(
+            remoteChar.distinctionIds || []
+          );
+
+          const localDistChanged = hasChanged(
+            Array.from(baseDistIds),
+            Array.from(localDistIds)
+          );
+          const remoteDistChanged = hasChanged(
+            Array.from(baseDistIds),
+            Array.from(remoteDistIds)
+          );
+
+          if (remoteDistChanged && !localDistChanged) {
+            merged.distinctionIds = Array.from(remoteDistIds);
+            hasAnyChanges = true;
+          } else if (!remoteDistChanged && localDistChanged) {
+            merged.distinctionIds = Array.from(localDistIds);
+          } else if (remoteDistChanged && localDistChanged) {
+            const combinedDists = new Set<string>([
+              ...localDistIds,
+              ...remoteDistIds,
+            ]);
+            merged.distinctionIds = Array.from(combinedDists);
+            hasAnyChanges = true;
+          }
+
+          // Handle factions
+          const baseFactions = baseChar?.factions || [];
+          const localFactions = localChar.factions || [];
+          const remoteFactions = remoteChar.factions || [];
+
+          const localFactionsChanged = hasChanged(baseFactions, localFactions);
+          const remoteFactionsChanged = hasChanged(
+            baseFactions,
+            remoteFactions
+          );
+
+          if (remoteFactionsChanged && !localFactionsChanged) {
+            merged.factions = remoteFactions;
+            hasAnyChanges = true;
+          } else if (!remoteFactionsChanged && localFactionsChanged) {
+            merged.factions = localFactions;
+          } else if (remoteFactionsChanged && localFactionsChanged) {
+            // Both changed - merge by faction name
+            const mergedFactionsMap = new Map<string, any>();
+            localFactions.forEach((f: any) => mergedFactionsMap.set(f.name, f));
+            remoteFactions.forEach((f: any) => {
+              if (!mergedFactionsMap.has(f.name)) {
+                mergedFactionsMap.set(f.name, f);
+              }
+            });
+            merged.factions = Array.from(mergedFactionsMap.values());
+            hasAnyChanges = true;
+          }
+
+          // Handle relationships
+          const baseRels = baseChar?.relationships || [];
+          const localRels = localChar.relationships || [];
+          const remoteRels = remoteChar.relationships || [];
+
+          const localRelsChanged = hasChanged(baseRels, localRels);
+          const remoteRelsChanged = hasChanged(baseRels, remoteRels);
+
+          if (remoteRelsChanged && !localRelsChanged) {
+            merged.relationships = remoteRels;
+            hasAnyChanges = true;
+          } else if (!remoteRelsChanged && localRelsChanged) {
+            merged.relationships = localRels;
+          } else if (remoteRelsChanged && localRelsChanged) {
+            // Both changed - merge by character name
+            const mergedRelsMap = new Map<string, any>();
+            localRels.forEach((r: any) =>
+              mergedRelsMap.set(r.characterName, r)
+            );
+            remoteRels.forEach((r: any) => {
+              if (!mergedRelsMap.has(r.characterName)) {
+                mergedRelsMap.set(r.characterName, r);
+              }
+            });
+            merged.relationships = Array.from(mergedRelsMap.values());
+            hasAnyChanges = true;
+          }
+
+          // Only update if there were actual changes
+          if (hasAnyChanges) {
+            merged.updatedAt = new Date().toISOString();
+            mergedCharacters[localIndex] = merged;
+            updated++;
+          }
+        }
+      }
+    }
+
+    if (conflicts.length === 0) {
+      await saveCharacters(mergedCharacters);
+
+      // Merge factions similarly
+      const mergedFactions = [...currentFactions];
+      const baseFactions = baseData?.factions || [];
+      const remoteFactions = remoteData.factions || [];
+
+      for (const remoteFaction of remoteFactions) {
+        const localIndex = currentFactions.findIndex(
+          f => f.name === remoteFaction.name
+        );
+        const baseFaction = baseFactions.find(
+          (f: any) => f.name === remoteFaction.name
+        );
+
+        if (localIndex === -1) {
+          mergedFactions.push(remoteFaction);
+          added++;
+        } else {
+          const localFaction = currentFactions[localIndex];
+          const localChanged =
+            baseFaction && localFaction.updatedAt !== baseFaction.updatedAt;
+          const remoteChanged =
+            baseFaction && remoteFaction.updatedAt !== baseFaction.updatedAt;
+
+          if (remoteChanged && !localChanged) {
+            mergedFactions[localIndex] = remoteFaction;
+            updated++;
+          }
+        }
+      }
+
+      await saveFactions(mergedFactions);
+
+      // Merge locations
+      const mergedLocations = [...currentLocations];
+      const baseLocations = baseData?.locations || [];
+      const remoteLocations = remoteData.locations || [];
+
+      for (const remoteLoc of remoteLocations) {
+        const localIndex = currentLocations.findIndex(
+          l => l.id === remoteLoc.id
+        );
+        const baseLoc = baseLocations.find((l: any) => l.id === remoteLoc.id);
+
+        if (localIndex === -1) {
+          mergedLocations.push(remoteLoc);
+          added++;
+        } else {
+          const localLoc = currentLocations[localIndex];
+          const localChanged =
+            baseLoc && localLoc.updatedAt !== baseLoc.updatedAt;
+          const remoteChanged =
+            baseLoc && remoteLoc.updatedAt !== baseLoc.updatedAt;
+
+          if (remoteChanged && !localChanged) {
+            mergedLocations[localIndex] = remoteLoc;
+            updated++;
+          }
+        }
+      }
+
+      await saveLocations(mergedLocations);
+
+      // Merge events
+      const mergedEvents = [...currentEvents];
+      const baseEvents = baseData?.events || [];
+      const remoteEvents = remoteData.events || [];
+
+      for (const remoteEvent of remoteEvents) {
+        const localIndex = currentEvents.findIndex(
+          e => e.id === remoteEvent.id
+        );
+        const baseEvent = baseEvents.find((e: any) => e.id === remoteEvent.id);
+
+        if (localIndex === -1) {
+          mergedEvents.push(remoteEvent);
+          added++;
+        } else {
+          const localEvent = currentEvents[localIndex];
+          const localChanged =
+            baseEvent && localEvent.updatedAt !== baseEvent.updatedAt;
+          const remoteChanged =
+            baseEvent && remoteEvent.updatedAt !== baseEvent.updatedAt;
+
+          if (remoteChanged && !localChanged) {
+            mergedEvents[localIndex] = remoteEvent;
+            updated++;
+          }
+        }
+      }
+
+      await saveEvents(mergedEvents);
+    }
+
+    return {
+      success: conflicts.length === 0,
+      conflicts,
+      added,
+      updated,
+    };
+  } catch (error) {
+    console.error('Error in three-way merge:', error);
+    return {
+      success: false,
+      conflicts: [],
+      added: 0,
+      updated: 0,
+    };
+  }
+};
+
 export const toggleCharacterPresent = async (
   id: string
 ): Promise<GameCharacter | null> => {

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions, View, Text } from 'react-native';
 import {
   RootStackParamList,
   RootDrawerParamList,
@@ -26,6 +26,10 @@ import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from './src/components';
+import {
+  GitHubSyncProvider,
+  useGitHubSync,
+} from './src/contexts/GitHubSyncContext';
 
 // Dark theme for navigation
 const DarkTheme = {
@@ -46,6 +50,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 // Main drawer navigator for primary screens
 function MainDrawer() {
+  const { hasUpdates } = useGitHubSync();
+
   return (
     <Drawer.Navigator
       initialRouteName="CharacterList"
@@ -128,7 +134,18 @@ function MainDrawer() {
         component={DataManagementScreen}
         options={{
           title: 'Data Management',
-          drawerLabel: 'Data Management',
+          drawerLabel: ({ color }) => (
+            <View style={appStyles.drawerLabelContainer}>
+              <Text style={[appStyles.drawerLabelText, { color }]}>
+                Data Management
+              </Text>
+              {hasUpdates && (
+                <View style={appStyles.updateBadge}>
+                  <Text style={appStyles.updateBadgeText}>1</Text>
+                </View>
+              )}
+            </View>
+          ),
         }}
       />
     </Drawer.Navigator>
@@ -138,6 +155,28 @@ function MainDrawer() {
 const appStyles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  drawerLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  drawerLabelText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  updateBadge: {
+    marginLeft: 8,
+    backgroundColor: '#F59E0B',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  updateBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 
@@ -159,96 +198,98 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={appStyles.root}>
-        <NavigationContainer theme={DarkTheme}>
-          <Stack.Navigator
-            initialRouteName="Main"
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: '#262647',
-                borderBottomWidth: 1,
-                borderBottomColor: '#404066',
-              },
-              headerTintColor: '#FFFFFF',
-              headerTitleStyle: {
-                fontWeight: '600',
-                fontSize: 18,
-                letterSpacing: 0.3,
-                maxWidth: headerTitleMaxWidth,
-              },
-              headerTitleAlign: 'left',
-              cardStyle: {
-                backgroundColor: '#0F0F23',
-              },
-            }}
-          >
-            <Stack.Screen
-              name="Main"
-              component={MainDrawer}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="CharacterDetail"
-              component={CharacterDetailScreen}
-              options={({ route }) => ({
-                title: route.params?.character?.name || 'Character Detail',
-              })}
-            />
-            <Stack.Screen
-              name="CharacterForm"
-              component={CharacterFormScreen}
-              options={{ title: 'Character Form' }}
-            />
-            <Stack.Screen
-              name="CharacterSearch"
-              component={CharacterSearchScreen}
-              options={{ title: 'Search Characters' }}
-            />
-            <Stack.Screen
-              name="FactionDetails"
-              component={FactionDetailsScreen}
-              options={({ route }) => ({
-                title: route.params?.factionName || 'Faction Details',
-              })}
-            />
-            <Stack.Screen
-              name="FactionForm"
-              component={FactionFormScreen}
-              options={{ title: 'Create Faction' }}
-            />
-            <Stack.Screen
-              name="LocationDetails"
-              component={LocationDetailsScreen}
-              options={{ title: 'Location Details' }}
-            />
-            <Stack.Screen
-              name="LocationForm"
-              component={LocationFormScreen}
-              options={{ title: 'Create Location' }}
-            />
-            <Stack.Screen
-              name="LocationMap"
-              component={LocationMapScreen}
-              options={{ title: 'Junktown Map' }}
-            />
-            <Stack.Screen
-              name="EventsTimeline"
-              component={EventsTimelineScreen}
-              options={{ title: 'Events Timeline' }}
-            />
-            <Stack.Screen
-              name="EventsForm"
-              component={EventsFormScreen}
-              options={{ title: 'Event Form' }}
-            />
-            <Stack.Screen
-              name="EventsDetail"
-              component={EventsDetailScreen}
-              options={{ title: 'Event Details' }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </GestureHandlerRootView>
+      <GitHubSyncProvider>
+        <GestureHandlerRootView style={appStyles.root}>
+          <NavigationContainer theme={DarkTheme}>
+            <Stack.Navigator
+              initialRouteName="Main"
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: '#262647',
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#404066',
+                },
+                headerTintColor: '#FFFFFF',
+                headerTitleStyle: {
+                  fontWeight: '600',
+                  fontSize: 18,
+                  letterSpacing: 0.3,
+                  maxWidth: headerTitleMaxWidth,
+                },
+                headerTitleAlign: 'left',
+                cardStyle: {
+                  backgroundColor: '#0F0F23',
+                },
+              }}
+            >
+              <Stack.Screen
+                name="Main"
+                component={MainDrawer}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="CharacterDetail"
+                component={CharacterDetailScreen}
+                options={({ route }) => ({
+                  title: route.params?.character?.name || 'Character Detail',
+                })}
+              />
+              <Stack.Screen
+                name="CharacterForm"
+                component={CharacterFormScreen}
+                options={{ title: 'Character Form' }}
+              />
+              <Stack.Screen
+                name="CharacterSearch"
+                component={CharacterSearchScreen}
+                options={{ title: 'Search Characters' }}
+              />
+              <Stack.Screen
+                name="FactionDetails"
+                component={FactionDetailsScreen}
+                options={({ route }) => ({
+                  title: route.params?.factionName || 'Faction Details',
+                })}
+              />
+              <Stack.Screen
+                name="FactionForm"
+                component={FactionFormScreen}
+                options={{ title: 'Create Faction' }}
+              />
+              <Stack.Screen
+                name="LocationDetails"
+                component={LocationDetailsScreen}
+                options={{ title: 'Location Details' }}
+              />
+              <Stack.Screen
+                name="LocationForm"
+                component={LocationFormScreen}
+                options={{ title: 'Create Location' }}
+              />
+              <Stack.Screen
+                name="LocationMap"
+                component={LocationMapScreen}
+                options={{ title: 'Junktown Map' }}
+              />
+              <Stack.Screen
+                name="EventsTimeline"
+                component={EventsTimelineScreen}
+                options={{ title: 'Events Timeline' }}
+              />
+              <Stack.Screen
+                name="EventsForm"
+                component={EventsFormScreen}
+                options={{ title: 'Event Form' }}
+              />
+              <Stack.Screen
+                name="EventsDetail"
+                component={EventsDetailScreen}
+                options={{ title: 'Event Details' }}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </GitHubSyncProvider>
     </ErrorBoundary>
   );
 }
