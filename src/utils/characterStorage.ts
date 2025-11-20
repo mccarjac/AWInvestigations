@@ -887,83 +887,136 @@ export const threeWayMergeDataset = async (
             // Else use local (either local changed or neither changed)
           }
 
-          // Merge arrays intelligently
-          if (remoteChar.perkIds) {
-            const basePerkIds = new Set<string>(baseChar?.perkIds || []);
-            const localPerkIds = new Set<string>(localChar.perkIds || []);
-            const remotePerkIds = new Set<string>(remoteChar.perkIds || []);
+          // Handle imageUris separately (it's an array but needs special handling)
+          const baseImageUris = baseChar?.imageUris || [];
+          const localImageUris = localChar.imageUris || [];
+          const remoteImageUris = remoteChar.imageUris || [];
 
-            // Add perks that are new in remote
-            remotePerkIds.forEach(perk => {
-              if (!basePerkIds.has(perk) && !localPerkIds.has(perk)) {
-                localPerkIds.add(perk);
-              }
-            });
+          const localImageChanged = hasChanged(baseImageUris, localImageUris);
+          const remoteImageChanged = hasChanged(baseImageUris, remoteImageUris);
 
+          if (remoteImageChanged && !localImageChanged) {
+            // Only remote changed - use remote images
+            merged.imageUris = remoteImageUris;
+            merged.imageUri = remoteImageUris[0] || undefined;
+          } else if (!remoteImageChanged && localImageChanged) {
+            // Only local changed - keep local
+            merged.imageUris = localImageUris;
+            merged.imageUri = localImageUris[0] || undefined;
+          } else if (remoteImageChanged && localImageChanged) {
+            // Both changed - keep local (conflicts already checked)
+            merged.imageUris = localImageUris;
+            merged.imageUri = localImageUris[0] || undefined;
+          }
+
+          // Merge arrays intelligently - prefer remote if only remote changed
+          const basePerkIds = new Set<string>(baseChar?.perkIds || []);
+          const localPerkIds = new Set<string>(localChar.perkIds || []);
+          const remotePerkIds = new Set<string>(remoteChar.perkIds || []);
+
+          const localPerksChanged = hasChanged(
+            Array.from(basePerkIds),
+            Array.from(localPerkIds)
+          );
+          const remotePerksChanged = hasChanged(
+            Array.from(basePerkIds),
+            Array.from(remotePerkIds)
+          );
+
+          if (remotePerksChanged && !localPerksChanged) {
+            // Only remote changed - use remote
+            merged.perkIds = Array.from(remotePerkIds);
+          } else if (!remotePerksChanged && localPerksChanged) {
+            // Only local changed - use local
             merged.perkIds = Array.from(localPerkIds);
+          } else if (remotePerksChanged && localPerksChanged) {
+            // Both changed - merge by combining both
+            const combinedPerks = new Set<string>([
+              ...localPerkIds,
+              ...remotePerkIds,
+            ]);
+            merged.perkIds = Array.from(combinedPerks);
           }
 
-          if (remoteChar.distinctionIds) {
-            const baseDistIds = new Set<string>(baseChar?.distinctionIds || []);
-            const localDistIds = new Set<string>(
-              localChar.distinctionIds || []
-            );
-            const remoteDistIds = new Set<string>(
-              remoteChar.distinctionIds || []
-            );
+          // Handle distinctionIds
+          const baseDistIds = new Set<string>(baseChar?.distinctionIds || []);
+          const localDistIds = new Set<string>(localChar.distinctionIds || []);
+          const remoteDistIds = new Set<string>(
+            remoteChar.distinctionIds || []
+          );
 
-            remoteDistIds.forEach(dist => {
-              if (!baseDistIds.has(dist) && !localDistIds.has(dist)) {
-                localDistIds.add(dist);
+          const localDistChanged = hasChanged(
+            Array.from(baseDistIds),
+            Array.from(localDistIds)
+          );
+          const remoteDistChanged = hasChanged(
+            Array.from(baseDistIds),
+            Array.from(remoteDistIds)
+          );
+
+          if (remoteDistChanged && !localDistChanged) {
+            merged.distinctionIds = Array.from(remoteDistIds);
+          } else if (!remoteDistChanged && localDistChanged) {
+            merged.distinctionIds = Array.from(localDistIds);
+          } else if (remoteDistChanged && localDistChanged) {
+            const combinedDists = new Set<string>([
+              ...localDistIds,
+              ...remoteDistIds,
+            ]);
+            merged.distinctionIds = Array.from(combinedDists);
+          }
+
+          // Handle factions
+          const baseFactions = baseChar?.factions || [];
+          const localFactions = localChar.factions || [];
+          const remoteFactions = remoteChar.factions || [];
+
+          const localFactionsChanged = hasChanged(baseFactions, localFactions);
+          const remoteFactionsChanged = hasChanged(
+            baseFactions,
+            remoteFactions
+          );
+
+          if (remoteFactionsChanged && !localFactionsChanged) {
+            merged.factions = remoteFactions;
+          } else if (!remoteFactionsChanged && localFactionsChanged) {
+            merged.factions = localFactions;
+          } else if (remoteFactionsChanged && localFactionsChanged) {
+            // Both changed - merge by faction name
+            const mergedFactionsMap = new Map<string, any>();
+            localFactions.forEach((f: any) => mergedFactionsMap.set(f.name, f));
+            remoteFactions.forEach((f: any) => {
+              if (!mergedFactionsMap.has(f.name)) {
+                mergedFactionsMap.set(f.name, f);
               }
             });
-
-            merged.distinctionIds = Array.from(localDistIds);
+            merged.factions = Array.from(mergedFactionsMap.values());
           }
 
-          // Merge factions and relationships similarly
-          if (remoteChar.factions) {
-            const baseFactionNames = new Set(
-              (baseChar?.factions || []).map((f: { name: string }) => f.name)
-            );
-            const localFactions = localChar.factions || [];
-            const remoteFactions = remoteChar.factions || [];
+          // Handle relationships
+          const baseRels = baseChar?.relationships || [];
+          const localRels = localChar.relationships || [];
+          const remoteRels = remoteChar.relationships || [];
 
-            const newRemoteFactions = remoteFactions.filter(
-              (f: { name: string }) => !baseFactionNames.has(f.name)
-            );
-            const localFactionNames = new Set(
-              localFactions.map((f: { name: string }) => f.name)
-            );
-            const factionsToAdd = newRemoteFactions.filter(
-              (f: { name: string }) => !localFactionNames.has(f.name)
-            );
+          const localRelsChanged = hasChanged(baseRels, localRels);
+          const remoteRelsChanged = hasChanged(baseRels, remoteRels);
 
-            merged.factions = [...localFactions, ...factionsToAdd];
-          }
-
-          if (remoteChar.relationships) {
-            const baseRelNames = new Set(
-              (baseChar?.relationships || []).map(
-                (r: { characterName: string }) => r.characterName
-              )
+          if (remoteRelsChanged && !localRelsChanged) {
+            merged.relationships = remoteRels;
+          } else if (!remoteRelsChanged && localRelsChanged) {
+            merged.relationships = localRels;
+          } else if (remoteRelsChanged && localRelsChanged) {
+            // Both changed - merge by character name
+            const mergedRelsMap = new Map<string, any>();
+            localRels.forEach((r: any) =>
+              mergedRelsMap.set(r.characterName, r)
             );
-            const localRels = localChar.relationships || [];
-            const remoteRels = remoteChar.relationships || [];
-
-            const newRemoteRels = remoteRels.filter(
-              (r: { characterName: string }) =>
-                !baseRelNames.has(r.characterName)
-            );
-            const localRelNames = new Set(
-              localRels.map((r: { characterName: string }) => r.characterName)
-            );
-            const relsToAdd = newRemoteRels.filter(
-              (r: { characterName: string }) =>
-                !localRelNames.has(r.characterName)
-            );
-
-            merged.relationships = [...localRels, ...relsToAdd];
+            remoteRels.forEach((r: any) => {
+              if (!mergedRelsMap.has(r.characterName)) {
+                mergedRelsMap.set(r.characterName, r);
+              }
+            });
+            merged.relationships = Array.from(mergedRelsMap.values());
           }
 
           merged.updatedAt = new Date().toISOString();
