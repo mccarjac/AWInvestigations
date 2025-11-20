@@ -550,12 +550,26 @@ export const importFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               character.imageUris = localPaths;
               character.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed to avoid broken GitHub paths
+              console.warn(
+                `Failed to download images for character ${character.name}`
+              );
+              character.imageUris = [];
+              character.imageUri = undefined;
             }
           } else if (character.imageUri) {
             const localPaths = await downloadImages([character.imageUri]);
             if (localPaths.length > 0) {
               character.imageUri = localPaths[0];
               character.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              console.warn(
+                `Failed to download image for character ${character.name}`
+              );
+              character.imageUri = undefined;
+              character.imageUris = [];
             }
           }
         }
@@ -569,12 +583,20 @@ export const importFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               location.imageUris = localPaths;
               location.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed
+              location.imageUris = [];
+              location.imageUri = undefined;
             }
           } else if (location.imageUri) {
             const localPaths = await downloadImages([location.imageUri]);
             if (localPaths.length > 0) {
               location.imageUri = localPaths[0];
               location.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              location.imageUri = undefined;
+              location.imageUris = [];
             }
           }
         }
@@ -588,12 +610,20 @@ export const importFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               event.imageUris = localPaths;
               event.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed
+              event.imageUris = [];
+              event.imageUri = undefined;
             }
           } else if (event.imageUri) {
             const localPaths = await downloadImages([event.imageUri]);
             if (localPaths.length > 0) {
               event.imageUri = localPaths[0];
               event.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              event.imageUri = undefined;
+              event.imageUris = [];
             }
           }
         }
@@ -607,12 +637,20 @@ export const importFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               faction.imageUris = localPaths;
               faction.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed
+              faction.imageUris = [];
+              faction.imageUri = undefined;
             }
           } else if (faction.imageUri) {
             const localPaths = await downloadImages([faction.imageUri]);
             if (localPaths.length > 0) {
               faction.imageUri = localPaths[0];
               faction.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              faction.imageUri = undefined;
+              faction.imageUris = [];
             }
           }
         }
@@ -870,12 +908,26 @@ export const syncFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               character.imageUris = localPaths;
               character.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed to avoid broken GitHub paths
+              console.warn(
+                `Failed to download images for character ${character.name}`
+              );
+              character.imageUris = [];
+              character.imageUri = undefined;
             }
           } else if (character.imageUri) {
             const localPaths = await downloadImages([character.imageUri]);
             if (localPaths.length > 0) {
               character.imageUri = localPaths[0];
               character.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              console.warn(
+                `Failed to download image for character ${character.name}`
+              );
+              character.imageUri = undefined;
+              character.imageUris = [];
             }
           }
         }
@@ -889,12 +941,20 @@ export const syncFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               location.imageUris = localPaths;
               location.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed
+              location.imageUris = [];
+              location.imageUri = undefined;
             }
           } else if (location.imageUri) {
             const localPaths = await downloadImages([location.imageUri]);
             if (localPaths.length > 0) {
               location.imageUri = localPaths[0];
               location.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              location.imageUri = undefined;
+              location.imageUris = [];
             }
           }
         }
@@ -908,12 +968,20 @@ export const syncFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               event.imageUris = localPaths;
               event.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed
+              event.imageUris = [];
+              event.imageUri = undefined;
             }
           } else if (event.imageUri) {
             const localPaths = await downloadImages([event.imageUri]);
             if (localPaths.length > 0) {
               event.imageUri = localPaths[0];
               event.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              event.imageUri = undefined;
+              event.imageUris = [];
             }
           }
         }
@@ -927,12 +995,20 @@ export const syncFromGitHub = async (): Promise<{
             if (localPaths.length > 0) {
               faction.imageUris = localPaths;
               faction.imageUri = localPaths[0];
+            } else {
+              // Clear image references if download failed
+              faction.imageUris = [];
+              faction.imageUri = undefined;
             }
           } else if (faction.imageUri) {
             const localPaths = await downloadImages([faction.imageUri]);
             if (localPaths.length > 0) {
               faction.imageUri = localPaths[0];
               faction.imageUris = localPaths;
+            } else {
+              // Clear image references if download failed
+              faction.imageUri = undefined;
+              faction.imageUris = [];
             }
           }
         }
