@@ -870,6 +870,7 @@ export const threeWayMergeDataset = async (
         } else {
           // No conflicts - merge intelligently
           const merged: GameCharacter = { ...localChar };
+          let hasAnyChanges = false;
 
           // For each property, prefer: remote if changed, else local
           for (const prop of simpleProps) {
@@ -883,6 +884,7 @@ export const threeWayMergeDataset = async (
             if (remoteChanged && !localChanged) {
               // Only remote changed - use remote
               (merged as any)[prop] = remoteVal;
+              hasAnyChanges = true;
             }
             // Else use local (either local changed or neither changed)
           }
@@ -899,6 +901,7 @@ export const threeWayMergeDataset = async (
             // Only remote changed - use remote images
             merged.imageUris = remoteImageUris;
             merged.imageUri = remoteImageUris[0] || undefined;
+            hasAnyChanges = true;
           } else if (!remoteImageChanged && localImageChanged) {
             // Only local changed - keep local
             merged.imageUris = localImageUris;
@@ -926,6 +929,7 @@ export const threeWayMergeDataset = async (
           if (remotePerksChanged && !localPerksChanged) {
             // Only remote changed - use remote
             merged.perkIds = Array.from(remotePerkIds);
+            hasAnyChanges = true;
           } else if (!remotePerksChanged && localPerksChanged) {
             // Only local changed - use local
             merged.perkIds = Array.from(localPerkIds);
@@ -936,6 +940,7 @@ export const threeWayMergeDataset = async (
               ...remotePerkIds,
             ]);
             merged.perkIds = Array.from(combinedPerks);
+            hasAnyChanges = true;
           }
 
           // Handle distinctionIds
@@ -956,6 +961,7 @@ export const threeWayMergeDataset = async (
 
           if (remoteDistChanged && !localDistChanged) {
             merged.distinctionIds = Array.from(remoteDistIds);
+            hasAnyChanges = true;
           } else if (!remoteDistChanged && localDistChanged) {
             merged.distinctionIds = Array.from(localDistIds);
           } else if (remoteDistChanged && localDistChanged) {
@@ -964,6 +970,7 @@ export const threeWayMergeDataset = async (
               ...remoteDistIds,
             ]);
             merged.distinctionIds = Array.from(combinedDists);
+            hasAnyChanges = true;
           }
 
           // Handle factions
@@ -979,6 +986,7 @@ export const threeWayMergeDataset = async (
 
           if (remoteFactionsChanged && !localFactionsChanged) {
             merged.factions = remoteFactions;
+            hasAnyChanges = true;
           } else if (!remoteFactionsChanged && localFactionsChanged) {
             merged.factions = localFactions;
           } else if (remoteFactionsChanged && localFactionsChanged) {
@@ -991,6 +999,7 @@ export const threeWayMergeDataset = async (
               }
             });
             merged.factions = Array.from(mergedFactionsMap.values());
+            hasAnyChanges = true;
           }
 
           // Handle relationships
@@ -1003,6 +1012,7 @@ export const threeWayMergeDataset = async (
 
           if (remoteRelsChanged && !localRelsChanged) {
             merged.relationships = remoteRels;
+            hasAnyChanges = true;
           } else if (!remoteRelsChanged && localRelsChanged) {
             merged.relationships = localRels;
           } else if (remoteRelsChanged && localRelsChanged) {
@@ -1017,11 +1027,15 @@ export const threeWayMergeDataset = async (
               }
             });
             merged.relationships = Array.from(mergedRelsMap.values());
+            hasAnyChanges = true;
           }
 
-          merged.updatedAt = new Date().toISOString();
-          mergedCharacters[localIndex] = merged;
-          updated++;
+          // Only update if there were actual changes
+          if (hasAnyChanges) {
+            merged.updatedAt = new Date().toISOString();
+            mergedCharacters[localIndex] = merged;
+            updated++;
+          }
         }
       }
     }
