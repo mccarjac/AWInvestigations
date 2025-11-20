@@ -873,9 +873,9 @@ export const threeWayMergeDataset = async (
 
           // For each property, prefer: remote if changed, else local
           for (const prop of simpleProps) {
-            const baseVal = baseChar?.[prop];
-            const localVal = localChar[prop];
-            const remoteVal = remoteChar[prop];
+            const baseVal = baseChar?.[prop as keyof GameCharacter];
+            const localVal = localChar[prop as keyof GameCharacter];
+            const remoteVal = remoteChar[prop as keyof GameCharacter];
 
             const localChanged = hasChanged(baseVal, localVal);
             const remoteChanged = hasChanged(baseVal, remoteVal);
@@ -889,9 +889,9 @@ export const threeWayMergeDataset = async (
 
           // Merge arrays intelligently
           if (remoteChar.perkIds) {
-            const basePerkIds = new Set(baseChar?.perkIds || []);
-            const localPerkIds = new Set(localChar.perkIds || []);
-            const remotePerkIds = new Set(remoteChar.perkIds || []);
+            const basePerkIds = new Set<string>(baseChar?.perkIds || []);
+            const localPerkIds = new Set<string>(localChar.perkIds || []);
+            const remotePerkIds = new Set<string>(remoteChar.perkIds || []);
 
             // Add perks that are new in remote
             remotePerkIds.forEach(perk => {
@@ -904,9 +904,13 @@ export const threeWayMergeDataset = async (
           }
 
           if (remoteChar.distinctionIds) {
-            const baseDistIds = new Set(baseChar?.distinctionIds || []);
-            const localDistIds = new Set(localChar.distinctionIds || []);
-            const remoteDistIds = new Set(remoteChar.distinctionIds || []);
+            const baseDistIds = new Set<string>(baseChar?.distinctionIds || []);
+            const localDistIds = new Set<string>(
+              localChar.distinctionIds || []
+            );
+            const remoteDistIds = new Set<string>(
+              remoteChar.distinctionIds || []
+            );
 
             remoteDistIds.forEach(dist => {
               if (!baseDistIds.has(dist) && !localDistIds.has(dist)) {
@@ -920,17 +924,19 @@ export const threeWayMergeDataset = async (
           // Merge factions and relationships similarly
           if (remoteChar.factions) {
             const baseFactionNames = new Set(
-              (baseChar?.factions || []).map(f => f.name)
+              (baseChar?.factions || []).map((f: { name: string }) => f.name)
             );
             const localFactions = localChar.factions || [];
             const remoteFactions = remoteChar.factions || [];
 
             const newRemoteFactions = remoteFactions.filter(
-              f => !baseFactionNames.has(f.name)
+              (f: { name: string }) => !baseFactionNames.has(f.name)
             );
-            const localFactionNames = new Set(localFactions.map(f => f.name));
+            const localFactionNames = new Set(
+              localFactions.map((f: { name: string }) => f.name)
+            );
             const factionsToAdd = newRemoteFactions.filter(
-              f => !localFactionNames.has(f.name)
+              (f: { name: string }) => !localFactionNames.has(f.name)
             );
 
             merged.factions = [...localFactions, ...factionsToAdd];
@@ -938,17 +944,23 @@ export const threeWayMergeDataset = async (
 
           if (remoteChar.relationships) {
             const baseRelNames = new Set(
-              (baseChar?.relationships || []).map(r => r.characterName)
+              (baseChar?.relationships || []).map(
+                (r: { characterName: string }) => r.characterName
+              )
             );
             const localRels = localChar.relationships || [];
             const remoteRels = remoteChar.relationships || [];
 
             const newRemoteRels = remoteRels.filter(
-              r => !baseRelNames.has(r.characterName)
+              (r: { characterName: string }) =>
+                !baseRelNames.has(r.characterName)
             );
-            const localRelNames = new Set(localRels.map(r => r.characterName));
+            const localRelNames = new Set(
+              localRels.map((r: { characterName: string }) => r.characterName)
+            );
             const relsToAdd = newRemoteRels.filter(
-              r => !localRelNames.has(r.characterName)
+              (r: { characterName: string }) =>
+                !localRelNames.has(r.characterName)
             );
 
             merged.relationships = [...localRels, ...relsToAdd];
