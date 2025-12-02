@@ -1,45 +1,392 @@
-# AWIntelligence
+# AWInvestigations
 
-A React Native mobile application for managing tabletop RPG game data, including characters, factions, locations, and events.
+<div align="center">
 
-## Features
+**A comprehensive React Native mobile application for managing tabletop RPG campaign data**
 
-- **Character Management**: Track character stats, skills, perks, and relationships
-- **Faction System**: Manage factions and character affiliations
-- **Location Tracking**: Create and assign locations to characters
-- **Event Timeline**: Track important game events
-- **Import/Export**: Share data via JSON, ZIP, or CSV files
-- **GitHub Integration**: Sync data with other users via GitHub repository (see [GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md))
+[![React Native](https://img.shields.io/badge/React%20Native-0.81.5-blue.svg)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-54.0.23-000020.svg)](https://expo.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-Private-red.svg)]()
 
-## PRE-REQS
+_Developed by Jacob McCarty ([mccarjac](https://github.com/mccarjac))_
 
-- A linux based terminal (Linux subservice for Windows should suffice)
-- Permissions to run terminal commands, install packages on the machine
-- NPM and GitHub CLI will need to be installed
+</div>
 
-## TO SETUP
+---
 
-1. Create your workspace \
-   `mkdir AWIntelligence && cd AWIntelligence`
-1. Pull down this package \
-   `gh repo clone mccarjac/AWInvestigations`
-1. Install dependencies \
-   `npm install`
+## 📖 Table of Contents
 
-## TO RUN
+- [About the Project](#-about-the-project)
+- [Use Case](#-use-case)
+- [Key Features](#-key-features)
+- [Technology Stack](#-technology-stack)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Running the App](#running-the-app)
+- [Available Scripts](#-available-scripts)
+- [Building for Android](#-building-for-android)
+- [Project Structure](#-project-structure)
+- [Documentation](#-documentation)
+- [Development Workflow](#-development-workflow)
+- [Contributing](#-contributing)
+- [Acknowledgments](#-acknowledgments)
 
-### Android Development (Preffered)
+---
 
-1. If using a physical device, connect it via USB
-   - You will need to enable USB debugging, see the [official documentation](https://developer.android.com/studio/run/device)
-1. `npm run android`
-   - While running, you can press 'a' in the terminal to re-launch the app on your device, bringing in any changes
+## 🎯 About the Project
 
-### Web Version (Features may not work on web as expected)
+**AWInvestigations** (also known as **AWIntelligence** or **Game Character Manager**) is a powerful mobile application designed to help tabletop RPG game masters and players organize, track, and manage their campaign data. Built with React Native and Expo, this cross-platform solution provides a comprehensive suite of tools for managing complex game worlds, character relationships, faction dynamics, and campaign timelines.
 
-1. `npm run web`
-1. Open a web browser and navigate to `localhost:8081`
+Whether you're running a sprawling post-apocalyptic campaign or a intricate fantasy world, AWInvestigations helps you keep track of every detail that matters.
 
-## TO BUILD ANDROID APP
+---
 
-See ANDROID_BUILD.md
+## 🎲 Use Case
+
+### Target Audience
+
+- **Game Masters**: Organize NPCs, factions, locations, and campaign events
+- **Players**: Track character progression, relationships, and important story beats
+- **Campaign Groups**: Share and synchronize campaign data across multiple devices
+
+### Ideal For
+
+- **Complex Campaigns**: Managing dozens of characters, factions, and interconnected storylines
+- **Long-Running Games**: Tracking character evolution and campaign history over time
+- **Collaborative Storytelling**: Sharing campaign data with other GMs or players
+- **World Building**: Creating detailed, interconnected game worlds with rich faction dynamics
+
+---
+
+## ✨ Key Features
+
+### 📝 Character Management
+
+- **Comprehensive Profiles**: Track detailed character information including stats, skills, perks, and distinctions
+- **Relationships**: Manage character relationships and faction affiliations with detailed standing levels
+- **Species System**: Support for base species (Human, Android, Mutant, etc.) and prestige classes
+- **Search & Filter**: Quickly find characters using advanced search capabilities
+- **Occupation Tracking**: Record character roles and occupations within your game world
+
+### 🏛️ Faction System
+
+- **Faction Management**: Create and manage factions with descriptions, member lists, and influence tracking
+- **Relationship Standings**: Track character-faction relationships (Enemy, Neutral, Ally, etc.)
+- **Member Tracking**: Automatic syncing of faction membership with character data
+- **Influence Reports**: Visualize faction influence and power dynamics
+
+### 📍 Location Management
+
+- **Location Library**: Create and manage locations across your game world
+- **Coordinate System**: Optional coordinate mapping for spatial tracking
+- **Character Assignments**: Link characters to their frequent locations
+- **Interactive Maps**: View locations on a map interface (Junktown map included)
+
+### 📅 Event Timeline
+
+- **Campaign History**: Track important events with dates and participant lists
+- **Chronological View**: View events in timeline format
+- **Participant Tracking**: Link events to specific characters and locations
+- **Notes & Details**: Add detailed descriptions and outcomes for each event
+
+### 💾 Data Management
+
+- **Import/Export**: Share data via JSON, ZIP, or CSV formats
+- **Merge Functionality**: Merge imported data with existing campaign data
+- **CSV Bulk Import**: Import multiple characters at once from CSV files
+- **Data Backup**: Export complete campaign data for backup purposes
+
+### 🔄 GitHub Integration
+
+- **Collaborative Sync**: Share campaign data through GitHub repositories
+- **Pull Request Workflow**: Export creates PRs for review before merging
+- **Import from Repository**: Pull latest campaign data from shared repositories
+- **Version Control**: Leverage Git for campaign data versioning
+
+### 📊 Analytics & Reports
+
+- **Character Statistics**: View aggregate stats across your character roster
+- **Influence Reports**: Analyze faction power dynamics and relationships
+- **Visualization**: Charts and graphs for data analysis
+
+---
+
+## 🛠️ Technology Stack
+
+### Core Framework
+
+- **React Native** (v0.81.5) - Cross-platform mobile framework
+- **Expo** (v54) - Development platform and build tools
+- **TypeScript** (v5.9.2) - Type-safe development
+
+### UI & Navigation
+
+- **React Navigation** (v7) - Navigation system (Drawer + Stack)
+- **React Native Gesture Handler** - Touch gesture management
+- **React Native Reanimated** - Smooth animations
+- **React Native Gifted Charts** - Data visualization
+
+### State & Storage
+
+- **AsyncStorage** - Local data persistence
+- **Expo File System** - File management and storage
+
+### Additional Features
+
+- **Expo Image Picker** - Character image uploads
+- **Expo Document Picker** - Import file selection
+- **React Native Zip Archive** - ZIP file handling
+- **Octokit** - GitHub API integration
+
+### Development Tools
+
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **Husky** - Git hooks for code quality
+- **TypeScript Strict Mode** - Enhanced type safety
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** (v16 or higher) and **npm**
+- **Expo CLI**: Install globally with `npm install -g expo-cli`
+- **Android Studio** (for Android development) or **Xcode** (for iOS development)
+- **Linux-based terminal** (Linux, macOS, or WSL on Windows)
+- **Git** and **GitHub CLI** (optional, for repository cloning)
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/mccarjac/AWInvestigations.git
+   cd AWInvestigations
+   ```
+
+   Or using GitHub CLI:
+
+   ```bash
+   gh repo clone mccarjac/AWInvestigations
+   cd AWInvestigations
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Set up git hooks** (optional, for development)
+   ```bash
+   npm run prepare
+   ```
+
+### Running the App
+
+#### Android (Recommended)
+
+1. **Connect your Android device** via USB and enable USB debugging ([see official docs](https://developer.android.com/studio/run/device))
+
+   Or start an Android emulator from Android Studio
+
+2. **Run the app**
+
+   ```bash
+   npm run android
+   ```
+
+3. **Development tips**:
+   - Press `a` in the terminal to reload the app
+   - Shake your device to open the developer menu
+   - Press `r` to reload the JavaScript bundle
+
+#### Web (Limited Features)
+
+```bash
+npm run web
+```
+
+Then open your browser to `http://localhost:8081`
+
+**Note**: Some features may not work as expected on web due to native module dependencies.
+
+#### iOS
+
+```bash
+npm run ios
+```
+
+**Note**: Requires macOS and Xcode. iOS simulator will launch automatically.
+
+---
+
+## 📜 Available Scripts
+
+### Development
+
+- `npm start` - Start Expo development server
+- `npm run android` - Run on Android device/emulator
+- `npm run ios` - Run on iOS simulator
+- `npm run web` - Run in web browser
+
+### Code Quality
+
+- `npm run lint` - Run ESLint on all files
+- `npm run lint:fix` - Auto-fix ESLint issues
+- `npm run lint:errors` - Show only critical errors
+- `npm run format` - Format all files with Prettier
+- `npm run format:check` - Check formatting without changes
+- `npm run type-check` - Run TypeScript type checking
+- `npm run check-all` - Run all checks (type-check, lint, format-check)
+
+### Setup
+
+- `npm run prepare` - Set up Husky git hooks
+
+---
+
+## 📦 Building for Android
+
+To build a standalone Android APK or AAB:
+
+1. **Install EAS CLI**
+
+   ```bash
+   npm install -g eas-cli
+   ```
+
+2. **Configure EAS**
+
+   ```bash
+   eas login
+   eas build:configure
+   ```
+
+3. **Build APK** (for testing/distribution outside Play Store)
+
+   ```bash
+   eas build --platform android --profile preview
+   ```
+
+4. **Build AAB** (for Google Play Store)
+   ```bash
+   eas build --platform android --profile production
+   ```
+
+For detailed build instructions, see [ANDROID_BUILD.md](./ANDROID_BUILD.md)
+
+---
+
+## 📁 Project Structure
+
+```
+AWInvestigations/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   ├── common/         # Shared components (Button, Card, etc.)
+│   │   └── screens/        # Base/abstract screen components
+│   ├── models/             # Data models and type definitions
+│   ├── navigation/         # Navigation types and configuration
+│   ├── screens/            # Screen components by feature
+│   │   ├── character/      # Character management screens
+│   │   ├── faction/        # Faction management screens
+│   │   ├── location/       # Location management screens
+│   │   └── events/         # Event timeline screens
+│   ├── styles/             # Shared styles and theming
+│   ├── types/              # TypeScript type definitions
+│   └── utils/              # Utility functions
+│       ├── characterStorage.ts  # Data persistence
+│       ├── exportImport.ts      # Import/export functionality
+│       ├── gitIntegration.ts    # GitHub sync
+│       └── statsUtils.ts        # Statistics calculations
+├── assets/                 # Images, icons, and static assets
+├── .github/               # GitHub configuration
+├── App.tsx                # Main application component
+├── package.json           # Dependencies and scripts
+└── [config files]         # ESLint, Prettier, TypeScript configs
+```
+
+---
+
+## 📚 Documentation
+
+- **[LINTING.md](./LINTING.md)** - ESLint configuration and coding standards
+- **[ANDROID_BUILD.md](./ANDROID_BUILD.md)** - Detailed Android build instructions
+- **[GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md)** - GitHub sync setup and usage
+- **[CSV_Import_Format.md](./CSV_Import_Format.md)** - CSV import format specification
+- **[DATA_REPOSITORY_TEMPLATE.md](./DATA_REPOSITORY_TEMPLATE.md)** - Data repository setup guide
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - GitHub integration implementation details
+- **[UI_CHANGES.md](./UI_CHANGES.md)** - UI changes documentation
+
+---
+
+## 🔧 Development Workflow
+
+### Code Style
+
+- **TypeScript Strict Mode** enabled - all strict checks enforced
+- **Single quotes** for strings
+- **Semicolons required**
+- **2-space indentation**
+- **80 character line width**
+- Use path aliases: `@/*`, `@components/*`, `@screens/*`, `@models/*`, `@utils/*`
+
+### Git Workflow
+
+- **Pre-commit hooks** automatically run linting and formatting
+- **Husky** enforces code quality at commit time
+- Always run `npm run check-all` before committing
+
+### Best Practices
+
+- Use explicit types for function parameters
+- Avoid `any` type - use proper types or `unknown`
+- Prefix unused variables with underscore: `_unusedVar`
+- Use `StyleSheet.create()` for all styles
+- Follow React Hooks rules
+
+---
+
+## 🤝 Contributing
+
+This is currently a private project, but contributions are welcome through the standard GitHub workflow:
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Make your changes** following the code style guidelines
+4. **Run code quality checks** (`npm run check-all`)
+5. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+6. **Push to the branch** (`git push origin feature/amazing-feature`)
+7. **Open a Pull Request**
+
+### Development Guidelines
+
+- Ensure all TypeScript type checks pass
+- Follow the existing code style and conventions
+- Add comments for complex logic
+- Test on Android device/emulator before submitting
+- Update documentation for significant changes
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with [React Native](https://reactnative.dev/) and [Expo](https://expo.dev/)
+- Navigation powered by [React Navigation](https://reactnavigation.org/)
+- Charts and visualizations by [React Native Gifted Charts](https://github.com/Abhinandan-Kushwaha/react-native-gifted-charts)
+- Designed for managing campaigns in post-apocalyptic and fantasy tabletop RPG settings
+
+---
+
+<div align="center">
+
+**Developed with ❤️ by Jacob McCarty**
+
+[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/AWInvestigations/issues) • [Request Feature](https://github.com/mccarjac/AWInvestigations/issues)
+
+</div>
