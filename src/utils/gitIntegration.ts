@@ -360,6 +360,9 @@ export const exportToGitHub = async (): Promise<{
     console.log(`[GitHub Export] Total images to upload: ${totalImages}`);
 
     // Update data.json with modified paths
+    // Note: This happens AFTER image processing because we need to update
+    // the imageUri/imageUris fields in the dataset to point to the
+    // relative paths in the repository (e.g., "images/characters/id_0.jpg")
     const updatedDataContent = Buffer.from(
       JSON.stringify(dataset, null, 2)
     ).toString('base64');
@@ -526,8 +529,8 @@ export const importFromGitHub = async (): Promise<{
               const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
               const localPath = permanentImageDir + entityType + '/' + filename;
 
-              // GitHub API returns base64 content with newlines - remove them
-              const cleanBase64 = imageFile.content.replace(/\n/g, '');
+              // GitHub API returns base64 content with newlines and carriage returns - remove them
+              const cleanBase64 = imageFile.content.replace(/[\r\n]/g, '');
 
               await FileSystem.writeAsStringAsync(localPath, cleanBase64, {
                 encoding: FileSystem.EncodingType.Base64,
