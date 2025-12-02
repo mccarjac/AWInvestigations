@@ -267,9 +267,7 @@ export const FactionListScreen: React.FC = () => {
           {showRetired ? 'Retired' : 'Active'}
         </Text>
       </TouchableOpacity>
-      <HeaderAddButton
-        onPress={() => navigation.navigate('FactionForm', {})}
-      />
+      <HeaderAddButton onPress={() => navigation.navigate('FactionForm', {})} />
     </View>
   );
 
