@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**A comprehensive React Native mobile application for managing tabletop RPG campaign data**
+**A comprehensive React Native mobile application for managing tabletop RPGs, LARPs, worldbuilding, and storytelling**
 
 [![React Native](https://img.shields.io/badge/React%20Native-0.81.5-blue.svg)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-54.0.23-000020.svg)](https://expo.dev/)
@@ -31,15 +31,16 @@ _Developed by Jacob McCarty ([mccarjac](https://github.com/mccarjac))_
 - [Documentation](#-documentation)
 - [Development Workflow](#-development-workflow)
 - [Contributing](#-contributing)
+- [Contributors](#-contributors)
 - [Acknowledgments](#-acknowledgments)
 
 ---
 
 ## 🎯 About the Project
 
-**AWInvestigations** (also known as **AWIntelligence** or **Game Character Manager**) is a powerful mobile application designed to help tabletop RPG game masters and players organize, track, and manage their campaign data. Built with React Native and Expo, this cross-platform solution provides a comprehensive suite of tools for managing complex game worlds, character relationships, faction dynamics, and campaign timelines.
+**AWInvestigations** (also known as **AWIntelligence** or **Game Character Manager**) is a powerful mobile application designed to help game masters, players, storytellers, and worldbuilders organize, track, and manage their creative projects. Built with React Native and Expo, this cross-platform solution provides a comprehensive suite of tools for managing complex game worlds, character relationships, faction dynamics, and timelines across multiple formats including tabletop RPGs, live action role-playing (LARPs), worldbuilding projects, and collaborative storytelling.
 
-Whether you're running a sprawling post-apocalyptic campaign or a intricate fantasy world, AWInvestigations helps you keep track of every detail that matters.
+Whether you're running a sprawling post-apocalyptic campaign, organizing a LARP event, building an intricate fantasy world, or crafting an epic narrative, AWInvestigations helps you keep track of every detail that matters.
 
 ---
 
@@ -47,16 +48,21 @@ Whether you're running a sprawling post-apocalyptic campaign or a intricate fant
 
 ### Target Audience
 
-- **Game Masters**: Organize NPCs, factions, locations, and campaign events
+- **Tabletop RPG Game Masters**: Organize NPCs, factions, locations, and campaign events
+- **LARP Organizers**: Manage characters, plots, and event logistics for live action events
 - **Players**: Track character progression, relationships, and important story beats
-- **Campaign Groups**: Share and synchronize campaign data across multiple devices
+- **Worldbuilders**: Document and organize fictional worlds, cultures, and histories
+- **Storytellers & Writers**: Plan narratives, character arcs, and plot threads
+- **Creative Groups**: Share and synchronize project data across multiple collaborators
 
 ### Ideal For
 
-- **Complex Campaigns**: Managing dozens of characters, factions, and interconnected storylines
+- **Tabletop RPG Campaigns**: Managing dozens of NPCs, factions, and interconnected storylines
+- **LARP Events**: Organizing character sheets, faction politics, and event timelines
 - **Long-Running Games**: Tracking character evolution and campaign history over time
-- **Collaborative Storytelling**: Sharing campaign data with other GMs or players
-- **World Building**: Creating detailed, interconnected game worlds with rich faction dynamics
+- **Worldbuilding Projects**: Creating detailed, interconnected fictional worlds with rich faction dynamics
+- **Collaborative Storytelling**: Sharing narrative elements and character data with co-creators
+- **Creative Writing**: Planning complex narratives with multiple characters and plot threads
 
 ---
 
@@ -320,8 +326,6 @@ AWInvestigations/
 - **[GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md)** - GitHub sync setup and usage
 - **[CSV_Import_Format.md](./CSV_Import_Format.md)** - CSV import format specification
 - **[DATA_REPOSITORY_TEMPLATE.md](./DATA_REPOSITORY_TEMPLATE.md)** - Data repository setup guide
-- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - GitHub integration implementation details
-- **[UI_CHANGES.md](./UI_CHANGES.md)** - UI changes documentation
 
 ---
 
@@ -374,12 +378,20 @@ This is currently a private project, but contributions are welcome through the s
 
 ---
 
+## 👥 Contributors
+
+Special thanks to those who have contributed to making AWInvestigations better:
+
+- **[Jim Scanlan (calmninjas)](https://github.com/calmninjas)** - Testing, bug reports, and feature ideas
+
+---
+
 ## 🙏 Acknowledgments
 
 - Built with [React Native](https://reactnative.dev/) and [Expo](https://expo.dev/)
 - Navigation powered by [React Navigation](https://reactnavigation.org/)
 - Charts and visualizations by [React Native Gifted Charts](https://github.com/Abhinandan-Kushwaha/react-native-gifted-charts)
-- Designed for managing campaigns in post-apocalyptic and fantasy tabletop RPG settings
+- Designed for tabletop RPGs, LARPs, worldbuilding, and storytelling across all genres
 
 ---
 
