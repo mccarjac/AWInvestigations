@@ -42,11 +42,13 @@ When you export data to GitHub:
      - Factions
      - Locations
      - Events
+   - Export all images for characters, factions, locations, and events
+   - Upload images to the `images/` directory in the repository
    - Create a Pull Request for review
 3. You'll receive a link to the Pull Request
 4. A human reviewer can approve and merge the PR
 
-**Note**: Images are not currently included in GitHub exports. This is a planned feature for future releases.
+**Note**: Images are included in both export and import operations. They are stored in the repository under the `images/` directory organized by entity type (characters, factions, locations, events).
 
 ## Importing Data from GitHub
 
@@ -55,6 +57,8 @@ When you import data from GitHub:
 1. Click "Import from GitHub" in the Data Management screen
 2. The app will:
    - Fetch the latest `data.json` from the main branch
+   - Download all images from the `images/` directory
+   - Save images to local permanent storage
    - Replace your local data with the imported data
 3. **Warning**: This will replace ALL existing data on your device
 
@@ -65,7 +69,17 @@ The data repository should have the following structure:
 ```
 mccarjac/AWInvestigationsDataLibrary/
 ├── README.md
-└── data.json
+├── data.json
+└── images/
+    ├── characters/
+    │   ├── characterId_0.jpg
+    │   └── characterId_1.png
+    ├── factions/
+    │   └── Faction_Name_0.jpg
+    ├── locations/
+    │   └── locationId_0.jpg
+    └── events/
+        └── eventId_0.jpg
 ```
 
 ### data.json Format
@@ -124,17 +138,19 @@ If import fails:
 2. Verify the repository exists and has a `data.json` file
 3. Verify your token has read access to the repository
 4. Check if the `data.json` format is valid
+5. Check the console logs for specific image download errors
+6. Ensure images in the `images/` directory are valid and accessible
 
 ## Future Enhancements
 
 Planned features for future releases:
 
-1. **Image Support**: Export and import character/faction/location images
+1. ~~**Image Support**: Export and import character/faction/location images~~ ✅ Completed
 2. **Merge Instead of Replace**: Option to merge imported data with existing data
 3. **Selective Export**: Export only specific entities
 4. **Version History**: View and restore previous versions
 5. **Conflict Resolution**: Better handling of concurrent edits
-6. **Git LFS**: Support for large image files
+6. **Git LFS**: Support for large image files (for better performance with many images)
 
 ## Contributing
 
