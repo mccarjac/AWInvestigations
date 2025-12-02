@@ -387,13 +387,16 @@ export const exportToGitHub = async (): Promise<{
     let uploadedCount = 0;
     for (const imageFile of imageFiles) {
       try {
+        // Clean base64 content - remove any whitespace that might have been added during encoding
+        const cleanBase64 = imageFile.content.replace(/[\r\n\s]/g, '');
+
         // Upload the image (no SHA needed for new files)
         await octokit.rest.repos.createOrUpdateFileContents({
           owner: DATA_REPO_OWNER,
           repo: DATA_REPO_NAME,
           path: imageFile.path,
           message: `Add image for ${imageFile.entityType}/${imageFile.entityId}`,
-          content: imageFile.content,
+          content: cleanBase64,
           branch: branchName,
         });
         uploadedCount++;
