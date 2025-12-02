@@ -174,11 +174,6 @@ export const exportToGitHub = async (): Promise<{
     const jsonData = await exportDataset();
     const dataset = JSON.parse(jsonData);
 
-    // Create/update data.json file
-    const dataContent = Buffer.from(JSON.stringify(dataset, null, 2)).toString(
-      'base64'
-    );
-
     // Check if file exists
     let fileSha: string | undefined;
     try {
@@ -296,6 +291,7 @@ export const exportToGitHub = async (): Promise<{
 
     // Process images for all entities
     let totalImages = 0;
+    console.log('[GitHub Export] Processing images for export...');
     if (dataset.characters) {
       for (const character of dataset.characters) {
         const images = await processEntityImages(
@@ -307,6 +303,9 @@ export const exportToGitHub = async (): Promise<{
           character.imageUris = images;
           character.imageUri = images[0];
           totalImages += images.length;
+          console.log(
+            `[GitHub Export] Processed ${images.length} images for character: ${character.name}`
+          );
         }
       }
     }
@@ -322,6 +321,9 @@ export const exportToGitHub = async (): Promise<{
           location.imageUris = images;
           location.imageUri = images[0];
           totalImages += images.length;
+          console.log(
+            `[GitHub Export] Processed ${images.length} images for location: ${location.name}`
+          );
         }
       }
     }
@@ -333,6 +335,9 @@ export const exportToGitHub = async (): Promise<{
           event.imageUris = images;
           event.imageUri = images[0];
           totalImages += images.length;
+          console.log(
+            `[GitHub Export] Processed ${images.length} images for event: ${event.title}`
+          );
         }
       }
     }
@@ -345,9 +350,14 @@ export const exportToGitHub = async (): Promise<{
           faction.imageUris = images;
           faction.imageUri = images[0];
           totalImages += images.length;
+          console.log(
+            `[GitHub Export] Processed ${images.length} images for faction: ${faction.name}`
+          );
         }
       }
     }
+
+    console.log(`[GitHub Export] Total images to upload: ${totalImages}`);
 
     // Update data.json with modified paths
     const updatedDataContent = Buffer.from(
@@ -368,6 +378,10 @@ export const exportToGitHub = async (): Promise<{
     // Upload all image files to the repository
     // Note: Since we're always creating a new branch, files won't exist yet,
     // so we don't need to check for existing SHAs
+    console.log(
+      `[GitHub Export] Uploading ${imageFiles.length} images to GitHub...`
+    );
+    let uploadedCount = 0;
     for (const imageFile of imageFiles) {
       try {
         // Upload the image (no SHA needed for new files)
@@ -379,11 +393,21 @@ export const exportToGitHub = async (): Promise<{
           content: imageFile.content,
           branch: branchName,
         });
+        uploadedCount++;
+        console.log(
+          `[GitHub Export] Uploaded image ${uploadedCount}/${imageFiles.length}: ${imageFile.path}`
+        );
       } catch (error) {
-        console.error(`Failed to upload image ${imageFile.path}:`, error);
+        console.error(
+          `[GitHub Export] Failed to upload image ${imageFile.path}:`,
+          error
+        );
         // Continue with other images even if one fails
       }
     }
+    console.log(
+      `[GitHub Export] Successfully uploaded ${uploadedCount}/${imageFiles.length} images`
+    );
 
     // Create Pull Request
     const { data: pr } = await octokit.rest.pulls.create({
@@ -502,18 +526,23 @@ export const importFromGitHub = async (): Promise<{
               const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
               const localPath = permanentImageDir + entityType + '/' + filename;
 
-              await FileSystem.writeAsStringAsync(
-                localPath,
-                imageFile.content,
-                {
-                  encoding: FileSystem.EncodingType.Base64,
-                }
-              );
+              // GitHub API returns base64 content with newlines - remove them
+              const cleanBase64 = imageFile.content.replace(/\n/g, '');
+
+              await FileSystem.writeAsStringAsync(localPath, cleanBase64, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
 
               localPaths.push(localPath);
+              console.log(
+                `[GitHub Import] Successfully downloaded image: ${imagePath} -> ${localPath}`
+              );
             }
           } catch (error) {
-            console.error(`Failed to download image ${imagePath}:`, error);
+            console.error(
+              `[GitHub Import] Failed to download image ${imagePath}:`,
+              error
+            );
             // Continue with other images even if one fails
           }
         }
@@ -522,19 +551,36 @@ export const importFromGitHub = async (): Promise<{
       };
 
       // Process images for characters
+      let totalImagesDownloaded = 0;
       if (dataset.characters) {
         for (const character of dataset.characters) {
           if (character.imageUris && character.imageUris.length > 0) {
+            console.log(
+              `[GitHub Import] Processing ${character.imageUris.length} images for character: ${character.name}`
+            );
             const localPaths = await downloadImages(character.imageUris);
             if (localPaths.length > 0) {
               character.imageUris = localPaths;
               character.imageUri = localPaths[0];
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No images downloaded for character: ${character.name}`
+              );
             }
           } else if (character.imageUri) {
+            console.log(
+              `[GitHub Import] Processing single image for character: ${character.name}`
+            );
             const localPaths = await downloadImages([character.imageUri]);
             if (localPaths.length > 0) {
               character.imageUri = localPaths[0];
               character.imageUris = localPaths;
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No image downloaded for character: ${character.name}`
+              );
             }
           }
         }
@@ -544,16 +590,32 @@ export const importFromGitHub = async (): Promise<{
       if (dataset.locations) {
         for (const location of dataset.locations) {
           if (location.imageUris && location.imageUris.length > 0) {
+            console.log(
+              `[GitHub Import] Processing ${location.imageUris.length} images for location: ${location.name}`
+            );
             const localPaths = await downloadImages(location.imageUris);
             if (localPaths.length > 0) {
               location.imageUris = localPaths;
               location.imageUri = localPaths[0];
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No images downloaded for location: ${location.name}`
+              );
             }
           } else if (location.imageUri) {
+            console.log(
+              `[GitHub Import] Processing single image for location: ${location.name}`
+            );
             const localPaths = await downloadImages([location.imageUri]);
             if (localPaths.length > 0) {
               location.imageUri = localPaths[0];
               location.imageUris = localPaths;
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No image downloaded for location: ${location.name}`
+              );
             }
           }
         }
@@ -563,16 +625,32 @@ export const importFromGitHub = async (): Promise<{
       if (dataset.events) {
         for (const event of dataset.events) {
           if (event.imageUris && event.imageUris.length > 0) {
+            console.log(
+              `[GitHub Import] Processing ${event.imageUris.length} images for event: ${event.title}`
+            );
             const localPaths = await downloadImages(event.imageUris);
             if (localPaths.length > 0) {
               event.imageUris = localPaths;
               event.imageUri = localPaths[0];
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No images downloaded for event: ${event.title}`
+              );
             }
           } else if (event.imageUri) {
+            console.log(
+              `[GitHub Import] Processing single image for event: ${event.title}`
+            );
             const localPaths = await downloadImages([event.imageUri]);
             if (localPaths.length > 0) {
               event.imageUri = localPaths[0];
               event.imageUris = localPaths;
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No image downloaded for event: ${event.title}`
+              );
             }
           }
         }
@@ -582,20 +660,40 @@ export const importFromGitHub = async (): Promise<{
       if (dataset.factions) {
         for (const faction of dataset.factions) {
           if (faction.imageUris && faction.imageUris.length > 0) {
+            console.log(
+              `[GitHub Import] Processing ${faction.imageUris.length} images for faction: ${faction.name}`
+            );
             const localPaths = await downloadImages(faction.imageUris);
             if (localPaths.length > 0) {
               faction.imageUris = localPaths;
               faction.imageUri = localPaths[0];
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No images downloaded for faction: ${faction.name}`
+              );
             }
           } else if (faction.imageUri) {
+            console.log(
+              `[GitHub Import] Processing single image for faction: ${faction.name}`
+            );
             const localPaths = await downloadImages([faction.imageUri]);
             if (localPaths.length > 0) {
               faction.imageUri = localPaths[0];
               faction.imageUris = localPaths;
+              totalImagesDownloaded += localPaths.length;
+            } else {
+              console.warn(
+                `[GitHub Import] No image downloaded for faction: ${faction.name}`
+              );
             }
           }
         }
       }
+
+      console.log(
+        `[GitHub Import] Total images downloaded: ${totalImagesDownloaded}`
+      );
 
       // Update last sync time
       const config = await getGitHubConfig();
