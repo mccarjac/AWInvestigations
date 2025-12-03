@@ -406,7 +406,7 @@ export const exportToGitHub = async (): Promise<{
       owner: DATA_REPO_OWNER,
       repo: DATA_REPO_NAME,
       tree_sha: baseTreeSha,
-      recursive: 'true',
+      recursive: true,
     });
 
     // Build a map of existing files for quick lookup
@@ -415,9 +415,9 @@ export const exportToGitHub = async (): Promise<{
       { sha: string; size: number | undefined }
     >();
     for (const item of baseTree.tree) {
-      if (item.path && item.type === 'blob') {
+      if (item.path && item.type === 'blob' && item.sha) {
         existingFiles.set(item.path, {
-          sha: item.sha || '',
+          sha: item.sha,
           size: item.size,
         });
       }
