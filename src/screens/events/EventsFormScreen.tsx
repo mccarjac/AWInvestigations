@@ -21,7 +21,7 @@ import {
 } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { Picker } from '@react-native-picker/picker';
-import { GameCharacter, GameLocation } from '@models/types';
+import { GameCharacter, GameLocation, CertaintyLevel } from '@models/types';
 import { BaseFormScreen } from '@/components';
 
 type EventsFormNavigationProp = StackNavigationProp<
@@ -42,6 +42,7 @@ interface EventFormData {
   notes: string;
   imageUri?: string;
   imageUris?: string[];
+  certaintyLevel: CertaintyLevel;
 }
 
 export const EventsFormScreen: React.FC = () => {
@@ -67,6 +68,7 @@ export const EventsFormScreen: React.FC = () => {
     notes: '',
     imageUri: undefined,
     imageUris: [],
+    certaintyLevel: 'confirmed',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -111,6 +113,7 @@ export const EventsFormScreen: React.FC = () => {
         notes: event.notes || '',
         imageUri: event.imageUri,
         imageUris: event.imageUris || (event.imageUri ? [event.imageUri] : []),
+        certaintyLevel: event.certaintyLevel || 'confirmed',
       });
     }
   }, [event]);
@@ -288,6 +291,25 @@ export const EventsFormScreen: React.FC = () => {
           value={formData.time}
           onChangeText={time => setFormData({ ...formData, time })}
         />
+      </View>
+
+      {/* Certainty Level */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Certainty Level</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={formData.certaintyLevel}
+            onValueChange={certaintyLevel =>
+              setFormData({ ...formData, certaintyLevel })
+            }
+            style={styles.picker}
+            dropdownIconColor={themeColors.text.secondary}
+          >
+            <Picker.Item label="Confirmed" value="confirmed" />
+            <Picker.Item label="Unconfirmed" value="unconfirmed" />
+            <Picker.Item label="Disputed" value="disputed" />
+          </Picker>
+        </View>
       </View>
 
       {/* Location */}

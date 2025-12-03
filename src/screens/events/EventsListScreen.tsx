@@ -35,6 +35,7 @@ export const EventsTimelineScreen: React.FC = () => {
   const [filterLocation, setFilterLocation] = useState<string>('');
   const [filterCharacter, setFilterCharacter] = useState<string>('');
   const [filterFaction, setFilterFaction] = useState<string>('');
+  const [filterCertainty, setFilterCertainty] = useState<string>('');
   const [characters, setCharacters] = useState<{ id: string; name: string }[]>(
     []
   );
@@ -126,8 +127,22 @@ export const EventsTimelineScreen: React.FC = () => {
       );
     }
 
+    // Filter by certainty level
+    if (filterCertainty) {
+      filtered = filtered.filter(
+        event => (event.certaintyLevel || 'confirmed') === filterCertainty
+      );
+    }
+
     return filtered;
-  }, [events, searchQuery, filterLocation, filterCharacter, filterFaction]);
+  }, [
+    events,
+    searchQuery,
+    filterLocation,
+    filterCharacter,
+    filterFaction,
+    filterCertainty,
+  ]);
 
   const formatDate = (dateString: string, timeString?: string): string => {
     const date = new Date(dateString);
@@ -146,7 +161,26 @@ export const EventsTimelineScreen: React.FC = () => {
     >
       <View style={styles.eventHeader}>
         <View style={styles.eventTitleContainer}>
-          <Text style={styles.eventTitle}>{item.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.eventTitle}>{item.title}</Text>
+            <View
+              style={[
+                styles.certaintyBadge,
+                item.certaintyLevel === 'unconfirmed' &&
+                  styles.certaintyUnconfirmed,
+                item.certaintyLevel === 'disputed' && styles.certaintyDisputed,
+                (!item.certaintyLevel || item.certaintyLevel === 'confirmed') &&
+                  styles.certaintyConfirmed,
+              ]}
+            >
+              <Text style={styles.certaintyBadgeText}>
+                {item.certaintyLevel
+                  ? item.certaintyLevel.charAt(0).toUpperCase() +
+                    item.certaintyLevel.slice(1)
+                  : 'Confirmed'}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.eventDate}>
             {formatDate(item.date, item.time)}
           </Text>
@@ -198,6 +232,20 @@ export const EventsTimelineScreen: React.FC = () => {
 
   const renderFilters = () => (
     <View style={styles.filtersContainer}>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={filterCertainty}
+          onValueChange={setFilterCertainty}
+          style={styles.picker}
+          dropdownIconColor={themeColors.text.secondary}
+        >
+          <Picker.Item label="All Certainty Levels" value="" />
+          <Picker.Item label="Confirmed" value="confirmed" />
+          <Picker.Item label="Unconfirmed" value="unconfirmed" />
+          <Picker.Item label="Disputed" value="disputed" />
+        </Picker>
+      </View>
+
       <View style={styles.pickerContainer}>
         <Picker
           selectedValue={filterLocation}
@@ -303,11 +351,17 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   eventTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: themeColors.text.primary,
-    marginBottom: 4,
+    flex: 1,
   },
   eventDate: {
     fontSize: 14,
@@ -343,5 +397,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: themeColors.text.secondary,
     flex: 1,
+  },
+  certaintyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  certaintyBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+  },
+  certaintyConfirmed: {
+    backgroundColor: themeColors.certainty.confirmed,
+  },
+  certaintyUnconfirmed: {
+    backgroundColor: themeColors.certainty.unconfirmed,
+  },
+  certaintyDisputed: {
+    backgroundColor: themeColors.certainty.disputed,
   },
 });
