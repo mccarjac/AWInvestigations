@@ -21,7 +21,7 @@ import {
 } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { Picker } from '@react-native-picker/picker';
-import { GameCharacter, GameLocation } from '@models/types';
+import { GameCharacter, GameLocation, CertaintyLevel } from '@models/types';
 import { BaseFormScreen } from '@/components';
 
 type EventsFormNavigationProp = StackNavigationProp<
@@ -42,7 +42,7 @@ interface EventFormData {
   notes: string;
   imageUri?: string;
   imageUris?: string[];
-  certaintyLevel: 'unconfirmed' | 'confirmed' | 'disputed';
+  certaintyLevel: CertaintyLevel;
 }
 
 export const EventsFormScreen: React.FC = () => {
