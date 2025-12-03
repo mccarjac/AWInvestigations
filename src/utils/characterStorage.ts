@@ -134,13 +134,27 @@ export const exportDataset = async (): Promise<string> => {
   };
   const events = eventData || { events: [], version: '1.0', lastUpdated: '' };
 
+  // Find the most recent lastUpdated timestamp from all datasets
+  const timestamps = [
+    characters.lastUpdated,
+    factions.lastUpdated,
+    locations.lastUpdated,
+    events.lastUpdated,
+  ].filter(t => t && t !== '');
+
+  // Use the most recent timestamp, or current time if no timestamps exist
+  const mostRecentTimestamp =
+    timestamps.length > 0
+      ? timestamps.sort().reverse()[0]
+      : new Date().toISOString();
+
   const combinedDataset = {
     characters: characters.characters || [],
     factions: factions.factions || [],
     locations: locations.locations || [],
     events: events.events || [],
     version: '1.0',
-    lastUpdated: new Date().toISOString(),
+    lastUpdated: mostRecentTimestamp,
   };
 
   return JSON.stringify(combinedDataset);
