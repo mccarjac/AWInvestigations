@@ -48,6 +48,13 @@ export const colors = {
     enemy: '#EF4444', // Red
   },
 
+  // Certainty level colors
+  certainty: {
+    confirmed: '#2ECC71', // Green
+    unconfirmed: '#F39C12', // Orange
+    disputed: '#E74C3C', // Red
+  },
+
   // Interactive colors
   interactive: {
     hover: 'rgba(108, 92, 231, 0.15)', // Light overlay for hover states

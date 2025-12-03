@@ -291,15 +291,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   certaintyConfirmed: {
-    backgroundColor: '#2ECC71',
+    backgroundColor: themeColors.certainty.confirmed,
     color: themeColors.text.primary,
   },
   certaintyUnconfirmed: {
-    backgroundColor: '#F39C12',
+    backgroundColor: themeColors.certainty.unconfirmed,
     color: themeColors.text.primary,
   },
   certaintyDisputed: {
-    backgroundColor: '#E74C3C',
+    backgroundColor: themeColors.certainty.disputed,
     color: themeColors.text.primary,
   },
 });

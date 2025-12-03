@@ -410,12 +410,12 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
   },
   certaintyConfirmed: {
-    backgroundColor: '#2ECC71',
+    backgroundColor: themeColors.certainty.confirmed,
   },
   certaintyUnconfirmed: {
-    backgroundColor: '#F39C12',
+    backgroundColor: themeColors.certainty.unconfirmed,
   },
   certaintyDisputed: {
-    backgroundColor: '#E74C3C',
+    backgroundColor: themeColors.certainty.disputed,
   },
 });
