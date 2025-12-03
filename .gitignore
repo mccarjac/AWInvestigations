@@ -40,5 +40,5 @@ yarn-error.*
 /ios
 /android
 
-package-lock.json
-yarn.lock
+# package-lock.json
+# yarn.lock
