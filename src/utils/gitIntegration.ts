@@ -605,7 +605,7 @@ export const importFromGitHub = async (): Promise<{
                   `[GitHub Import] Image already exists (${fileInfo.size} bytes): ${imagePath} -> ${localPath}`
                 );
               } else {
-                // Image doesn't exist or has different size - download it
+                // Image doesn't exist, has different size, or size check failed - download it
                 // Use Git Blob API to fetch the content directly (no size limit)
                 const { data: blob } = await octokit.rest.git.getBlob({
                   owner: DATA_REPO_OWNER,
