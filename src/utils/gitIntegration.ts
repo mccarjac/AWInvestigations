@@ -590,6 +590,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No images downloaded for character: ${character.name}`
               );
+              // Clear image references if download failed
+              delete character.imageUri;
+              delete character.imageUris;
             }
           } else if (character.imageUri) {
             console.log(
@@ -604,6 +607,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No image downloaded for character: ${character.name}`
               );
+              // Clear image references if download failed
+              delete character.imageUri;
+              delete character.imageUris;
             }
           }
         }
@@ -625,6 +631,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No images downloaded for location: ${location.name}`
               );
+              // Clear image references if download failed
+              delete location.imageUri;
+              delete location.imageUris;
             }
           } else if (location.imageUri) {
             console.log(
@@ -639,6 +648,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No image downloaded for location: ${location.name}`
               );
+              // Clear image references if download failed
+              delete location.imageUri;
+              delete location.imageUris;
             }
           }
         }
@@ -660,6 +672,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No images downloaded for event: ${event.title}`
               );
+              // Clear image references if download failed
+              delete event.imageUri;
+              delete event.imageUris;
             }
           } else if (event.imageUri) {
             console.log(
@@ -674,6 +689,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No image downloaded for event: ${event.title}`
               );
+              // Clear image references if download failed
+              delete event.imageUri;
+              delete event.imageUris;
             }
           }
         }
@@ -695,6 +713,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No images downloaded for faction: ${faction.name}`
               );
+              // Clear image references if download failed
+              delete faction.imageUri;
+              delete faction.imageUris;
             }
           } else if (faction.imageUri) {
             console.log(
@@ -709,6 +730,9 @@ export const importFromGitHub = async (): Promise<{
               console.warn(
                 `[GitHub Import] No image downloaded for faction: ${faction.name}`
               );
+              // Clear image references if download failed
+              delete faction.imageUri;
+              delete faction.imageUris;
             }
           }
         }
