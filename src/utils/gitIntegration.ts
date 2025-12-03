@@ -401,31 +401,6 @@ export const exportToGitHub = async (): Promise<{
     });
     const baseTreeSha = latestCommit.tree.sha;
 
-    // Fetch the base tree to get existing file SHAs (more efficient than N API calls)
-    const { data: baseTree } = await octokit.rest.git.getTree({
-      owner: DATA_REPO_OWNER,
-      repo: DATA_REPO_NAME,
-      tree_sha: baseTreeSha,
-      recursive: true,
-    });
-
-    // Build a map of existing files for quick lookup
-    const existingFiles = new Map<
-      string,
-      { sha: string; size: number | undefined }
-    >();
-    for (const item of baseTree.tree) {
-      if (item.path && item.type === 'blob' && item.sha) {
-        existingFiles.set(item.path, {
-          sha: item.sha,
-          size: item.size,
-        });
-      }
-    }
-    console.log(
-      `[GitHub Export] Found ${existingFiles.size} existing files in repository`
-    );
-
     // Create blobs for all images
     const treeItems: Array<{
       path: string;
@@ -434,61 +409,33 @@ export const exportToGitHub = async (): Promise<{
       sha: string;
     }> = [];
 
-    let skippedCount = 0;
     for (const imageFile of imageFiles) {
       try {
-        // Check if image already exists in the repository
-        const existingFile = existingFiles.get(imageFile.path);
-        const existingFileSha = existingFile?.sha;
-        const existingFileSize = existingFile?.size;
-
         // Clean base64 content - remove any whitespace that might have been added during encoding
         const cleanBase64 = imageFile.content.replace(/[\r\n\s]/g, '');
 
-        // Calculate the size of the content we're about to upload
-        const contentSize = Buffer.from(cleanBase64, 'base64').length;
+        // Create a blob for the image
+        const { data: blob } = await octokit.rest.git.createBlob({
+          owner: DATA_REPO_OWNER,
+          repo: DATA_REPO_NAME,
+          content: cleanBase64,
+          encoding: 'base64',
+        });
 
-        // Skip upload if file exists with same size
-        if (
-          existingFileSha &&
-          typeof existingFileSize === 'number' &&
-          contentSize === existingFileSize
-        ) {
-          // File already exists with same size - reuse existing blob SHA
-          treeItems.push({
-            path: imageFile.path,
-            mode: '100644',
-            type: 'blob',
-            sha: existingFileSha,
-          });
-          skippedCount++;
-          console.log(
-            `[GitHub Export] Image already exists (${existingFileSize} bytes): ${imageFile.path}`
-          );
-        } else {
-          // Create a blob for the new or updated image
-          const { data: blob } = await octokit.rest.git.createBlob({
-            owner: DATA_REPO_OWNER,
-            repo: DATA_REPO_NAME,
-            content: cleanBase64,
-            encoding: 'base64',
-          });
+        treeItems.push({
+          path: imageFile.path,
+          mode: '100644',
+          type: 'blob',
+          sha: blob.sha,
+        });
 
-          treeItems.push({
-            path: imageFile.path,
-            mode: '100644',
-            type: 'blob',
-            sha: blob.sha,
-          });
-
-          uploadedCount++;
-          console.log(
-            `[GitHub Export] Uploaded image ${uploadedCount + skippedCount}/${imageFiles.length}: ${imageFile.path}`
-          );
-        }
+        uploadedCount++;
+        console.log(
+          `[GitHub Export] Created blob for image ${uploadedCount}/${imageFiles.length}: ${imageFile.path}`
+        );
       } catch (error) {
         console.error(
-          `[GitHub Export] Failed to process image ${imageFile.path}:`,
+          `[GitHub Export] Failed to create blob for image ${imageFile.path}:`,
           error
         );
         // Continue with other images even if one fails
@@ -520,7 +467,7 @@ export const exportToGitHub = async (): Promise<{
       sha: newCommit.sha,
     });
     console.log(
-      `[GitHub Export] Successfully processed ${imageFiles.length} images: ${uploadedCount} uploaded, ${skippedCount} skipped (already exist)`
+      `[GitHub Export] Successfully uploaded ${uploadedCount}/${imageFiles.length} images`
     );
 
     // Create Pull Request
@@ -857,7 +804,7 @@ export const importFromGitHub = async (): Promise<{
       }
 
       console.log(
-        `[GitHub Import] Total images processed: ${totalImagesDownloaded}`
+        `[GitHub Import] Total images downloaded: ${totalImagesDownloaded}`
       );
 
       // Update last sync time
