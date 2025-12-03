@@ -849,7 +849,7 @@ export const importFromGitHub = async (): Promise<{
       }
 
       console.log(
-        `[GitHub Import] Total images downloaded: ${totalImagesDownloaded}`
+        `[GitHub Import] Total images processed: ${totalImagesDownloaded}`
       );
 
       // Update last sync time
