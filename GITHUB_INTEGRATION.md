@@ -42,11 +42,14 @@ When you export data to GitHub:
      - Factions
      - Locations
      - Events
-   - Export all images for characters, factions, locations, and events
-   - Upload images to the `images/` directory in the repository
+   - Check for existing images in the repository
+   - Upload only new or updated images (skips images that already exist with the same size)
+   - Save images to the `images/` directory in the repository
    - Create a Pull Request for review
 3. You'll receive a link to the Pull Request
 4. A human reviewer can approve and merge the PR
+
+**Performance Note**: Subsequent exports are faster as existing images are not re-uploaded unless they have changed.
 
 **Note**: Images are included in both export and import operations. They are stored in the repository under the `images/` directory organized by entity type (characters, factions, locations, events).
 
