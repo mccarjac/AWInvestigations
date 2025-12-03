@@ -582,29 +582,44 @@ export const importFromGitHub = async (): Promise<{
             });
 
             if ('sha' in fileInfo && 'size' in fileInfo) {
-              // Use Git Blob API to fetch the content directly (no size limit)
-              const { data: blob } = await octokit.rest.git.getBlob({
-                owner: DATA_REPO_OWNER,
-                repo: DATA_REPO_NAME,
-                file_sha: fileInfo.sha,
-              });
-
-              // Save to local permanent storage
+              // Determine local path for the image
               const filename = imagePath.split('/').pop() || 'image.jpg';
               const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
               const localPath = permanentImageDir + entityType + '/' + filename;
 
-              // Git Blob API returns base64 content - remove any whitespace
-              const cleanBase64 = blob.content.replace(/\s/g, '');
+              // Check if image already exists locally
+              const localFileInfo = await FileSystem.getInfoAsync(localPath);
 
-              await FileSystem.writeAsStringAsync(localPath, cleanBase64, {
-                encoding: FileSystem.EncodingType.Base64,
-              });
+              if (
+                localFileInfo.exists &&
+                localFileInfo.size === fileInfo.size
+              ) {
+                // Image already exists with the same size - skip download
+                localPaths.push(localPath);
+                console.log(
+                  `[GitHub Import] Image already exists (${fileInfo.size} bytes): ${imagePath} -> ${localPath}`
+                );
+              } else {
+                // Image doesn't exist or has different size - download it
+                // Use Git Blob API to fetch the content directly (no size limit)
+                const { data: blob } = await octokit.rest.git.getBlob({
+                  owner: DATA_REPO_OWNER,
+                  repo: DATA_REPO_NAME,
+                  file_sha: fileInfo.sha,
+                });
 
-              localPaths.push(localPath);
-              console.log(
-                `[GitHub Import] Successfully downloaded image (${fileInfo.size} bytes): ${imagePath} -> ${localPath}`
-              );
+                // Git Blob API returns base64 content - remove any whitespace
+                const cleanBase64 = blob.content.replace(/\s/g, '');
+
+                await FileSystem.writeAsStringAsync(localPath, cleanBase64, {
+                  encoding: FileSystem.EncodingType.Base64,
+                });
+
+                localPaths.push(localPath);
+                console.log(
+                  `[GitHub Import] Successfully downloaded image (${fileInfo.size} bytes): ${imagePath} -> ${localPath}`
+                );
+              }
             }
           } catch (error) {
             console.error(
