@@ -10,8 +10,8 @@ jobs:
     name: Build APK
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-    
+      contents: write   # Needed for release upload
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,23 +32,45 @@ jobs:
         run: npm ci
 
       - name: Build Android APK
+        id: build_apk
         run: |
           echo "Starting EAS build for Android APK..."
-          eas build --platform android --profile preview --non-interactive --no-wait
+          BUILD_INFO=$(eas build --platform android --profile preview --non-interactive --output=json)
+          echo "$BUILD_INFO"
+          # Extract build ID for further querying
+          BUILD_ID=$(echo "$BUILD_INFO" | jq -r '.id')
+          echo "Build ID: $BUILD_ID"
+          echo "::set-output name=build_id::$BUILD_ID"
 
-      - name: Build Information
+      - name: Get APK download URL via EAS API
+        id: get_apk_url
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          echo "✅ Build submitted successfully to Expo Application Services (EAS)"
-          echo ""
-          echo "📱 Platform: Android"
-          echo "📦 Build Type: APK (preview profile)"
-          echo "⏱️  Build typically takes 10-20 minutes"
-          echo ""
-          echo "🔗 Monitor your build progress at:"
-          echo "   https://expo.dev"
-          echo "   Navigate to: Projects → GameCharacterManager → Builds"
-          echo ""
-          echo "💡 Once the build completes, you can:"
-          echo "   1. Download the APK from the EAS build page"
-          echo "   2. Install it directly on your Android device"
-          echo "   3. Share it with testers"
+          # Query the EAS API for build details
+          BUILD_ID="${{ steps.build_apk.outputs.build_id }}"
+          BUILD_DETAILS=$(curl -s -H "Authorization: Bearer $EXPO_TOKEN" "https://api.expo.dev/v2/builds/$BUILD_ID")
+          # Extract download URL (.apk file)
+          APK_URL=$(echo "$BUILD_DETAILS" | jq -r '.artifacts.android.buildUrl')
+          echo "APK Download URL: $APK_URL"
+          echo "::set-output name=apk_url::$APK_URL"
+
+      - name: Create or update a GitHub Release with APK link
+        uses: softprops/action-gh-release@v2
+        if: ${{ steps.get_apk_url.outputs.apk_url != '' }}
+        with:
+          tag_name: latest-apk
+          name: Android APK (latest)
+          body: |
+            ## Download the latest APK
+            
+            [Download APK](${{ steps.get_apk_url.outputs.apk_url }})
+
+            This is an automated release containing the latest Android build artifact.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Information (optional)
+        run: |
+          echo "✅ Build completed and posted download URL to GitHub Release."
+          echo "🔗 APK: ${{ steps.get_apk_url.outputs.apk_url }}"
