@@ -581,7 +581,11 @@ export const importFromGitHub = async (): Promise<{
               ref: DATA_REPO_BRANCH,
             });
 
-            if ('sha' in fileInfo && 'size' in fileInfo) {
+            if (
+              'sha' in fileInfo &&
+              'size' in fileInfo &&
+              typeof fileInfo.size === 'number'
+            ) {
               // Determine local path for the image
               const filename = imagePath.split('/').pop() || 'image.jpg';
               const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
