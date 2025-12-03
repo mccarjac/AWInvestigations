@@ -401,6 +401,31 @@ export const exportToGitHub = async (): Promise<{
     });
     const baseTreeSha = latestCommit.tree.sha;
 
+    // Fetch the base tree to get existing file SHAs (more efficient than N API calls)
+    const { data: baseTree } = await octokit.rest.git.getTree({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      tree_sha: baseTreeSha,
+      recursive: 'true',
+    });
+
+    // Build a map of existing files for quick lookup
+    const existingFiles = new Map<
+      string,
+      { sha: string; size: number | undefined }
+    >();
+    for (const item of baseTree.tree) {
+      if (item.path && item.type === 'blob') {
+        existingFiles.set(item.path, {
+          sha: item.sha || '',
+          size: item.size,
+        });
+      }
+    }
+    console.log(
+      `[GitHub Export] Found ${existingFiles.size} existing files in repository`
+    );
+
     // Create blobs for all images
     const treeItems: Array<{
       path: string;
@@ -413,23 +438,9 @@ export const exportToGitHub = async (): Promise<{
     for (const imageFile of imageFiles) {
       try {
         // Check if image already exists in the repository
-        let existingFileSha: string | undefined;
-        let existingFileSize: number | undefined;
-        try {
-          const { data: existingFile } = await octokit.rest.repos.getContent({
-            owner: DATA_REPO_OWNER,
-            repo: DATA_REPO_NAME,
-            path: imageFile.path,
-            ref: DATA_REPO_BRANCH,
-          });
-
-          if ('sha' in existingFile && 'size' in existingFile) {
-            existingFileSha = existingFile.sha;
-            existingFileSize = existingFile.size;
-          }
-        } catch {
-          // File doesn't exist in repository, that's fine - we'll upload it
-        }
+        const existingFile = existingFiles.get(imageFile.path);
+        const existingFileSha = existingFile?.sha;
+        const existingFileSize = existingFile?.size;
 
         // Clean base64 content - remove any whitespace that might have been added during encoding
         const cleanBase64 = imageFile.content.replace(/[\r\n\s]/g, '');
