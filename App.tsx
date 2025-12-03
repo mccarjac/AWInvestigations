@@ -7,7 +7,14 @@ import {
   DrawerItemList,
   DrawerItem,
 } from '@react-navigation/drawer';
-import { StyleSheet, useWindowDimensions, View, Text } from 'react-native';
+import {
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  Text,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
 import {
   RootStackParamList,
   RootDrawerParamList,
@@ -53,14 +60,13 @@ const DarkTheme = {
 const Drawer = createDrawerNavigator<RootDrawerParamList>();
 const Stack = createStackNavigator<RootStackParamList>();
 
-// Context for update badge state
-const UpdateContext = React.createContext({
-  updatesAvailable: false,
-  setUpdatesAvailable: (_value: boolean) => {},
-});
-
 // Main drawer navigator for primary screens
 function MainDrawer() {
+  // Context for update badge state (scoped to MainDrawer)
+  const UpdateContext = React.createContext({
+    updatesAvailable: false,
+    setUpdatesAvailable: (_value: boolean) => {},
+  });
   const [updatesAvailable, setUpdatesAvailable] = useState(false);
 
   useEffect(() => {
@@ -75,10 +81,35 @@ function MainDrawer() {
     // Check on mount
     checkUpdates();
 
-    // Check periodically (every 5 minutes)
-    const interval = setInterval(checkUpdates, 5 * 60 * 1000);
+    // Check periodically (every 5 minutes) but only when app is active
+    let interval: NodeJS.Timeout | null = null;
+    
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        // App came to foreground, check for updates
+        checkUpdates();
+        // Start periodic checking
+        if (interval) clearInterval(interval);
+        interval = setInterval(checkUpdates, 5 * 60 * 1000);
+      } else {
+        // App went to background, stop periodic checking
+        if (interval) {
+          clearInterval(interval);
+          interval = null;
+        }
+      }
+    };
 
-    return () => clearInterval(interval);
+    // Start periodic checking if app is active
+    interval = setInterval(checkUpdates, 5 * 60 * 1000);
+    
+    // Listen for app state changes
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      subscription.remove();
+    };
   }, []);
 
   return (

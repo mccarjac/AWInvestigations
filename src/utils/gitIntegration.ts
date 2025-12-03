@@ -982,8 +982,12 @@ export const checkForUpdates = async (): Promise<{
     });
 
     // Compare timestamps - if remote is newer, updates are available
+    // Only show updates if we have local data (localLastUpdated is not empty)
+    // and remote data is newer than local data
     const available =
-      remoteLastUpdated > localLastUpdated && localLastUpdated !== '';
+      localLastUpdated !== '' &&
+      remoteLastUpdated !== '' &&
+      remoteLastUpdated > localLastUpdated;
 
     return {
       available,

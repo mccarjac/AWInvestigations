@@ -369,9 +369,17 @@ export const DataManagementScreen: React.FC = () => {
       setUpdatesAvailable(result.available);
 
       if (result.available) {
+        const remoteDate = result.remoteLastUpdated
+          ? new Date(result.remoteLastUpdated)
+          : null;
+        const dateStr =
+          remoteDate && !isNaN(remoteDate.getTime())
+            ? remoteDate.toLocaleString()
+            : 'unknown date';
+
         Alert.alert(
           'Updates Available',
-          `Remote data was updated on ${new Date(result.remoteLastUpdated || '').toLocaleString()}.\n\nWould you like to sync now?`,
+          `Remote data was updated on ${dateStr}.\n\nWould you like to sync now?`,
           [
             { text: 'Later', style: 'cancel' },
             { text: 'Sync Now', onPress: handleGitHubSync },
@@ -608,7 +616,7 @@ export const DataManagementScreen: React.FC = () => {
                 style={[styles.actionButton, styles.gitImportButton]}
                 onPress={handleGitHubImport}
               >
-                <Text style={styles.buttonText}>Import from GitHub (Replace All)</Text>
+                <Text style={styles.buttonText}>Force Import from GitHub</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
