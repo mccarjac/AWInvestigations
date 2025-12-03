@@ -10,11 +10,13 @@ Before the GitHub Action can build your APK, you need to set up an Expo access t
 
 ### 1. Create an Expo Access Token
 
-1. Go to [Expo Access Tokens page](https://expo.dev/accounts/[account]/settings/access-tokens)
-   - Replace `[account]` with your Expo username or organization name
-2. Click **"Create Token"**
-3. Give it a descriptive name (e.g., "GitHub Actions APK Builder")
-4. Copy the token immediately (you won't be able to see it again)
+1. Log in to your Expo account at [expo.dev](https://expo.dev)
+2. Navigate to **Account Settings** → **Access Tokens**
+   - Or go directly to: `https://expo.dev/accounts/YOUR_USERNAME/settings/access-tokens`
+   - Replace `YOUR_USERNAME` with your actual Expo username or organization name
+3. Click **"Create Token"**
+4. Give it a descriptive name (e.g., "GitHub Actions APK Builder")
+5. Copy the token immediately (you won't be able to see it again)
 
 ### 2. Add the Token to GitHub Secrets
 
@@ -48,7 +50,11 @@ The GitHub Action workflow:
 
 After the GitHub Action completes:
 
-1. Visit your [Expo builds page](https://expo.dev/accounts/[account]/projects/GameCharacterManager/builds)
+1. Visit your Expo builds page:
+   - Go to [expo.dev](https://expo.dev)
+   - Navigate to **Projects** → **GameCharacterManager** → **Builds**
+   - Or go directly to: `https://expo.dev/accounts/YOUR_USERNAME/projects/GameCharacterManager/builds`
+   - Replace `YOUR_USERNAME` with your actual Expo username or organization name
 2. Wait for the build to finish (status will change from "In Progress" to "Finished")
 3. Click **"Download"** to get your APK file
 4. Transfer the APK to your Android device and install it

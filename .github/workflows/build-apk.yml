@@ -33,8 +33,6 @@ jobs:
         run: |
           echo "Starting EAS build for Android APK..."
           eas build --platform android --profile preview --non-interactive --no-wait
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build Information
         run: |
@@ -45,7 +43,8 @@ jobs:
           echo "⏱️  Build typically takes 10-20 minutes"
           echo ""
           echo "🔗 Monitor your build progress at:"
-          echo "   https://expo.dev/accounts/$(whoami)/projects/GameCharacterManager/builds"
+          echo "   https://expo.dev"
+          echo "   Navigate to: Projects → GameCharacterManager → Builds"
           echo ""
           echo "💡 Once the build completes, you can:"
           echo "   1. Download the APK from the EAS build page"
