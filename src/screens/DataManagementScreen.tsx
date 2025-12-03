@@ -25,6 +25,8 @@ import {
   verifyGitHubToken,
   saveGitHubConfig,
   getGitHubConfig,
+  checkForUpdates,
+  syncWithGitHub,
 } from '@utils/gitIntegration';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
@@ -39,6 +41,8 @@ interface ProgressState {
     | 'csv'
     | 'git-export'
     | 'git-import'
+    | 'git-sync'
+    | 'check-updates'
     | null;
 }
 
@@ -52,12 +56,22 @@ export const DataManagementScreen: React.FC = () => {
   const [tokenDialogVisible, setTokenDialogVisible] = useState<boolean>(false);
   const [tokenInput, setTokenInput] = useState<string>('');
   const [tokenValidating, setTokenValidating] = useState<boolean>(false);
+  const [updatesAvailable, setUpdatesAvailable] = useState<boolean>(false);
+  const [checkingUpdates, setCheckingUpdates] = useState<boolean>(false);
 
-  // Check GitHub configuration on mount
+  // Check GitHub configuration and updates on mount
   React.useEffect(() => {
     const checkConfig = async () => {
       const configured = await isGitHubConfigured();
       setGitHubConfigured(configured);
+      
+      // Check for updates if configured
+      if (configured) {
+        setCheckingUpdates(true);
+        const result = await checkForUpdates();
+        setUpdatesAvailable(result.available);
+        setCheckingUpdates(false);
+      }
     };
     checkConfig();
   }, []);
@@ -69,7 +83,9 @@ export const DataManagementScreen: React.FC = () => {
       | 'merge'
       | 'csv'
       | 'git-export'
-      | 'git-import',
+      | 'git-import'
+      | 'git-sync'
+      | 'check-updates',
     message: string
   ) => {
     setProgress({ visible: true, message, operation });
@@ -293,6 +309,11 @@ export const DataManagementScreen: React.FC = () => {
             'Data has been imported from the GitHub repository.',
             [{ text: 'OK' }]
           );
+          // Refresh update check
+          setCheckingUpdates(true);
+          const updateResult = await checkForUpdates();
+          setUpdatesAvailable(updateResult.available);
+          setCheckingUpdates(false);
         } else {
           Alert.alert(
             'Import Failed',
@@ -313,6 +334,134 @@ export const DataManagementScreen: React.FC = () => {
       Alert.alert(
         'Import Failed',
         `An unexpected error occurred during import: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleCheckForUpdates = async () => {
+    if (!gitHubConfigured) {
+      Alert.alert(
+        'GitHub Not Configured',
+        'Please set up your GitHub token first.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Set Up', onPress: handleGitHubSetup },
+        ]
+      );
+      return;
+    }
+
+    showProgress('check-updates', 'Checking for updates...');
+    try {
+      const result = await checkForUpdates();
+      hideProgress();
+
+      if (result.error) {
+        Alert.alert(
+          'Check Failed',
+          result.error,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      setUpdatesAvailable(result.available);
+
+      if (result.available) {
+        Alert.alert(
+          'Updates Available',
+          `Remote data was updated on ${new Date(result.remoteLastUpdated || '').toLocaleString()}.\n\nWould you like to sync now?`,
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Sync Now', onPress: handleGitHubSync },
+          ]
+        );
+      } else {
+        Alert.alert(
+          'No Updates',
+          'Your data is up to date with the GitHub repository.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      hideProgress();
+      Alert.alert(
+        'Check Failed',
+        `An unexpected error occurred: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleGitHubSync = async () => {
+    if (!gitHubConfigured) {
+      Alert.alert(
+        'GitHub Not Configured',
+        'Please set up your GitHub token first.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Set Up', onPress: handleGitHubSetup },
+        ]
+      );
+      return;
+    }
+
+    showProgress('git-sync', 'Syncing with GitHub...');
+    try {
+      const result = await syncWithGitHub();
+      hideProgress();
+
+      if (!result.success) {
+        if (result.requiresManualReview) {
+          Alert.alert(
+            'Manual Review Required',
+            result.error || 'You have local changes that need to be reviewed.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Export to GitHub',
+                onPress: handleGitHubExport,
+              },
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Sync Failed',
+            result.error || 'An unexpected error occurred',
+            [{ text: 'OK' }]
+          );
+        }
+        return;
+      }
+
+      // Update the updates available state
+      setUpdatesAvailable(false);
+
+      if (result.conflicts && result.conflicts > 0) {
+        Alert.alert(
+          'Sync Complete with Conflicts',
+          `Successfully synced ${result.merged || 0} new items.\n\nFound ${result.conflicts} conflicts that were auto-resolved. Please review your data.`,
+          [{ text: 'OK' }]
+        );
+      } else if (result.merged && result.merged > 0) {
+        Alert.alert(
+          'Sync Successful',
+          `Successfully synced ${result.merged} new items with no conflicts.`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Already Up to Date',
+          'Your data is already in sync with the GitHub repository.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      hideProgress();
+      Alert.alert(
+        'Sync Failed',
+        `An unexpected error occurred during sync: ${error instanceof Error ? error.message : 'Unknown error'}`,
         [{ text: 'OK' }]
       );
     }
@@ -393,10 +542,18 @@ export const DataManagementScreen: React.FC = () => {
 
         {/* GitHub Integration Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>GitHub Repository Sync</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>GitHub Repository Sync</Text>
+            {gitHubConfigured && updatesAvailable && (
+              <View style={styles.updateBadge}>
+                <Text style={styles.updateBadgeText}>Updates Available</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.sectionDescription}>
             Share data with other users through the AWInvestigationsDataLibrary
-            GitHub repository. Exports create pull requests for review.
+            GitHub repository. Sync intelligently merges remote changes with your
+            local data.
           </Text>
 
           {!gitHubConfigured && (
@@ -411,6 +568,34 @@ export const DataManagementScreen: React.FC = () => {
           {gitHubConfigured && (
             <>
               <TouchableOpacity
+                style={[
+                  styles.actionButton,
+                  styles.gitSyncButton,
+                  updatesAvailable && styles.gitSyncButtonHighlight,
+                ]}
+                onPress={handleGitHubSync}
+                disabled={checkingUpdates}
+              >
+                <Text style={styles.buttonText}>
+                  {updatesAvailable ? '🔄 Sync Now (Updates Available)' : '🔄 Sync with GitHub'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.gitCheckButton]}
+                onPress={handleCheckForUpdates}
+                disabled={checkingUpdates}
+              >
+                <Text style={styles.buttonText}>
+                  {checkingUpdates ? 'Checking...' : 'Check for Updates'}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.advancedOptionsHeader}>
+                <Text style={styles.advancedOptionsText}>Advanced Options:</Text>
+              </View>
+
+              <TouchableOpacity
                 style={[styles.actionButton, styles.gitExportButton]}
                 onPress={handleGitHubExport}
               >
@@ -423,7 +608,7 @@ export const DataManagementScreen: React.FC = () => {
                 style={[styles.actionButton, styles.gitImportButton]}
                 onPress={handleGitHubImport}
               >
-                <Text style={styles.buttonText}>Import from GitHub</Text>
+                <Text style={styles.buttonText}>Import from GitHub (Replace All)</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -569,6 +754,21 @@ const styles = StyleSheet.create({
     borderColor: themeColors.accent.secondary,
     marginBottom: 12,
   },
+  gitSyncButton: {
+    backgroundColor: themeColors.accent.primary,
+    marginBottom: 12,
+  },
+  gitSyncButtonHighlight: {
+    backgroundColor: themeColors.accent.success,
+    borderWidth: 2,
+    borderColor: themeColors.accent.warning,
+  },
+  gitCheckButton: {
+    backgroundColor: themeColors.elevated,
+    borderColor: themeColors.accent.info,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
   gitExportButton: {
     backgroundColor: themeColors.accent.success,
     marginBottom: 12,
@@ -576,6 +776,33 @@ const styles = StyleSheet.create({
   gitImportButton: {
     backgroundColor: themeColors.accent.info,
     marginBottom: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  updateBadge: {
+    backgroundColor: themeColors.accent.warning,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  updateBadgeText: {
+    color: themeColors.text.primary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  advancedOptionsHeader: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  advancedOptionsText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.muted,
+    fontSize: 13,
+    fontStyle: 'italic',
   },
   clearButton: commonStyles.button.danger,
   buttonText: commonStyles.button.text,

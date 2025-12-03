@@ -35,6 +35,14 @@ const GITHUB_CONFIG_KEY = '@github_config';
 interface GitHubConfig {
   token?: string;
   lastSync?: string;
+  lastKnownRemoteVersion?: string;
+  lastCheckedForUpdates?: string;
+}
+
+interface GitHubDataInfo {
+  version: string;
+  lastUpdated: string;
+  sha: string;
 }
 
 /**
@@ -865,4 +873,234 @@ export const showGitHubTokenDialog = (): Promise<string | null> => {
 export const isGitHubConfigured = async (): Promise<boolean> => {
   const config = await getGitHubConfig();
   return !!config.token;
+};
+
+/**
+ * Get information about the remote data without downloading it
+ */
+export const getRemoteDataInfo = async (): Promise<{
+  success: boolean;
+  info?: GitHubDataInfo;
+  error?: string;
+}> => {
+  try {
+    const octokit = await getOctokit();
+    if (!octokit) {
+      return {
+        success: false,
+        error: 'GitHub token not configured.',
+      };
+    }
+
+    // Verify repository exists and is accessible
+    const repoCheck = await verifyRepository(octokit);
+    if (!repoCheck.exists) {
+      return {
+        success: false,
+        error: repoCheck.error || 'Repository verification failed.',
+      };
+    }
+
+    // Get file info
+    const { data: file } = await octokit.rest.repos.getContent({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      path: 'data.json',
+      ref: DATA_REPO_BRANCH,
+    });
+
+    if ('content' in file && 'sha' in file) {
+      // Parse just enough to get version and lastUpdated
+      const content = Buffer.from(file.content, 'base64').toString('utf-8');
+      const dataset = JSON.parse(content);
+
+      return {
+        success: true,
+        info: {
+          version: dataset.version || '1.0',
+          lastUpdated: dataset.lastUpdated || '',
+          sha: file.sha,
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: 'File not found or is a directory',
+      };
+    }
+  } catch (error) {
+    console.error('Failed to get remote data info:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+};
+
+/**
+ * Check if updates are available from GitHub
+ */
+export const checkForUpdates = async (): Promise<{
+  available: boolean;
+  remoteLastUpdated?: string;
+  localLastUpdated?: string;
+  error?: string;
+}> => {
+  try {
+    const octokit = await getOctokit();
+    if (!octokit) {
+      return {
+        available: false,
+        error: 'GitHub token not configured.',
+      };
+    }
+
+    // Get remote data info
+    const remoteResult = await getRemoteDataInfo();
+    if (!remoteResult.success || !remoteResult.info) {
+      return {
+        available: false,
+        error: remoteResult.error || 'Failed to get remote data info.',
+      };
+    }
+
+    // Get local data version
+    const { exportDataset } = await import('./characterStorage');
+    const localDataStr = await exportDataset();
+    const localData = JSON.parse(localDataStr);
+
+    const remoteLastUpdated = remoteResult.info.lastUpdated;
+    const localLastUpdated = localData.lastUpdated || '';
+
+    // Update lastCheckedForUpdates
+    const config = await getGitHubConfig();
+    await saveGitHubConfig({
+      ...config,
+      lastCheckedForUpdates: new Date().toISOString(),
+      lastKnownRemoteVersion: remoteLastUpdated,
+    });
+
+    // Compare timestamps - if remote is newer, updates are available
+    const available =
+      remoteLastUpdated > localLastUpdated && localLastUpdated !== '';
+
+    return {
+      available,
+      remoteLastUpdated,
+      localLastUpdated,
+    };
+  } catch (error) {
+    console.error('Failed to check for updates:', error);
+    return {
+      available: false,
+      error:
+        error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+};
+
+/**
+ * Sync data with GitHub - intelligent merge that handles conflicts
+ */
+export const syncWithGitHub = async (): Promise<{
+  success: boolean;
+  merged?: number;
+  conflicts?: number;
+  requiresManualReview?: boolean;
+  error?: string;
+}> => {
+  try {
+    const octokit = await getOctokit();
+    if (!octokit) {
+      return {
+        success: false,
+        error: 'GitHub token not configured.',
+      };
+    }
+
+    // Check if updates are available first
+    const updateCheck = await checkForUpdates();
+    if (updateCheck.error) {
+      return {
+        success: false,
+        error: updateCheck.error,
+      };
+    }
+
+    if (!updateCheck.available) {
+      // No updates available, check if we have local changes to push
+      const config = await getGitHubConfig();
+      const localHasChanges =
+        !config.lastSync ||
+        (updateCheck.localLastUpdated &&
+          updateCheck.localLastUpdated > config.lastSync);
+
+      if (localHasChanges) {
+        // We have local changes but no remote updates - suggest export
+        return {
+          success: false,
+          requiresManualReview: true,
+          error:
+            'You have local changes. Please export to GitHub to create a pull request.',
+        };
+      }
+
+      // No changes on either side
+      return {
+        success: true,
+        merged: 0,
+        conflicts: 0,
+      };
+    }
+
+    // Fetch remote data
+    const importResult = await importFromGitHub();
+    if (!importResult.success || !importResult.data) {
+      return {
+        success: false,
+        error: importResult.error || 'Failed to fetch remote data.',
+      };
+    }
+
+    // Import uses replace strategy, but we should use merge for sync
+    const { mergeDatasetWithConflictResolution } = await import(
+      './characterStorage'
+    );
+    const mergeResult = await mergeDatasetWithConflictResolution(
+      importResult.data
+    );
+
+    if (!mergeResult.success) {
+      return {
+        success: false,
+        error: 'Failed to merge data.',
+      };
+    }
+
+    // Update config with successful sync
+    const config = await getGitHubConfig();
+    await saveGitHubConfig({
+      ...config,
+      lastSync: new Date().toISOString(),
+      lastKnownRemoteVersion: updateCheck.remoteLastUpdated,
+    });
+
+    // If there are conflicts, they need manual review
+    const hasConflicts = mergeResult.conflicts.length > 0;
+
+    return {
+      success: true,
+      merged: mergeResult.added.length,
+      conflicts: mergeResult.conflicts.length,
+      requiresManualReview: hasConflicts,
+    };
+  } catch (error) {
+    console.error('Sync failed:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
 };
