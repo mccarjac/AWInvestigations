@@ -592,6 +592,7 @@ export const importFromGitHub = async (): Promise<{
 
               if (
                 localFileInfo.exists &&
+                typeof localFileInfo.size === 'number' &&
                 localFileInfo.size === fileInfo.size
               ) {
                 // Image already exists with the same size - skip download
