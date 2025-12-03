@@ -549,8 +549,8 @@ export const importFromGitHub = async (): Promise<{
               const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
               const localPath = permanentImageDir + entityType + '/' + filename;
 
-              // GitHub API returns base64 content with newlines and carriage returns - remove them
-              const cleanBase64 = imageFile.content.replace(/[\r\n]/g, '');
+              // GitHub API returns base64 content with whitespace - remove all of it
+              const cleanBase64 = imageFile.content.replace(/\s/g, '');
 
               await FileSystem.writeAsStringAsync(localPath, cleanBase64, {
                 encoding: FileSystem.EncodingType.Base64,
