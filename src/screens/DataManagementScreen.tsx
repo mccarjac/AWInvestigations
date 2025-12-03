@@ -16,7 +16,6 @@ import {
   exportCharacterData,
   importCharacterData,
   mergeCharacterData,
-  importCSVCharacters,
 } from '@utils/exportImport';
 import {
   exportToGitHub,
@@ -32,14 +31,7 @@ import { commonStyles } from '@/styles/commonStyles';
 interface ProgressState {
   visible: boolean;
   message: string;
-  operation:
-    | 'export'
-    | 'import'
-    | 'merge'
-    | 'csv'
-    | 'git-export'
-    | 'git-import'
-    | null;
+  operation: 'export' | 'import' | 'merge' | 'git-export' | 'git-import' | null;
 }
 
 export const DataManagementScreen: React.FC = () => {
@@ -63,13 +55,7 @@ export const DataManagementScreen: React.FC = () => {
   }, []);
 
   const showProgress = (
-    operation:
-      | 'export'
-      | 'import'
-      | 'merge'
-      | 'csv'
-      | 'git-export'
-      | 'git-import',
+    operation: 'export' | 'import' | 'merge' | 'git-export' | 'git-import',
     message: string
   ) => {
     setProgress({ visible: true, message, operation });
@@ -82,13 +68,13 @@ export const DataManagementScreen: React.FC = () => {
     const confirmClear = () => {
       if (Platform.OS === 'web') {
         return window.confirm(
-          'Are you sure you want to delete all data (characters, factions, locations, and events)? This action cannot be undone.'
+          'Are you sure you want to delete all game data? This action cannot be undone.'
         );
       } else {
         return new Promise<boolean>(resolve => {
           Alert.alert(
             'Clear All Data',
-            'Are you sure you want to delete all data (characters, factions, locations, and events)? This action cannot be undone.',
+            'Are you sure you want to delete all game data? This action cannot be undone.',
             [
               {
                 text: 'Cancel',
@@ -109,7 +95,9 @@ export const DataManagementScreen: React.FC = () => {
     const shouldClear = await confirmClear();
     if (shouldClear) {
       await clearStorage();
-      Alert.alert('Success', 'All data has been deleted.', [{ text: 'OK' }]);
+      Alert.alert('Success', 'All game data has been deleted.', [
+        { text: 'OK' },
+      ]);
     }
   };
 
@@ -128,11 +116,9 @@ export const DataManagementScreen: React.FC = () => {
       const success = await importCharacterData();
       hideProgress();
       if (success) {
-        Alert.alert(
-          'Success',
-          'Character and faction data imported successfully.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Success', 'Game data imported successfully.', [
+          { text: 'OK' },
+        ]);
       }
     } catch {
       hideProgress();
@@ -150,37 +136,15 @@ export const DataManagementScreen: React.FC = () => {
       const success = await mergeCharacterData();
       hideProgress();
       if (success) {
-        Alert.alert(
-          'Success',
-          'Character and faction data merged successfully.',
-          [{ text: 'OK' }]
-        );
-      }
-    } catch {
-      hideProgress();
-      Alert.alert(
-        'Merge Failed',
-        'An unexpected error occurred during merge.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
-
-  const handleCSVImport = async () => {
-    showProgress('csv', 'Importing CSV data...');
-    try {
-      const success = await importCSVCharacters();
-      hideProgress();
-      if (success) {
-        Alert.alert('Success', 'CSV data imported successfully.', [
+        Alert.alert('Success', 'Game data merged successfully.', [
           { text: 'OK' },
         ]);
       }
     } catch {
       hideProgress();
       Alert.alert(
-        'CSV Import Failed',
-        'An unexpected error occurred during CSV import.',
+        'Merge Failed',
+        'An unexpected error occurred during merge.',
         [{ text: 'OK' }]
       );
     }
@@ -327,67 +291,36 @@ export const DataManagementScreen: React.FC = () => {
       >
         <Text style={styles.header}>Data Management</Text>
         <Text style={styles.description}>
-          Manage your character and faction data with import, export, merge, and
-          backup options.
+          Manage your game data with import, export, merge, and backup options.
         </Text>
 
-        {/* Export Section */}
+        {/* JSON Data Management Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Export Data</Text>
+          <Text style={styles.sectionTitle}>JSON Data Management</Text>
           <Text style={styles.sectionDescription}>
-            Export all your character and faction data to a JSON file for backup
+            Export, import, or merge your game data using JSON files for backup
             or sharing.
           </Text>
+
           <TouchableOpacity
             style={[styles.actionButton, styles.exportButton]}
             onPress={handleExport}
           >
-            <Text style={styles.buttonText}>Export Characters & Factions</Text>
+            <Text style={styles.buttonText}>Export Game Data</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Import Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Import Data</Text>
-          <Text style={styles.sectionDescription}>
-            Import character and faction data from a JSON file. This will
-            replace all existing data.
-          </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.importButton]}
             onPress={handleImport}
           >
             <Text style={styles.buttonText}>Import & Replace</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Merge Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Merge Data</Text>
-          <Text style={styles.sectionDescription}>
-            Merge character and faction data from a JSON file with your existing
-            data. Duplicates will be handled intelligently.
-          </Text>
           <TouchableOpacity
             style={[styles.actionButton, styles.mergeButton]}
             onPress={handleMerge}
           >
             <Text style={styles.buttonText}>Merge Data</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* CSV Import Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>CSV Import</Text>
-          <Text style={styles.sectionDescription}>
-            Import character data from a CSV file. Useful for bulk character
-            creation from spreadsheets.
-          </Text>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.csvImportButton]}
-            onPress={handleCSVImport}
-          >
-            <Text style={styles.buttonText}>Import CSV</Text>
           </TouchableOpacity>
         </View>
 
@@ -557,13 +490,15 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   actionButton: commonStyles.button.base,
-  exportButton: commonStyles.button.warning,
-  importButton: commonStyles.button.secondary,
-  mergeButton: commonStyles.button.primary,
-  csvImportButton: {
-    backgroundColor: themeColors.elevated,
-    borderColor: themeColors.accent.primary,
+  exportButton: {
+    ...commonStyles.button.warning,
+    marginBottom: 12,
   },
+  importButton: {
+    ...commonStyles.button.secondary,
+    marginBottom: 12,
+  },
+  mergeButton: commonStyles.button.primary,
   setupButton: {
     backgroundColor: themeColors.elevated,
     borderColor: themeColors.accent.secondary,
