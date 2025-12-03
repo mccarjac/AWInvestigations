@@ -385,49 +385,87 @@ export const exportToGitHub = async (): Promise<{
       `[GitHub Export] Uploading ${imageFiles.length} images to GitHub...`
     );
     let uploadedCount = 0;
+    // Get the latest commit for the branch to build on
+    const { data: refData } = await octokit.rest.git.getRef({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      ref: `heads/${branchName}`,
+    });
+    const latestCommitSha = refData.object.sha;
+
+    // Get the tree for the latest commit
+    const { data: latestCommit } = await octokit.rest.git.getCommit({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      commit_sha: latestCommitSha,
+    });
+    const baseTreeSha = latestCommit.tree.sha;
+
+    // Create blobs for all images
+    const treeItems: Array<{
+      path: string;
+      mode: '100644';
+      type: 'blob';
+      sha: string;
+    }> = [];
+
     for (const imageFile of imageFiles) {
       try {
         // Clean base64 content - remove any whitespace that might have been added during encoding
         const cleanBase64 = imageFile.content.replace(/[\r\n\s]/g, '');
 
-        // Check if the file already exists on the branch (inherited from base branch)
-        let existingFileSha: string | undefined;
-        try {
-          const { data: existingFile } = await octokit.rest.repos.getContent({
-            owner: DATA_REPO_OWNER,
-            repo: DATA_REPO_NAME,
-            path: imageFile.path,
-            ref: branchName,
-          });
-          if ('sha' in existingFile) {
-            existingFileSha = existingFile.sha;
-          }
-        } catch {
-          // File doesn't exist, that's fine
-        }
-
-        // Upload the image with SHA if file exists
-        await octokit.rest.repos.createOrUpdateFileContents({
+        // Create a blob for the image
+        const { data: blob } = await octokit.rest.git.createBlob({
           owner: DATA_REPO_OWNER,
           repo: DATA_REPO_NAME,
-          path: imageFile.path,
-          message: `Add image for ${imageFile.entityType}/${imageFile.entityId}`,
           content: cleanBase64,
-          branch: branchName,
-          ...(existingFileSha && { sha: existingFileSha }),
+          encoding: 'base64',
         });
+
+        treeItems.push({
+          path: imageFile.path,
+          mode: '100644',
+          type: 'blob',
+          sha: blob.sha,
+        });
+
         uploadedCount++;
         console.log(
-          `[GitHub Export] Uploaded image ${uploadedCount}/${imageFiles.length}: ${imageFile.path}`
+          `[GitHub Export] Created blob for image ${uploadedCount}/${imageFiles.length}: ${imageFile.path}`
         );
       } catch (error) {
         console.error(
-          `[GitHub Export] Failed to upload image ${imageFile.path}:`,
+          `[GitHub Export] Failed to create blob for image ${imageFile.path}:`,
           error
         );
         // Continue with other images even if one fails
       }
     }
+
+    // Create a new tree with all the image blobs
+    const { data: newTree } = await octokit.rest.git.createTree({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      base_tree: baseTreeSha,
+      tree: treeItems,
+    });
+
+    // Create a commit with the new tree
+    const { data: newCommit } = await octokit.rest.git.createCommit({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      message: `Upload ${treeItems.length} images`,
+      tree: newTree.sha,
+      parents: [latestCommitSha],
+    });
+
+    // Update the branch reference to point to the new commit
+    await octokit.rest.git.updateRef({
+      owner: DATA_REPO_OWNER,
+      repo: DATA_REPO_NAME,
+      ref: `heads/${branchName}`,
+      sha: newCommit.sha,
+    });
     console.log(
       `[GitHub Export] Successfully uploaded ${uploadedCount}/${imageFiles.length} images`
     );
@@ -535,22 +573,29 @@ export const importFromGitHub = async (): Promise<{
 
         for (const imagePath of imagePaths) {
           try {
-            // Fetch image from GitHub
-            const { data: imageFile } = await octokit.rest.repos.getContent({
+            // First try to get the file metadata to get its blob SHA
+            const { data: fileInfo } = await octokit.rest.repos.getContent({
               owner: DATA_REPO_OWNER,
               repo: DATA_REPO_NAME,
               path: imagePath,
               ref: DATA_REPO_BRANCH,
             });
 
-            if ('content' in imageFile) {
+            if ('sha' in fileInfo && 'size' in fileInfo) {
+              // Use Git Blob API to fetch the content directly (no size limit)
+              const { data: blob } = await octokit.rest.git.getBlob({
+                owner: DATA_REPO_OWNER,
+                repo: DATA_REPO_NAME,
+                file_sha: fileInfo.sha,
+              });
+
               // Save to local permanent storage
               const filename = imagePath.split('/').pop() || 'image.jpg';
               const entityType = imagePath.split('/')[1]; // characters, locations, events, or factions
               const localPath = permanentImageDir + entityType + '/' + filename;
 
-              // GitHub API returns base64 content with whitespace - remove all of it
-              const cleanBase64 = imageFile.content.replace(/\s/g, '');
+              // Git Blob API returns base64 content - remove any whitespace
+              const cleanBase64 = blob.content.replace(/\s/g, '');
 
               await FileSystem.writeAsStringAsync(localPath, cleanBase64, {
                 encoding: FileSystem.EncodingType.Base64,
@@ -558,7 +603,7 @@ export const importFromGitHub = async (): Promise<{
 
               localPaths.push(localPath);
               console.log(
-                `[GitHub Import] Successfully downloaded image: ${imagePath} -> ${localPath}`
+                `[GitHub Import] Successfully downloaded image (${fileInfo.size} bytes): ${imagePath} -> ${localPath}`
               );
             }
           } catch (error) {
