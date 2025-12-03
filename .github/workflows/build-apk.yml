@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Android APK
+        run: |
+          echo "Starting EAS build for Android APK..."
+          eas build --platform android --profile preview --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Information
+        run: |
+          echo "✅ Build submitted successfully to Expo Application Services (EAS)"
+          echo ""
+          echo "📱 Platform: Android"
+          echo "📦 Build Type: APK (preview profile)"
+          echo "⏱️  Build typically takes 10-20 minutes"
+          echo ""
+          echo "🔗 Monitor your build progress at:"
+          echo "   https://expo.dev/accounts/$(whoami)/projects/GameCharacterManager/builds"
+          echo ""
+          echo "💡 Once the build completes, you can:"
+          echo "   1. Download the APK from the EAS build page"
+          echo "   2. Install it directly on your Android device"
+          echo "   3. Share it with testers"

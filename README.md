@@ -258,7 +258,15 @@ npm run ios
 
 ## 📦 Building for Android
 
-To build a standalone Android APK or AAB:
+### Automated Builds (GitHub Actions)
+
+APK builds are automatically created when code is pushed to the `master` branch via GitHub Actions. The built APK can be downloaded from your [Expo builds page](https://expo.dev).
+
+**Setup Required**: Add an `EXPO_TOKEN` secret to your GitHub repository. See [.github/GITHUB_ACTIONS_SETUP.md](./.github/GITHUB_ACTIONS_SETUP.md) for complete setup instructions.
+
+### Manual Builds (Local)
+
+To build a standalone Android APK or AAB manually:
 
 1. **Install EAS CLI**
 
@@ -323,6 +331,7 @@ AWInvestigations/
 
 - **[LINTING.md](./LINTING.md)** - ESLint configuration and coding standards
 - **[ANDROID_BUILD.md](./ANDROID_BUILD.md)** - Detailed Android build instructions
+- **[.github/GITHUB_ACTIONS_SETUP.md](./.github/GITHUB_ACTIONS_SETUP.md)** - Automated APK build setup
 - **[GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md)** - GitHub sync setup and usage
 - **[CSV_Import_Format.md](./CSV_Import_Format.md)** - CSV import format specification
 - **[DATA_REPOSITORY_TEMPLATE.md](./DATA_REPOSITORY_TEMPLATE.md)** - Data repository setup guide
