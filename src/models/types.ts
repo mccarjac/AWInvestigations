@@ -272,6 +272,7 @@ export interface GameEvent {
   notes?: string;
   imageUri?: string; // Deprecated: Use imageUris instead
   imageUris?: string[];
+  certaintyLevel?: CertaintyLevel; // Certainty level: unconfirmed, confirmed, or disputed
   createdAt: string;
   updatedAt: string;
 }
@@ -281,5 +282,7 @@ export interface EventDataset {
   version: string;
   lastUpdated: string;
 }
+
+export type CertaintyLevel = 'unconfirmed' | 'confirmed' | 'disputed';
 
 export type EventFormData = Omit<GameEvent, 'id' | 'createdAt' | 'updatedAt'>;

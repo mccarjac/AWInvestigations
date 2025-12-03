@@ -131,6 +131,27 @@ export const EventsDetailScreen: React.FC = () => {
         </Text>
       </Section>
 
+      {/* Certainty Level */}
+      <Section title="Certainty Level">
+        <View style={styles.certaintyBadge}>
+          <Text
+            style={[
+              styles.certaintyText,
+              event.certaintyLevel === 'unconfirmed' &&
+                styles.certaintyUnconfirmed,
+              event.certaintyLevel === 'disputed' && styles.certaintyDisputed,
+              (!event.certaintyLevel || event.certaintyLevel === 'confirmed') &&
+                styles.certaintyConfirmed,
+            ]}
+          >
+            {event.certaintyLevel
+              ? event.certaintyLevel.charAt(0).toUpperCase() +
+                event.certaintyLevel.slice(1)
+              : 'Confirmed'}
+          </Text>
+        </View>
+      </Section>
+
       {/* Description */}
       {event.description && (
         <Section title="Description">
@@ -257,5 +278,28 @@ const styles = StyleSheet.create({
   },
   footer: {
     height: 50,
+  },
+  certaintyBadge: {
+    alignSelf: 'flex-start',
+  },
+  certaintyText: {
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  certaintyConfirmed: {
+    backgroundColor: '#2ECC71',
+    color: themeColors.text.primary,
+  },
+  certaintyUnconfirmed: {
+    backgroundColor: '#F39C12',
+    color: themeColors.text.primary,
+  },
+  certaintyDisputed: {
+    backgroundColor: '#E74C3C',
+    color: themeColors.text.primary,
   },
 });

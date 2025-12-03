@@ -146,7 +146,26 @@ export const EventsTimelineScreen: React.FC = () => {
     >
       <View style={styles.eventHeader}>
         <View style={styles.eventTitleContainer}>
-          <Text style={styles.eventTitle}>{item.title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.eventTitle}>{item.title}</Text>
+            <View
+              style={[
+                styles.certaintyBadge,
+                item.certaintyLevel === 'unconfirmed' &&
+                  styles.certaintyUnconfirmed,
+                item.certaintyLevel === 'disputed' && styles.certaintyDisputed,
+                (!item.certaintyLevel || item.certaintyLevel === 'confirmed') &&
+                  styles.certaintyConfirmed,
+              ]}
+            >
+              <Text style={styles.certaintyBadgeText}>
+                {item.certaintyLevel
+                  ? item.certaintyLevel.charAt(0).toUpperCase() +
+                    item.certaintyLevel.slice(1)
+                  : 'Confirmed'}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.eventDate}>
             {formatDate(item.date, item.time)}
           </Text>
@@ -303,11 +322,17 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   eventTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: themeColors.text.primary,
-    marginBottom: 4,
+    flex: 1,
   },
   eventDate: {
     fontSize: 14,
@@ -343,5 +368,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: themeColors.text.secondary,
     flex: 1,
+  },
+  certaintyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  certaintyBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+  },
+  certaintyConfirmed: {
+    backgroundColor: '#2ECC71',
+  },
+  certaintyUnconfirmed: {
+    backgroundColor: '#F39C12',
+  },
+  certaintyDisputed: {
+    backgroundColor: '#E74C3C',
   },
 });
