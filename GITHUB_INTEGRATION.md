@@ -57,10 +57,13 @@ When you import data from GitHub:
 1. Click "Import from GitHub" in the Data Management screen
 2. The app will:
    - Fetch the latest `data.json` from the main branch
-   - Download all images from the `images/` directory
+   - Check for images in the `images/` directory
+   - Download only new or updated images (skips images that already exist locally with the same size)
    - Save images to local permanent storage
    - Replace your local data with the imported data
 3. **Warning**: This will replace ALL existing data on your device
+
+**Performance Note**: Subsequent imports are faster as existing images are not re-downloaded unless they have changed.
 
 ## Repository Structure
 
