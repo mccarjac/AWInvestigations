@@ -409,33 +409,78 @@ export const exportToGitHub = async (): Promise<{
       sha: string;
     }> = [];
 
+    let skippedCount = 0;
     for (const imageFile of imageFiles) {
       try {
+        // Check if image already exists in the repository
+        let existingFileSha: string | undefined;
+        let existingFileSize: number | undefined;
+        try {
+          const { data: existingFile } = await octokit.rest.repos.getContent({
+            owner: DATA_REPO_OWNER,
+            repo: DATA_REPO_NAME,
+            path: imageFile.path,
+            ref: DATA_REPO_BRANCH,
+          });
+
+          if ('sha' in existingFile && 'size' in existingFile) {
+            existingFileSha = existingFile.sha;
+            existingFileSize =
+              typeof existingFile.size === 'number'
+                ? existingFile.size
+                : undefined;
+          }
+        } catch {
+          // File doesn't exist in repository, that's fine - we'll upload it
+        }
+
         // Clean base64 content - remove any whitespace that might have been added during encoding
         const cleanBase64 = imageFile.content.replace(/[\r\n\s]/g, '');
 
-        // Create a blob for the image
-        const { data: blob } = await octokit.rest.git.createBlob({
-          owner: DATA_REPO_OWNER,
-          repo: DATA_REPO_NAME,
-          content: cleanBase64,
-          encoding: 'base64',
-        });
+        // Calculate the size of the content we're about to upload
+        const contentSize = Buffer.from(cleanBase64, 'base64').length;
 
-        treeItems.push({
-          path: imageFile.path,
-          mode: '100644',
-          type: 'blob',
-          sha: blob.sha,
-        });
+        // Skip upload if file exists with same size
+        if (
+          existingFileSha &&
+          typeof existingFileSize === 'number' &&
+          contentSize === existingFileSize
+        ) {
+          // File already exists with same size - reuse existing blob SHA
+          treeItems.push({
+            path: imageFile.path,
+            mode: '100644',
+            type: 'blob',
+            sha: existingFileSha,
+          });
+          skippedCount++;
+          console.log(
+            `[GitHub Export] Image already exists (${existingFileSize} bytes): ${imageFile.path}`
+          );
+        } else {
+          // Create a blob for the new or updated image
+          const { data: blob } = await octokit.rest.git.createBlob({
+            owner: DATA_REPO_OWNER,
+            repo: DATA_REPO_NAME,
+            content: cleanBase64,
+            encoding: 'base64',
+          });
 
-        uploadedCount++;
-        console.log(
-          `[GitHub Export] Created blob for image ${uploadedCount}/${imageFiles.length}: ${imageFile.path}`
-        );
+          treeItems.push({
+            path: imageFile.path,
+            mode: '100644',
+            type: 'blob',
+            sha: blob.sha,
+          });
+
+          uploadedCount++;
+          console.log(
+            `[GitHub Export] Created blob for image ${uploadedCount}/${imageFiles.length - skippedCount}: ${imageFile.path}`
+          );
+        }
       } catch (error) {
         console.error(
-          `[GitHub Export] Failed to create blob for image ${imageFile.path}:`,
+          `[GitHub Export] Failed to process image ${imageFile.path}:`,
           error
         );
         // Continue with other images even if one fails
@@ -467,7 +512,7 @@ export const exportToGitHub = async (): Promise<{
       sha: newCommit.sha,
     });
     console.log(
-      `[GitHub Export] Successfully uploaded ${uploadedCount}/${imageFiles.length} images`
+      `[GitHub Export] Successfully processed ${imageFiles.length} images: ${uploadedCount} uploaded, ${skippedCount} skipped (already exist)`
     );
 
     // Create Pull Request
