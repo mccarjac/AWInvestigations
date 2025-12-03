@@ -425,10 +425,7 @@ export const exportToGitHub = async (): Promise<{
 
           if ('sha' in existingFile && 'size' in existingFile) {
             existingFileSha = existingFile.sha;
-            existingFileSize =
-              typeof existingFile.size === 'number'
-                ? existingFile.size
-                : undefined;
+            existingFileSize = existingFile.size;
           }
         } catch {
           // File doesn't exist in repository, that's fine - we'll upload it
@@ -475,7 +472,7 @@ export const exportToGitHub = async (): Promise<{
 
           uploadedCount++;
           console.log(
-            `[GitHub Export] Created blob for image ${uploadedCount}/${imageFiles.length - skippedCount}: ${imageFile.path}`
+            `[GitHub Export] Uploaded image ${uploadedCount + skippedCount}/${imageFiles.length}: ${imageFile.path}`
           );
         }
       } catch (error) {
