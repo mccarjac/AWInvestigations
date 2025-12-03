@@ -1035,12 +1035,15 @@ export const syncWithGitHub = async (): Promise<{
     if (!updateCheck.available) {
       // No updates available, check if we have local changes to push
       const config = await getGitHubConfig();
-      const localHasChanges =
-        !config.lastSync ||
-        (updateCheck.localLastUpdated &&
-          updateCheck.localLastUpdated > config.lastSync);
+      
+      // Check if local data is newer than remote
+      // This indicates user has made changes locally that aren't in GitHub yet
+      const localIsNewer =
+        updateCheck.localLastUpdated &&
+        updateCheck.remoteLastUpdated &&
+        updateCheck.localLastUpdated > updateCheck.remoteLastUpdated;
 
-      if (localHasChanges) {
+      if (localIsNewer) {
         // We have local changes but no remote updates - suggest export
         return {
           success: false,
@@ -1050,7 +1053,7 @@ export const syncWithGitHub = async (): Promise<{
         };
       }
 
-      // No changes on either side
+      // No changes on either side - data is in sync
       return {
         success: true,
         merged: 0,
