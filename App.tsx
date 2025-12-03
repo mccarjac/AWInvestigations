@@ -1,8 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+  DrawerItem,
+} from '@react-navigation/drawer';
+import { StyleSheet, useWindowDimensions, View, Text } from 'react-native';
 import {
   RootStackParamList,
   RootDrawerParamList,
@@ -26,6 +31,10 @@ import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ErrorBoundary } from './src/components';
+import {
+  checkForUpdates,
+  isGitHubConfigured,
+} from './src/utils/gitIntegration';
 
 // Dark theme for navigation
 const DarkTheme = {
@@ -44,37 +53,64 @@ const DarkTheme = {
 const Drawer = createDrawerNavigator<RootDrawerParamList>();
 const Stack = createStackNavigator<RootStackParamList>();
 
+// Context for update badge state
+const UpdateContext = React.createContext({
+  updatesAvailable: false,
+  setUpdatesAvailable: (_value: boolean) => {},
+});
+
 // Main drawer navigator for primary screens
 function MainDrawer() {
+  const [updatesAvailable, setUpdatesAvailable] = useState(false);
+
+  useEffect(() => {
+    const checkUpdates = async () => {
+      const configured = await isGitHubConfigured();
+      if (configured) {
+        const result = await checkForUpdates();
+        setUpdatesAvailable(result.available);
+      }
+    };
+
+    // Check on mount
+    checkUpdates();
+
+    // Check periodically (every 5 minutes)
+    const interval = setInterval(checkUpdates, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <Drawer.Navigator
-      initialRouteName="CharacterList"
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#262647',
-          borderBottomWidth: 1,
-          borderBottomColor: '#404066',
-        },
-        headerTintColor: '#FFFFFF',
-        headerTitleStyle: {
-          fontWeight: '600',
-          fontSize: 18,
-          letterSpacing: 0.3,
-        },
-        drawerStyle: {
-          backgroundColor: '#262647',
-          width: 280,
-        },
-        drawerLabelStyle: {
-          fontSize: 16,
-          fontWeight: '600',
-          letterSpacing: 0.3,
-        },
-        drawerActiveTintColor: '#6C5CE7',
-        drawerInactiveTintColor: '#B8B8CC',
-        drawerActiveBackgroundColor: 'rgba(108, 92, 231, 0.1)',
-      }}
-    >
+    <UpdateContext.Provider value={{ updatesAvailable, setUpdatesAvailable }}>
+      <Drawer.Navigator
+        initialRouteName="CharacterList"
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#262647',
+            borderBottomWidth: 1,
+            borderBottomColor: '#404066',
+          },
+          headerTintColor: '#FFFFFF',
+          headerTitleStyle: {
+            fontWeight: '600',
+            fontSize: 18,
+            letterSpacing: 0.3,
+          },
+          drawerStyle: {
+            backgroundColor: '#262647',
+            width: 280,
+          },
+          drawerLabelStyle: {
+            fontSize: 16,
+            fontWeight: '600',
+            letterSpacing: 0.3,
+          },
+          drawerActiveTintColor: '#6C5CE7',
+          drawerInactiveTintColor: '#B8B8CC',
+          drawerActiveBackgroundColor: 'rgba(108, 92, 231, 0.1)',
+        }}
+      >
       <Drawer.Screen
         name="CharacterList"
         component={CharacterListScreen}
@@ -128,10 +164,54 @@ function MainDrawer() {
         component={DataManagementScreen}
         options={{
           title: 'Data Management',
-          drawerLabel: 'Data Management',
+          drawerLabel: () => {
+            const { updatesAvailable } = React.useContext(UpdateContext);
+            return (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  flex: 1,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    letterSpacing: 0.3,
+                    color: 'inherit',
+                  }}
+                >
+                  Data Management
+                </Text>
+                {updatesAvailable && (
+                  <View
+                    style={{
+                      backgroundColor: '#FF6B6B',
+                      borderRadius: 10,
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      marginLeft: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: 10,
+                        fontWeight: '700',
+                      }}
+                    >
+                      NEW
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          },
         }}
       />
     </Drawer.Navigator>
+    </UpdateContext.Provider>
   );
 }
 
