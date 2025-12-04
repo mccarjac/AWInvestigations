@@ -43,6 +43,7 @@ eas build --platform android --profile preview
 ```
 
 When prompted:
+
 - Select **"Yes"** to generate a new Android Keystore
 - Wait for the build to complete (this can take 10-20 minutes)
 
