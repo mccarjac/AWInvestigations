@@ -1,4 +1,4 @@
-# AWInvestigations
+![Logo](https://github.com/mccarjac/AWInvestigations/blob/master/assets/adaptive-icon.png)
 
 <div align="center">
 
