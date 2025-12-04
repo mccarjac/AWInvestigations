@@ -33,14 +33,48 @@ jobs:
         id: build_apk
         run: |
           echo "Starting EAS build for Android APK..."
-          eas build --platform android --profile preview --non-interactive --no-wait
-          echo "build_submitted=true" >> $GITHUB_OUTPUT
+          # Submit build and wait for completion
+          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --wait --json)
+          echo "$BUILD_OUTPUT"
 
-      - name: Build Information
-        if: steps.build_apk.outputs.build_submitted == 'true'
-        run: |
-          echo "✅ Build has been submitted to Expo Application Services (EAS)"
-          echo "📱 The build will be processed on EAS servers (typically 10-20 minutes)"
-          echo "🔗 Check your build status at: https://expo.dev/accounts/mccarjac/projects/GameCharacterManager/builds"
-          echo ""
-          echo "Once the build completes, you can download the APK from the Expo dashboard."
+          # Extract build ID and artifacts URL
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id')
+          ARTIFACTS_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl')
+          BUILD_STATUS=$(echo "$BUILD_OUTPUT" | jq -r '.[0].status')
+
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+          echo "artifacts_url=$ARTIFACTS_URL" >> $GITHUB_OUTPUT
+          echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
+
+          if [ "$BUILD_STATUS" != "FINISHED" ]; then
+            echo "❌ Build did not complete successfully. Status: $BUILD_STATUS"
+            exit 1
+          fi
+
+          echo "✅ Build completed successfully!"
+          echo "Build ID: $BUILD_ID"
+          echo "Download URL: $ARTIFACTS_URL"
+
+      - name: Create GitHub Release
+        if: steps.build_apk.outputs.build_status == 'FINISHED'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.sha }}
+          name: APK Build ${{ github.run_number }}
+          body: |
+            ## Android APK Build
+
+            **Build Details:**
+            - Commit: ${{ github.sha }}
+            - Build ID: ${{ steps.build_apk.outputs.build_id }}
+            - Profile: preview
+            - Platform: Android
+
+            **Download APK:**
+            [Download APK](${{ steps.build_apk.outputs.artifacts_url }})
+
+            This build was automatically generated from commit ${{ github.sha }}.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
