@@ -8,6 +8,7 @@
 [![Expo](https://img.shields.io/badge/Expo-54.0.23-000020.svg)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Support on Patreon](https://img.shields.io/badge/Support-Patreon-orange.svg)](https://www.patreon.com/cw/MugatuCreations)
 
 _Developed by Jacob McCarthy ([mccarjac](https://github.com/mccarjac))_
 
@@ -408,6 +409,6 @@ Special thanks to those who have contributed to making AWInvestigations better:
 
 **Developed with ❤️ by Jacob McCarthy**
 
-[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/AWInvestigations/issues) • [Request Feature](https://github.com/mccarjac/AWInvestigations/issues)
+[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/AWInvestigations/issues) • [Request Feature](https://github.com/mccarjac/AWInvestigations/issues) • [Support on Patreon](https://www.patreon.com/cw/MugatuCreations)
 
 </div>
