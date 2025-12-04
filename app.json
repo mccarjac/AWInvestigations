@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Junktown Intelligence",
-    "slug": "junktown-intelligence",
+    "slug": "GameCharacterManager",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,8 +32,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "b38d2e09-1234-45e2-8cdd-06b24351be34"
+        "projectId": "885b4454-9ce8-4aeb-b316-e62c0b669199"
       }
-    }
+    },
+    "owner": "mccarjac"
   }
 }
