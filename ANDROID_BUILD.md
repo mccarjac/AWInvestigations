@@ -28,7 +28,7 @@ Enter your Expo account credentials when prompted.
 
 The project is already configured with:
 
-- Android package name: `com.gamecharactermanager.app`
+- Android package name: `com.junktownintelligence.app`
 - Build profiles in `eas.json`
 
 ### 4. Build the Android App

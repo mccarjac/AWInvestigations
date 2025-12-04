@@ -477,7 +477,7 @@ export const exportToGitHub = async (): Promise<{
       title: `Data export by ${user.login}`,
       head: branchName,
       base: DATA_REPO_BRANCH,
-      body: `Automated data export from AWInvestigations app.
+      body: `Automated data export from Junktown Intelligence.
 
 **Export Details:**
 - User: ${user.login}
