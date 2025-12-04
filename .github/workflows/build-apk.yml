@@ -41,6 +41,6 @@ jobs:
         run: |
           echo "✅ Build has been submitted to Expo Application Services (EAS)"
           echo "📱 The build will be processed on EAS servers (typically 10-20 minutes)"
-          echo "🔗 Check your build status at: https://expo.dev/accounts/mccarjac/projects/GameCharacterManager/builds"
+          echo "🔗 Check your build status at: https://expo.dev/accounts/mccarjac/projects/junktown-intelligence/builds"
           echo ""
           echo "Once the build completes, you can download the APK from the Expo dashboard."
