@@ -9,7 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-_Developed by Jacob McCarty ([mccarjac](https://github.com/mccarjac))_
+_Developed by Jacob McCarthy ([mccarjac](https://github.com/mccarjac))_
 
 </div>
 
@@ -406,7 +406,7 @@ Special thanks to those who have contributed to making AWInvestigations better:
 
 <div align="center">
 
-**Developed with ❤️ by Jacob McCarty**
+**Developed with ❤️ by Jacob McCarthy**
 
 [GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/AWInvestigations/issues) • [Request Feature](https://github.com/mccarjac/AWInvestigations/issues)
 
