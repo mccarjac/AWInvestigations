@@ -4,7 +4,7 @@ This repository includes a GitHub Action that automatically builds an Android AP
 
 ## Prerequisites
 
-Before the GitHub Action can build your APK, you need to set up an Expo access token.
+Before the GitHub Action can build your APK, you need to set up an Expo access token and initialize Android build credentials.
 
 ## Setup Instructions
 
@@ -27,7 +27,30 @@ Before the GitHub Action can build your APK, you need to set up an Expo access t
 5. Value: Paste the Expo access token you copied
 6. Click **"Add secret"**
 
-### 3. Verify the Setup
+### 3. Initialize Android Build Credentials (One-Time Setup)
+
+**Important**: Before GitHub Actions can build your app, you must run your first build locally to generate Android signing credentials. This is a one-time setup.
+
+```bash
+# Install EAS CLI globally if you haven't already
+npm install -g eas-cli
+
+# Login to your Expo account
+eas login
+
+# Run your first build (this will create the Android keystore)
+eas build --platform android --profile preview
+```
+
+When prompted:
+- Select **"Yes"** to generate a new Android Keystore
+- Wait for the build to complete (this can take 10-20 minutes)
+
+After this first build completes, the Android signing credentials will be stored securely on Expo's servers, and GitHub Actions will be able to use them for automated builds.
+
+> **Note**: You only need to do this once. After the initial setup, all future builds through GitHub Actions will use the same credentials automatically.
+
+### 4. Verify the Setup
 
 Once you've added the `EXPO_TOKEN` secret:
 
@@ -81,6 +104,14 @@ Available profiles:
 
 ## Troubleshooting
 
+### Build Fails with "Generating a new Keystore is not supported in --non-interactive mode"
+
+This error means Android signing credentials haven't been set up yet. **Solution**:
+
+1. Run the one-time credential setup (see Step 3 above)
+2. Complete at least one successful build locally with `eas build --platform android --profile preview`
+3. After credentials are created, push to `master` branch again
+
 ### Build Fails with "Missing EXPO_TOKEN"
 
 - Verify you've added the `EXPO_TOKEN` secret in your repository settings
@@ -92,6 +123,7 @@ Available profiles:
 - Check your Expo account has build quota available (free tier includes builds)
 - Verify your `app.json` has the correct project ID
 - Ensure `eas.json` is properly configured
+- **Most common**: Make sure you've completed the one-time credential setup (Step 3)
 
 ### Action Runs But No Build Appears
 
