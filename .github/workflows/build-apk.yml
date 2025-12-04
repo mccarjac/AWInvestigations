@@ -37,10 +37,39 @@ jobs:
           BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --wait --json)
           echo "$BUILD_OUTPUT"
 
+          # Validate JSON output
+          if ! echo "$BUILD_OUTPUT" | jq empty 2>/dev/null; then
+            echo "❌ Failed to parse EAS build output as JSON"
+            exit 1
+          fi
+
+          # Check if output is an array with at least one element
+          ARRAY_LENGTH=$(echo "$BUILD_OUTPUT" | jq 'length')
+          if [ "$ARRAY_LENGTH" -eq 0 ]; then
+            echo "❌ EAS build output is empty"
+            exit 1
+          fi
+
           # Extract build ID and artifacts URL
-          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id')
-          ARTIFACTS_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl')
-          BUILD_STATUS=$(echo "$BUILD_OUTPUT" | jq -r '.[0].status')
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id // empty')
+          ARTIFACTS_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl // empty')
+          BUILD_STATUS=$(echo "$BUILD_OUTPUT" | jq -r '.[0].status // empty')
+
+          # Validate extracted values
+          if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" = "null" ]; then
+            echo "❌ Failed to extract build ID from EAS output"
+            exit 1
+          fi
+
+          if [ -z "$ARTIFACTS_URL" ] || [ "$ARTIFACTS_URL" = "null" ]; then
+            echo "❌ Failed to extract artifacts URL from EAS output"
+            exit 1
+          fi
+
+          if [ -z "$BUILD_STATUS" ] || [ "$BUILD_STATUS" = "null" ]; then
+            echo "❌ Failed to extract build status from EAS output"
+            exit 1
+          fi
 
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           echo "artifacts_url=$ARTIFACTS_URL" >> $GITHUB_OUTPUT
@@ -59,7 +88,7 @@ jobs:
         if: steps.build_apk.outputs.build_status == 'FINISHED'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-${{ github.sha }}
+          tag_name: build-${{ github.run_number }}
           name: APK Build ${{ github.run_number }}
           body: |
             ## Android APK Build
