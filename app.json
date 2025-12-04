@@ -16,6 +16,7 @@
       "bundleIdentifier": "com.junktownintelligence.app"
     },
     "android": {
+      "appidea": "b38d2e09-1234-45e2-8cdd-06b24351be34",
       "package": "com.junktownintelligence.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
