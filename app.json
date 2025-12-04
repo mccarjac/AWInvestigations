@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Junktown Intelligence",
-    "slug": "JunktownIntelligence",
+    "slug": "junktown-intelligence",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,7 +16,6 @@
       "bundleIdentifier": "com.junktownintelligence.app"
     },
     "android": {
-      "appidea": "b38d2e09-1234-45e2-8cdd-06b24351be34",
       "package": "com.junktownintelligence.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -28,9 +27,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "cli": {
+      "appVersionSource": "remote"
+    },
     "extra": {
       "eas": {
-        "projectId": "JunktownIntelligence"
+        "projectId": "b38d2e09-1234-45e2-8cdd-06b24351be34"
       }
     }
   }
