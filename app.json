@@ -29,8 +29,7 @@
     },
     "extra": {
       "eas": {
-        "slug": "JunktownIntelligence",
-        "projectId": "885b4454-9ce8-4aeb-b316-e62c0b669199"
+        "projectId": "JunktownIntelligence"
       }
     }
   }
