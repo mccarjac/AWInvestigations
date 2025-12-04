@@ -66,20 +66,31 @@ The GitHub Action workflow:
 
 1. **Triggers**: Automatically runs when code is pushed to the `master` branch
 2. **Setup**: Installs Node.js, Expo CLI, and project dependencies
-3. **Build**: Submits an APK build to Expo Application Services (EAS)
-4. **Duration**: The workflow completes in ~2-3 minutes (just submits the build)
-5. **Actual Build**: EAS processes the build in 10-20 minutes on their servers
+3. **Build**: Submits an APK build to Expo Application Services (EAS) and waits for completion
+4. **Duration**: The workflow takes 10-20 minutes (waits for EAS to complete the build)
+5. **Release**: Creates a GitHub Release with the APK download URL
 
 ## Accessing Your Built APK
 
-After the GitHub Action completes:
+After the GitHub Action completes, there are two ways to download your APK:
+
+### Method 1: GitHub Releases (Recommended)
+
+1. Go to your repository's **Releases** page:
+   - Navigate to `https://github.com/YOUR_USERNAME/YOUR_REPO/releases`
+   - Or click **Releases** in the right sidebar of your repository
+2. Find the latest release (named "APK Build #...")
+3. Click the **Download APK** link in the release description
+4. Transfer the APK to your Android device and install it
+
+### Method 2: Expo Dashboard
 
 1. Visit your Expo builds page:
    - Go to [expo.dev](https://expo.dev)
    - Navigate to **Projects** → **JunktownIntelligence** → **Builds**
    - Or go directly to: `https://expo.dev/accounts/YOUR_USERNAME/projects/JunktownIntelligence/builds`
    - Replace `YOUR_USERNAME` with your actual Expo username or organization name
-2. Wait for the build to finish (status will change from "In Progress" to "Finished")
+2. Find the completed build
 3. Click **"Download"** to get your APK file
 4. Transfer the APK to your Android device and install it
 
@@ -126,10 +137,18 @@ This error means Android signing credentials haven't been set up yet. **Solution
 - Ensure `eas.json` is properly configured
 - **Most common**: Make sure you've completed the one-time credential setup (Step 3)
 
-### Action Runs But No Build Appears
+### Action Runs But No Release Appears
 
-- The `--no-wait` flag means the Action doesn't wait for EAS to complete
-- Check the EAS builds page directly for your build status
+- Check the Action logs for any errors during the build process
+- Verify that the build completed successfully (status: FINISHED)
+- Ensure the workflow has permission to create releases (GITHUB_TOKEN should have write access)
+- Review the EAS builds page directly for your build status
+
+### Action Times Out
+
+- The workflow now waits for the build to complete (10-20 minutes typically)
+- If your build takes longer, GitHub Actions has a default timeout of 6 hours
+- Check the EAS builds page to see if the build is still processing
 - Review the Action logs for any error messages
 
 ## Additional Resources
@@ -182,8 +201,8 @@ jobs:
       - name: Build APK
         run: |
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-            eas build --platform android --profile production --non-interactive --no-wait
+            eas build --platform android --profile production --non-interactive --wait --json
           else
-            eas build --platform android --profile preview --non-interactive --no-wait
+            eas build --platform android --profile preview --non-interactive --wait --json
           fi
 ```

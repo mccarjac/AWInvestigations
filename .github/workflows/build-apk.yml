@@ -33,8 +33,9 @@ jobs:
         id: build_apk
         run: |
           echo "Starting EAS build for Android APK..."
-          eas build --platform android --profile preview --non-interactive --no-wait
-          echo "build_submitted=true" >> $GITHUB_OUTPUT
+          # Submit build and wait for completion
+          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --wait --json)
+          echo "$BUILD_OUTPUT"
 
       - name: Build Information
         if: steps.build_apk.outputs.build_submitted == 'true'
@@ -44,3 +45,84 @@ jobs:
           echo "🔗 Check your build status at: https://expo.dev/accounts/mccarjac/projects/junktown-intelligence/builds"
           echo ""
           echo "Once the build completes, you can download the APK from the Expo dashboard."
+
+          # Validate JSON output
+          if ! echo "$BUILD_OUTPUT" | jq empty 2>/dev/null; then
+            echo "❌ Failed to parse EAS build output as JSON"
+            exit 1
+          fi
+
+          # Check if output is an array or object and normalize to array
+          OUTPUT_TYPE=$(echo "$BUILD_OUTPUT" | jq -r 'type')
+          if [ "$OUTPUT_TYPE" = "array" ]; then
+            # Check if array has at least one element
+            ARRAY_LENGTH=$(echo "$BUILD_OUTPUT" | jq 'length')
+            if [ "$ARRAY_LENGTH" -eq 0 ]; then
+              echo "❌ EAS build output array is empty"
+              exit 1
+            fi
+            BUILD_DATA=$(echo "$BUILD_OUTPUT" | jq '.[0]')
+          elif [ "$OUTPUT_TYPE" = "object" ]; then
+            BUILD_DATA=$(echo "$BUILD_OUTPUT")
+          else
+            echo "❌ Unexpected EAS build output type: $OUTPUT_TYPE"
+            exit 1
+          fi
+
+          # Extract build ID and artifacts URL
+          BUILD_ID=$(echo "$BUILD_DATA" | jq -r '.id // empty')
+          ARTIFACTS_URL=$(echo "$BUILD_DATA" | jq -r '.artifacts.buildUrl // empty')
+          BUILD_STATUS=$(echo "$BUILD_DATA" | jq -r '.status // empty')
+
+          # Validate extracted values
+          if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" = "null" ]; then
+            echo "❌ Failed to extract build ID from EAS output"
+            exit 1
+          fi
+
+          if [ -z "$ARTIFACTS_URL" ] || [ "$ARTIFACTS_URL" = "null" ]; then
+            echo "❌ Failed to extract artifacts URL from EAS output"
+            exit 1
+          fi
+
+          if [ -z "$BUILD_STATUS" ] || [ "$BUILD_STATUS" = "null" ]; then
+            echo "❌ Failed to extract build status from EAS output"
+            exit 1
+          fi
+
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+          echo "artifacts_url=$ARTIFACTS_URL" >> $GITHUB_OUTPUT
+          echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
+
+          if [ "$BUILD_STATUS" != "FINISHED" ]; then
+            echo "❌ Build did not complete successfully. Status: $BUILD_STATUS"
+            exit 1
+          fi
+
+          echo "✅ Build completed successfully!"
+          echo "Build ID: $BUILD_ID"
+          echo "Download URL: $ARTIFACTS_URL"
+
+      - name: Create GitHub Release
+        if: steps.build_apk.outputs.build_status == 'FINISHED'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: APK Build #${{ github.run_number }}
+          body: |
+            ## Android APK Build
+
+            **Build Details:**
+            - Commit: ${{ github.sha }}
+            - Build ID: ${{ steps.build_apk.outputs.build_id }}
+            - Profile: preview
+            - Platform: Android
+
+            **Download APK:**
+            [Download APK](${{ steps.build_apk.outputs.artifacts_url }})
+
+            This build was automatically generated from commit ${{ github.sha }}.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
