@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollViewProps,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { commonStyles } from '@/styles/commonStyles';
 
 export interface BaseFormScreenProps {
@@ -23,11 +24,17 @@ export function BaseFormScreen({
   scrollViewProps = {},
   enableKeyboardAvoidance = true,
 }: BaseFormScreenProps) {
+  const insets = useSafeAreaInsets();
+
   const content = (
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingBottom: Math.max(insets.bottom, 16) + 100 },
+          contentContainerStyle,
+        ]}
         showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
         {...scrollViewProps}
