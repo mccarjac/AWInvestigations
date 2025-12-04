@@ -9,7 +9,8 @@ import {
   ViewStyle,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors as themeColors } from '@/styles/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors as themeColors, layout } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { HeaderAddButton } from '@/components/common/HeaderAddButton';
 
@@ -45,6 +46,7 @@ export function BaseListScreen<T>({
   ListHeaderComponent,
 }: BaseListScreenProps<T>) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   // Set up the header with the provided headerRight component or add button
   useLayoutEffect(() => {
@@ -105,7 +107,15 @@ export function BaseListScreen<T>({
           ListHeaderComponent ? () => <>{ListHeaderComponent}</> : undefined
         }
         style={styles.list}
-        contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
+        contentContainerStyle={[
+          styles.contentContainer,
+          {
+            paddingBottom:
+              Math.max(insets.bottom, layout.minSafeAreaPadding) +
+              layout.extraScrollSpace,
+          },
+          contentContainerStyle,
+        ]}
         showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
       />

@@ -9,6 +9,8 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { layout } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { HeaderEditButton } from '@/components/common/HeaderEditButton';
 import { HeaderDeleteButton } from '@/components/common/HeaderDeleteButton';
@@ -36,6 +38,7 @@ export function BaseDetailScreen({
   deleteConfig,
 }: BaseDetailScreenProps) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
   const handleDelete = useCallback(async () => {
     if (!deleteConfig) return;
@@ -98,7 +101,15 @@ export function BaseDetailScreen({
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
+        contentContainerStyle={[
+          styles.contentContainer,
+          {
+            paddingBottom:
+              Math.max(insets.bottom, layout.minSafeAreaPadding) +
+              layout.extraScrollSpace,
+          },
+          contentContainerStyle,
+        ]}
         showsVerticalScrollIndicator={true}
         {...scrollViewProps}
       >

@@ -19,7 +19,6 @@ export const layoutStyles = StyleSheet.create({
 
   contentContainer: {
     padding: spacing.base,
-    paddingBottom: 100,
   },
 
   section: {

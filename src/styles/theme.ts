@@ -222,6 +222,14 @@ export const componentStyles = {
   },
 };
 
+// Layout constants
+export const layout = {
+  // Extra scrollable space at bottom of screens (prevents content from being cut off)
+  extraScrollSpace: 100,
+  // Minimum safe area padding when device doesn't report insets
+  minSafeAreaPadding: 16,
+};
+
 // Export a default theme object
 export const theme = {
   colors,
@@ -230,6 +238,7 @@ export const theme = {
   borderRadius,
   shadows,
   componentStyles,
+  layout,
 };
 
 export type Theme = typeof theme;
