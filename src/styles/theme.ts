@@ -1,5 +1,5 @@
 /**
- * Centralized theme configuration for the Game Character Manager app
+ * Centralized theme configuration for Junktown Intelligence
  * Contains colors, typography, spacing, and other design tokens
  */
 

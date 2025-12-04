@@ -4,7 +4,7 @@ This document provides a template for setting up the `mccarjac/AWInvestigationsD
 
 ## Purpose
 
-This repository serves as a shared data library for the AWInvestigations application, allowing users to:
+This repository serves as a shared data library for Junktown Intelligence, allowing users to:
 
 - Share game data (characters, factions, locations, events) with other users
 - Collaborate on building a shared game universe
@@ -17,7 +17,7 @@ This repository serves as a shared data library for the AWInvestigations applica
 
 1. Go to https://github.com/new
 2. Set repository name: `AWInvestigationsDataLibrary`
-3. Add description: "Shared data library for AWInvestigations game management app"
+3. Add description: "Shared data library for Junktown Intelligence"
 4. Choose visibility:
    - **Public**: Anyone can see and contribute (recommended for community sharing)
    - **Private**: Only invited users can access
@@ -33,11 +33,11 @@ Create the following files in your repository:
 ```markdown
 # AWInvestigations Data Library
 
-This repository contains shared game data for the AWInvestigations mobile application.
+This repository contains shared game data for Junktown Intelligence.
 
 ## About
 
-AWInvestigations is a mobile app for managing tabletop RPG game data. This repository serves as a community-driven data library where users can share and collaborate on game content.
+Junktown Intelligence is a mobile app for managing tabletop RPG game data. This repository serves as a community-driven data library where users can share and collaborate on game content.
 
 ## Structure
 
@@ -48,7 +48,7 @@ AWInvestigations is a mobile app for managing tabletop RPG game data. This repos
 
 To contribute your game data:
 
-1. Export your data from the AWInvestigations app
+1. Export your data from Junktown Intelligence
 2. The app will automatically create a Pull Request to this repository
 3. Wait for review and approval from maintainers
 4. Once merged, your data will be available to all users
@@ -72,7 +72,7 @@ The `data.json` file follows this structure:
 
 To import data from this repository:
 
-1. Open AWInvestigations app
+1. Open Junktown Intelligence
 2. Go to Data Management
 3. Set up your GitHub token (if not already done)
 4. Click "Import from GitHub"
@@ -87,7 +87,7 @@ To import data from this repository:
 
 ## License
 
-The data in this repository is contributed by the community and is available for use within the AWInvestigations application.
+The data in this repository is contributed by the community and is available for use within Junktown Intelligence.
 ```
 
 #### data.json
@@ -191,7 +191,7 @@ Any other information that might be helpful
 
 ### Exporting Data
 
-1. Open AWInvestigations app
+1. Open Junktown Intelligence
 2. Go to Data Management
 3. Ensure GitHub token is configured
 4. Click "Export to GitHub (Create PR)"
@@ -200,7 +200,7 @@ Any other information that might be helpful
 
 ### Importing Data
 
-1. Open AWInvestigations app
+1. Open Junktown Intelligence
 2. Go to Data Management
 3. Ensure GitHub token is configured
 4. Click "Import from GitHub"
@@ -237,7 +237,7 @@ For issues with the data library:
 
 - Open an issue in this repository
 - Contact repository maintainers
-- Check AWInvestigations app documentation
+- Check Junktown Intelligence documentation
 
 ## Future Enhancements
 

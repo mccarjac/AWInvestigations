@@ -1,7 +1,11 @@
 {
-  "name": "gamecharactermanager",
+  "name": "junktown-intelligence",
   "version": "1.0.0",
   "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mccarjac/JunktownIntelligence.git"
+  },
   "scripts": {
     "start": "expo start",
     "android": "expo start --go --android",

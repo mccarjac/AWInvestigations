@@ -14,7 +14,7 @@ This guide explains how to set up and use the GitHub integration feature for imp
 
 1. Go to GitHub Settings: https://github.com/settings/tokens
 2. Click "Generate new token" → "Generate new token (classic)"
-3. Give it a descriptive name (e.g., "AWInvestigations Data Sync")
+3. Give it a descriptive name (e.g., "Junktown Intelligence Data Sync")
 4. Select the following scopes:
    - `repo` (Full control of private repositories)
 5. Click "Generate token"
@@ -169,5 +169,5 @@ If you want to contribute to the shared data library:
 For issues or questions:
 
 - Check the troubleshooting section above
-- Open an issue in the main AWInvestigations repository
+- Open an issue in the main repository
 - Contact the maintainers

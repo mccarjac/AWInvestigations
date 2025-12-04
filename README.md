@@ -39,9 +39,9 @@ _Developed by Jacob McCarthy ([mccarjac](https://github.com/mccarjac))_
 
 ## 🎯 About the Project
 
-**AWInvestigations** (also known as **AWIntelligence** or **Game Character Manager**) is a powerful mobile application designed to help game masters, players, storytellers, and worldbuilders organize, track, and manage their creative projects. Built with React Native and Expo, this cross-platform solution provides a comprehensive suite of tools for managing complex game worlds, character relationships, faction dynamics, and timelines across multiple formats including tabletop RPGs, live action role-playing (LARPs), worldbuilding projects, and collaborative storytelling.
+**Junktown Intelligence** is a powerful mobile application designed to help game masters, players, storytellers, and worldbuilders organize, track, and manage their creative projects. Built with React Native and Expo, this cross-platform solution provides a comprehensive suite of tools for managing complex game worlds, character relationships, faction dynamics, and timelines across multiple formats including tabletop RPGs, live action role-playing (LARPs), worldbuilding projects, and collaborative storytelling.
 
-Whether you're running a sprawling post-apocalyptic campaign, organizing a LARP event, building an intricate fantasy world, or crafting an epic narrative, AWInvestigations helps you keep track of every detail that matters.
+Whether you're running a sprawling post-apocalyptic campaign, organizing a LARP event, building an intricate fantasy world, or crafting an epic narrative, Junktown Intelligence helps you keep track of every detail that matters.
 
 ---
 
@@ -300,7 +300,7 @@ For detailed build instructions, see [ANDROID_BUILD.md](./ANDROID_BUILD.md)
 ## 📁 Project Structure
 
 ```
-AWInvestigations/
+JunktownIntelligence/
 ├── src/
 │   ├── components/          # Reusable UI components
 │   │   ├── common/         # Shared components (Button, Card, etc.)
@@ -390,7 +390,7 @@ This is currently a private project, but contributions are welcome through the s
 
 ## 👥 Contributors
 
-Special thanks to those who have contributed to making AWInvestigations better:
+Special thanks to those who have contributed to making Junktown Intelligence better:
 
 - **[Jim Scanlan (calmninjas)](https://github.com/calmninjas)** - Testing, bug reports, and feature ideas
 

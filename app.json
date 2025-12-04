@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GameCharacterManager",
-    "slug": "GameCharacterManager",
+    "name": "Junktown Intelligence",
+    "slug": "JunktownIntelligence",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,10 +13,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gamecharactermanager.app"
+      "bundleIdentifier": "com.junktownintelligence.app"
     },
     "android": {
-      "package": "com.gamecharactermanager.app",
+      "package": "com.junktownintelligence.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
