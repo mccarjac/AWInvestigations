@@ -36,16 +36,7 @@ jobs:
           # Submit build and wait for completion
           BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --wait --json)
           echo "$BUILD_OUTPUT"
-
-      - name: Build Information
-        if: steps.build_apk.outputs.build_submitted == 'true'
-        run: |
-          echo "✅ Build has been submitted to Expo Application Services (EAS)"
-          echo "📱 The build will be processed on EAS servers (typically 10-20 minutes)"
-          echo "🔗 Check your build status at: https://expo.dev/accounts/mccarjac/projects/junktown-intelligence/builds"
-          echo ""
-          echo "Once the build completes, you can download the APK from the Expo dashboard."
-
+          
           # Validate JSON output
           if ! echo "$BUILD_OUTPUT" | jq empty 2>/dev/null; then
             echo "❌ Failed to parse EAS build output as JSON"
@@ -80,31 +71,32 @@ jobs:
             exit 1
           fi
 
-          if [ -z "$ARTIFACTS_URL" ] || [ "$ARTIFACTS_URL" = "null" ]; then
-            echo "❌ Failed to extract artifacts URL from EAS output"
-            exit 1
-          fi
-
           if [ -z "$BUILD_STATUS" ] || [ "$BUILD_STATUS" = "null" ]; then
             echo "❌ Failed to extract build status from EAS output"
             exit 1
           fi
 
+          # Set outputs
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           echo "artifacts_url=$ARTIFACTS_URL" >> $GITHUB_OUTPUT
           echo "build_status=$BUILD_STATUS" >> $GITHUB_OUTPUT
 
-          if [ "$BUILD_STATUS" != "FINISHED" ]; then
-            echo "❌ Build did not complete successfully. Status: $BUILD_STATUS"
-            exit 1
+          echo "✅ Build completed with status: $BUILD_STATUS"
+          echo "Build ID: $BUILD_ID"
+          
+          if [ "$BUILD_STATUS" = "FINISHED" ]; then
+            if [ -z "$ARTIFACTS_URL" ] || [ "$ARTIFACTS_URL" = "null" ]; then
+              echo "⚠️ Build finished but no artifacts URL found"
+            else
+              echo "Download URL: $ARTIFACTS_URL"
+            fi
+          else
+            echo "⚠️ Build did not complete successfully. Status: $BUILD_STATUS"
+            echo "Check build details at: https://expo.dev/accounts/mccarjac/projects/GameCharacterManager/builds/$BUILD_ID"
           fi
 
-          echo "✅ Build completed successfully!"
-          echo "Build ID: $BUILD_ID"
-          echo "Download URL: $ARTIFACTS_URL"
-
       - name: Create GitHub Release
-        if: steps.build_apk.outputs.build_status == 'FINISHED'
+        if: steps.build_apk.outputs.build_status == 'FINISHED' && steps.build_apk.outputs.artifacts_url != '' && steps.build_apk.outputs.artifacts_url != 'null'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
@@ -121,8 +113,20 @@ jobs:
             **Download APK:**
             [Download APK](${{ steps.build_apk.outputs.artifacts_url }})
 
+            **View Build Details:**
+            [View on Expo](https://expo.dev/accounts/mccarjac/projects/GameCharacterManager/builds/${{ steps.build_apk.outputs.build_id }})
+
             This build was automatically generated from commit ${{ github.sha }}.
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build Failed Notice
+        if: steps.build_apk.outputs.build_status != 'FINISHED'
+        run: |
+          echo "❌ Build did not complete successfully"
+          echo "Status: ${{ steps.build_apk.outputs.build_status }}"
+          echo "Build ID: ${{ steps.build_apk.outputs.build_id }}"
+          echo "View details at: https://expo.dev/accounts/mccarjac/projects/GameCharacterManager/builds/${{ steps.build_apk.outputs.build_id }}"
+          exit 1
