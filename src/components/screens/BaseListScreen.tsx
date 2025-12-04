@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors as themeColors } from '@/styles/theme';
+import { colors as themeColors, layout } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { HeaderAddButton } from '@/components/common/HeaderAddButton';
 
@@ -109,7 +109,11 @@ export function BaseListScreen<T>({
         style={styles.list}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingBottom: Math.max(insets.bottom, 16) + 100 },
+          {
+            paddingBottom:
+              Math.max(insets.bottom, layout.minSafeAreaPadding) +
+              layout.extraScrollSpace,
+          },
           contentContainerStyle,
         ]}
         showsVerticalScrollIndicator={true}

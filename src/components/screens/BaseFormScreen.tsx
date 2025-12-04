@@ -9,6 +9,7 @@ import {
   ScrollViewProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { layout } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
 export interface BaseFormScreenProps {
@@ -32,7 +33,11 @@ export function BaseFormScreen({
         style={styles.scrollView}
         contentContainerStyle={[
           styles.contentContainer,
-          { paddingBottom: Math.max(insets.bottom, 16) + 100 },
+          {
+            paddingBottom:
+              Math.max(insets.bottom, layout.minSafeAreaPadding) +
+              layout.extraScrollSpace,
+          },
           contentContainerStyle,
         ]}
         showsVerticalScrollIndicator={true}
