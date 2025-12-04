@@ -10,10 +10,7 @@ import {
   mergeDatasetWithConflictResolution,
   MergeConflict,
   updateCharacter,
-  saveCharacters,
 } from './characterStorage';
-import { GameCharacter, Species, RelationshipStanding } from '../models/types';
-import { AVAILABLE_PERKS, AVAILABLE_DISTINCTIONS } from '../models/gameData';
 
 /**
  * Extract image data from a data URI
@@ -73,11 +70,11 @@ const handleMergeConflicts = async (
 };
 
 /**
- * Export character and faction data for native platforms (creates zip with images)
+ * Export game data for native platforms (creates zip with images)
  */
 const exportCharacterDataNative = async (): Promise<void> => {
   try {
-    // Get the character data as JSON string
+    // Get the game data as JSON string
     const jsonData = await exportDataset();
     const dataset = JSON.parse(jsonData);
 
@@ -504,7 +501,7 @@ const exportCharacterDataNative = async (): Promise<void> => {
     } else {
       Alert.alert(
         'Export Complete',
-        `Character and faction data exported to: ${zipPath}${imageCounter > 0 ? ` (includes ${imageCounter} images)` : ''}`,
+        `Game data exported to: ${zipPath}${imageCounter > 0 ? ` (includes ${imageCounter} images)` : ''}`,
         [{ text: 'OK' }]
       );
     }
@@ -512,21 +509,21 @@ const exportCharacterDataNative = async (): Promise<void> => {
     console.error('Export error:', error);
     Alert.alert(
       'Export Failed',
-      'Failed to export character and faction data. Please try again.',
+      'Failed to export game data. Please try again.',
       [{ text: 'OK' }]
     );
   }
 };
 
 /**
- * Export character and faction data to a JSON file and share it
+ * Export game data to a JSON file and share it
  */
 export const exportCharacterData = async (): Promise<void> => {
   await exportCharacterDataNative();
 };
 
 /**
- * Import character data for native platforms (supports both JSON and ZIP files)
+ * Import game data for native platforms (supports both JSON and ZIP files)
  */
 const importCharacterDataNative = async (): Promise<boolean> => {
   try {
@@ -816,7 +813,7 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         console.log('[ZIP Import] Import completed successfully');
         Alert.alert(
           'Import Successful',
-          'Character and faction data has been imported successfully. All existing data has been replaced.',
+          'Game data has been imported successfully. All existing data has been replaced.',
           [{ text: 'OK' }]
         );
         return true;
@@ -824,7 +821,7 @@ const importCharacterDataNative = async (): Promise<boolean> => {
         console.error('[ZIP Import] importDataset returned false');
         Alert.alert(
           'Import Failed',
-          'The selected file is not a valid character and faction data file.',
+          'The selected file is not a valid game data file.',
           [{ text: 'OK' }]
         );
         return false;
@@ -853,14 +850,14 @@ const importCharacterDataNative = async (): Promise<boolean> => {
       if (success) {
         Alert.alert(
           'Import Successful',
-          'Character and faction data has been imported successfully (without images). All existing data has been replaced.',
+          'Game data has been imported successfully (without images). All existing data has been replaced.',
           [{ text: 'OK' }]
         );
         return true;
       } else {
         Alert.alert(
           'Import Failed',
-          'The selected file is not a valid character and faction data file.',
+          'The selected file is not a valid game data file.',
           [{ text: 'OK' }]
         );
         return false;
@@ -878,7 +875,7 @@ const importCharacterDataNative = async (): Promise<boolean> => {
 
     Alert.alert(
       'Import Failed',
-      `Failed to import character data: ${errorMessage}\n\nPlease check the file format and try again.`,
+      `Failed to import game data: ${errorMessage}\n\nPlease check the file format and try again.`,
       [{ text: 'OK' }]
     );
     return false;
@@ -886,14 +883,14 @@ const importCharacterDataNative = async (): Promise<boolean> => {
 };
 
 /**
- * Import character data from a JSON file (replaces existing data)
+ * Import game data from a JSON file (replaces existing data)
  */
 export const importCharacterData = async (): Promise<boolean> => {
   return await importCharacterDataNative();
 };
 
 /**
- * Merge character and faction data for native platforms (supports both JSON and ZIP files)
+ * Merge game data for native platforms (supports both JSON and ZIP files)
  */
 const mergeCharacterDataNative = async (): Promise<boolean> => {
   try {
@@ -1104,7 +1101,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       if (result_merge.conflicts.length > 0) {
         Alert.alert(
           'Conflicts Found',
-          `Found ${result_merge.conflicts.length} character(s) with conflicts. You'll be asked to resolve each conflict.`,
+          `Found ${result_merge.conflicts.length} item(s) with conflicts. You'll be asked to resolve each conflict.`,
           [
             {
               text: 'Resolve Conflicts',
@@ -1112,7 +1109,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
                 await handleMergeConflicts(result_merge.conflicts);
                 Alert.alert(
                   'Merge Complete',
-                  `Successfully merged ${result_merge.added.length} new characters and factions, and resolved conflicts for ${result_merge.conflicts.length} existing characters.`,
+                  `Successfully merged ${result_merge.added.length} new items, and resolved conflicts for ${result_merge.conflicts.length} existing items.`,
                   [{ text: 'OK' }]
                 );
               },
@@ -1123,7 +1120,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
               onPress: () => {
                 Alert.alert(
                   'Merge Complete',
-                  `Successfully merged ${result_merge.added.length} new characters and factions. Conflicts were resolved automatically by merging compatible properties.`,
+                  `Successfully merged ${result_merge.added.length} new items. Conflicts were resolved automatically by merging compatible properties.`,
                   [{ text: 'OK' }]
                 );
               },
@@ -1133,7 +1130,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
       } else {
         Alert.alert(
           'Merge Successful',
-          `Successfully merged ${result_merge.added.length} new characters and factions with no conflicts.`,
+          `Successfully merged ${result_merge.added.length} new items with no conflicts.`,
           [{ text: 'OK' }]
         );
       }
@@ -1141,7 +1138,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     } else {
       Alert.alert(
         'Merge Failed',
-        'The selected file is not a valid character data file.',
+        'The selected file is not a valid game data file.',
         [{ text: 'OK' }]
       );
       return false;
@@ -1150,7 +1147,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
     console.error('Merge error:', error);
     Alert.alert(
       'Merge Failed',
-      'Failed to merge character and faction data. Please check the file format and try again.',
+      'Failed to merge game data. Please check the file format and try again.',
       [{ text: 'OK' }]
     );
     return false;
@@ -1158,7 +1155,7 @@ const mergeCharacterDataNative = async (): Promise<boolean> => {
 };
 
 /**
- * Import and merge character and faction data from a JSON file (keeps existing data)
+ * Import and merge game data from a JSON file (keeps existing data)
  */
 export const mergeCharacterData = async (): Promise<boolean> => {
   return await mergeCharacterDataNative();
@@ -1169,296 +1166,26 @@ export const mergeCharacterData = async (): Promise<boolean> => {
  */
 export const showImportOptions = (): void => {
   console.log('showImportOptions called');
-  Alert.alert(
-    'Import Options',
-    'Choose how to import character and faction data:',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-        onPress: () => console.log('Import cancelled'),
+  Alert.alert('Import Options', 'Choose how to import game data:', [
+    {
+      text: 'Cancel',
+      style: 'cancel',
+      onPress: () => console.log('Import cancelled'),
+    },
+    {
+      text: 'Replace All',
+      onPress: async () => {
+        console.log('Replace All selected');
+        await importCharacterData();
       },
-      {
-        text: 'Replace All',
-        onPress: async () => {
-          console.log('Replace All selected');
-          await importCharacterData();
-        },
-        style: 'destructive',
+      style: 'destructive',
+    },
+    {
+      text: 'Merge',
+      onPress: async () => {
+        console.log('Merge selected');
+        await mergeCharacterData();
       },
-      {
-        text: 'Merge',
-        onPress: async () => {
-          console.log('Merge selected');
-          await mergeCharacterData();
-        },
-      },
-    ]
-  );
-};
-
-/**
- * Parse a CSV line properly handling quoted fields with commas
- */
-const parseCSVLine = (line: string): string[] => {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const nextChar = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        // Escaped quote
-        current += '"';
-        i++; // Skip next quote
-      } else {
-        // Start or end quote
-        inQuotes = !inQuotes;
-      }
-    } else if (char === ',' && !inQuotes) {
-      // Field separator
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-
-  // Add the last field
-  result.push(current.trim());
-
-  return result;
-};
-
-/**
- * Parse CSV content and convert to character data
- */
-const parseCSVToCharacters = (csvContent: string): GameCharacter[] => {
-  const lines = csvContent.split('\n').filter(line => line.trim());
-  if (lines.length < 2) {
-    throw new Error('CSV must have at least 2 lines (header and data)');
-  }
-
-  // Parse headers - first column is the property name, rest are character names
-  const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, ''));
-  const characterNames = headers.slice(1).filter(name => name.length > 0);
-
-  if (characterNames.length === 0) {
-    throw new Error('No character names found in CSV headers');
-  }
-
-  // Initialize characters
-  const characters: Partial<GameCharacter>[] = characterNames.map(name => ({
-    id: `csv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    name,
-    species: 'Unknown' as Species,
-    perkIds: [],
-    distinctionIds: [],
-    relationships: [],
-    factions: [],
-    present: false, // Default to not present
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
-
-  // Process each data line
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const values = parseCSVLine(line).map(v => v.replace(/"/g, ''));
-    const propertyName = values[0];
-
-    if (!propertyName) continue;
-
-    // Handle different property types
-    if (propertyName.toLowerCase() === 'species') {
-      // Set species for each character
-      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-        const speciesValue = values[j];
-        if (speciesValue && speciesValue !== '') {
-          characters[j - 1].species = speciesValue as Species;
-        }
-      }
-    } else if (
-      propertyName.toLowerCase() === 'location' ||
-      propertyName.toLowerCase() === 'frequently located'
-    ) {
-      // Note: CSV import for locations is not currently supported in the new location system
-      // Locations should be created separately and then assigned to characters
-      // This section is kept for backwards compatibility but will be skipped
-      console.log(
-        'Location field found in CSV but will be skipped. Please create locations separately and assign them to characters.'
-      );
-    } else if (propertyName.toLowerCase() === 'notes') {
-      // Set notes for each character
-      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-        const notesValue = values[j];
-        if (notesValue && notesValue !== '') {
-          characters[j - 1].notes = notesValue;
-        }
-      }
-    } else if (propertyName.toLowerCase() === 'occupation') {
-      // Set occupation for each character
-      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-        const occupationValue = values[j];
-        if (occupationValue && occupationValue !== '') {
-          characters[j - 1].occupation = occupationValue;
-        }
-      }
-    } else if (
-      propertyName.toLowerCase() === 'factions' ||
-      propertyName.toLowerCase() === 'faction'
-    ) {
-      // Set factions for each character with Ally standing (supports comma-separated list)
-      console.log(`Processing factions row with values:`, values);
-      for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-        const factionValue = values[j];
-        console.log(
-          `Character ${characters[j - 1].name} faction value: "${factionValue}"`
-        );
-        if (factionValue && factionValue !== '' && factionValue !== 'Unknown') {
-          // Initialize factions array if it doesn't exist
-          if (!characters[j - 1].factions) {
-            characters[j - 1].factions = [];
-          }
-
-          // Split by comma or semicolon and process each faction
-          const separator = factionValue.includes(';') ? ';' : ',';
-          const factionNames = factionValue
-            .split(separator)
-            .map(name => name.trim())
-            .filter(name => name.length > 0);
-          console.log(
-            `Raw faction value for ${characters[j - 1].name}: "${factionValue}"`
-          );
-          console.log(`Using separator: "${separator}"`);
-          console.log(
-            `Split result: [${factionNames.map(f => `"${f}"`).join(', ')}]`
-          );
-          console.log(`Number of factions found: ${factionNames.length}`);
-
-          for (const factionName of factionNames) {
-            // Check if faction already exists to avoid duplicates
-            const existingFaction = characters[j - 1].factions!.find(
-              f => f.name === factionName
-            );
-            if (!existingFaction) {
-              // Add faction with Ally standing
-              characters[j - 1].factions!.push({
-                name: factionName,
-                standing: RelationshipStanding.Ally,
-                description: `Imported from CSV as ally`,
-              });
-              console.log(
-                `Added faction "${factionName}" to ${characters[j - 1].name}`
-              );
-            } else {
-              console.log(
-                `Faction "${factionName}" already exists for ${characters[j - 1].name}`
-              );
-            }
-          }
-        }
-        console.log(
-          `${characters[j - 1].name} now has ${characters[j - 1].factions?.length || 0} factions:`,
-          characters[j - 1].factions?.map(f => f.name) || []
-        );
-      }
-    } else {
-      // Check if it's a perk or distinction
-      const perk = AVAILABLE_PERKS.find(p => p.name === propertyName);
-      const distinction = AVAILABLE_DISTINCTIONS.find(
-        d => d.name === propertyName
-      );
-
-      if (perk) {
-        // Handle perk
-        for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-          const hasValue = values[j];
-          if (
-            hasValue &&
-            (hasValue.toLowerCase() === 'true' ||
-              hasValue.toLowerCase() === '1')
-          ) {
-            characters[j - 1].perkIds!.push(perk.id);
-          }
-        }
-      } else if (distinction) {
-        // Handle distinction
-        for (let j = 1; j < values.length && j - 1 < characters.length; j++) {
-          const hasValue = values[j];
-          if (
-            hasValue &&
-            (hasValue.toLowerCase() === 'true' ||
-              hasValue.toLowerCase() === '1')
-          ) {
-            characters[j - 1].distinctionIds!.push(distinction.id);
-          }
-        }
-      }
-      // Skip other properties for now (like notes, locations, etc.)
-    }
-  }
-
-  // Debug log final character data
-  console.log(
-    'Final parsed characters:',
-    characters.map(c => ({
-      name: c.name,
-      factions: c.factions,
-      species: c.species,
-      locationId: c.locationId,
-    }))
-  );
-
-  return characters as GameCharacter[];
-};
-
-/**
- * Import characters from CSV file
- */
-export const importCSVCharacters = async (): Promise<boolean> => {
-  try {
-    console.log('Starting CSV import...');
-    const result = await DocumentPicker.getDocumentAsync({
-      type: 'text/csv',
-      copyToCacheDirectory: true,
-    });
-
-    console.log('Document picker result:', result);
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const asset = result.assets[0];
-      console.log('Selected file:', asset);
-
-      // Read the file content
-      const fileContent = await FileSystem.readAsStringAsync(asset.uri);
-      console.log('File content length:', fileContent.length);
-
-      const characters = parseCSVToCharacters(fileContent);
-
-      // Save the characters
-      await saveCharacters(characters);
-
-      Alert.alert(
-        'CSV Import Successful',
-        `Successfully imported ${characters.length} characters from CSV.`,
-        [{ text: 'OK' }]
-      );
-      return true;
-    } else {
-      console.log('CSV import cancelled or no file selected');
-      return false;
-    }
-  } catch (error) {
-    console.error('CSV import error:', error);
-    Alert.alert(
-      'CSV Import Failed',
-      `Failed to import CSV data: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      [{ text: 'OK' }]
-    );
-    return false;
-  }
+    },
+  ]);
 };
