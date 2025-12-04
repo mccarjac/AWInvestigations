@@ -52,8 +52,8 @@ After the GitHub Action completes:
 
 1. Visit your Expo builds page:
    - Go to [expo.dev](https://expo.dev)
-   - Navigate to **Projects** → **GameCharacterManager** → **Builds**
-   - Or go directly to: `https://expo.dev/accounts/YOUR_USERNAME/projects/GameCharacterManager/builds`
+   - Navigate to **Projects** → **JunktownIntelligence** → **Builds**
+   - Or go directly to: `https://expo.dev/accounts/YOUR_USERNAME/projects/JunktownIntelligence/builds`
    - Replace `YOUR_USERNAME` with your actual Expo username or organization name
 2. Wait for the build to finish (status will change from "In Progress" to "Finished")
 3. Click **"Download"** to get your APK file

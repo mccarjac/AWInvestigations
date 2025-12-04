@@ -1,5 +1,5 @@
 /**
- * Common reusable styles for the Game Character Manager app
+ * Common reusable styles for Junktown Intelligence
  * These styles use the centralized theme and provide consistent UI patterns
  */
 

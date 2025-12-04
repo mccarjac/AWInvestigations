@@ -1,8 +1,8 @@
-# AWInvestigations - Copilot Instructions
+# Junktown Intelligence - Copilot Instructions
 
 ## Purpose
 
-This document provides comprehensive guidance for GitHub Copilot and other AI coding assistants working on the AWInvestigations project. It covers project structure, conventions, workflows, and best practices to ensure consistent, high-quality contributions.
+This document provides comprehensive guidance for GitHub Copilot and other AI coding assistants working on the Junktown Intelligence project. It covers project structure, conventions, workflows, and best practices to ensure consistent, high-quality contributions.
 
 **When to use AI assistance:**
 
@@ -22,7 +22,7 @@ This document provides comprehensive guidance for GitHub Copilot and other AI co
 
 ## Project Overview
 
-AWInvestigations (also known as AWIntelligence or Game Character Manager) is a React Native mobile application built with Expo for managing tabletop RPG game data. The app helps users track characters, factions, locations, and events for their gaming campaigns.
+Junktown Intelligence is a React Native mobile application built with Expo for managing tabletop RPG game data. The app helps users track characters, factions, locations, and events for their gaming campaigns.
 
 **Primary Use Cases:**
 
