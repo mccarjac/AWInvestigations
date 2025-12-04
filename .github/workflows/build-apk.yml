@@ -43,17 +43,27 @@ jobs:
             exit 1
           fi
 
-          # Check if output is an array with at least one element
-          ARRAY_LENGTH=$(echo "$BUILD_OUTPUT" | jq 'length')
-          if [ "$ARRAY_LENGTH" -eq 0 ]; then
-            echo "❌ EAS build output is empty"
+          # Check if output is an array or object and normalize to array
+          OUTPUT_TYPE=$(echo "$BUILD_OUTPUT" | jq -r 'type')
+          if [ "$OUTPUT_TYPE" = "array" ]; then
+            # Check if array has at least one element
+            ARRAY_LENGTH=$(echo "$BUILD_OUTPUT" | jq 'length')
+            if [ "$ARRAY_LENGTH" -eq 0 ]; then
+              echo "❌ EAS build output array is empty"
+              exit 1
+            fi
+            BUILD_DATA=$(echo "$BUILD_OUTPUT" | jq '.[0]')
+          elif [ "$OUTPUT_TYPE" = "object" ]; then
+            BUILD_DATA=$(echo "$BUILD_OUTPUT")
+          else
+            echo "❌ Unexpected EAS build output type: $OUTPUT_TYPE"
             exit 1
           fi
 
           # Extract build ID and artifacts URL
-          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id // empty')
-          ARTIFACTS_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl // empty')
-          BUILD_STATUS=$(echo "$BUILD_OUTPUT" | jq -r '.[0].status // empty')
+          BUILD_ID=$(echo "$BUILD_DATA" | jq -r '.id // empty')
+          ARTIFACTS_URL=$(echo "$BUILD_DATA" | jq -r '.artifacts.buildUrl // empty')
+          BUILD_STATUS=$(echo "$BUILD_DATA" | jq -r '.status // empty')
 
           # Validate extracted values
           if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" = "null" ]; then
@@ -89,7 +99,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: APK Build ${{ github.run_number }}
+          name: APK Build #${{ github.run_number }}
           body: |
             ## Android APK Build
 
