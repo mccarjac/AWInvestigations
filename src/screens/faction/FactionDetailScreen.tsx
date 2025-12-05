@@ -35,7 +35,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseDetailScreen, Section } from '@/components';
+import { BaseDetailScreen, Section, ErrorBoundary } from '@/components';
 import { Picker } from '@react-native-picker/picker';
 import Markdown from 'react-native-markdown-display';
 
@@ -481,7 +481,15 @@ export const FactionDetailsScreen: React.FC = () => {
           <Text style={styles.descriptionLabel}>Description</Text>
           <View style={styles.descriptionDisplay}>
             {factionDescription ? (
-              <Markdown style={markdownStyles}>{factionDescription}</Markdown>
+              <ErrorBoundary
+                fallback={
+                  <Text style={styles.descriptionText}>
+                    {factionDescription}
+                  </Text>
+                }
+              >
+                <Markdown style={markdownStyles}>{factionDescription}</Markdown>
+              </ErrorBoundary>
             ) : (
               <Text style={styles.descriptionText}>
                 No description provided
@@ -610,7 +618,10 @@ export const FactionDetailsScreen: React.FC = () => {
             </View>
 
             <TouchableOpacity
-              style={styles.addButton}
+              style={[
+                styles.addButton,
+                !selectedCharacter && styles.addButtonDisabled,
+              ]}
               onPress={handleAddMemberFromForm}
               disabled={!selectedCharacter}
             >
@@ -815,6 +826,10 @@ const styles = StyleSheet.create({
     ...commonStyles.button.primary,
     marginTop: 20,
     paddingVertical: 12,
+  },
+  addButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: themeColors.interactive.disabled,
   },
   addButtonText: {
     color: themeColors.text.primary,

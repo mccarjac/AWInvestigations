@@ -276,7 +276,10 @@ export const FactionFormScreen: React.FC = () => {
             onChangeText={text =>
               setFormData({ ...formData, description: text })
             }
-            placeholder="Enter faction description, goals, or background&#10;&#10;**Markdown** supported - use *italic*, **bold**, lists, etc."
+            placeholder={
+              'Enter faction description, goals, or background\n\n' +
+              '**Markdown** supported - use *italic*, **bold**, lists, etc.'
+            }
             placeholderTextColor={themeColors.text.muted}
             multiline
             numberOfLines={4}
