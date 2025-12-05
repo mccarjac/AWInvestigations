@@ -18,7 +18,7 @@ import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { Picker } from '@react-native-picker/picker';
 import { BaseListScreen } from '@/components';
-import { formatEventDateShort } from '@utils/dateUtils';
+import { formatEventDateShort, parseDateString } from '@utils/dateUtils';
 
 type EventsNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Events'>,
@@ -68,7 +68,8 @@ export const EventsTimelineScreen: React.FC = () => {
 
     // Sort by date descending (newest first)
     eventsWithDetails.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) =>
+        parseDateString(b.date).getTime() - parseDateString(a.date).getTime()
     );
 
     setEvents(eventsWithDetails);
