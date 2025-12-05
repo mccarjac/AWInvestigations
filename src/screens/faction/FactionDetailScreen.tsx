@@ -1016,19 +1016,19 @@ const markdownStyles = {
   heading1: {
     color: themeColors.text.primary,
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     marginBottom: 8,
   },
   heading2: {
     color: themeColors.text.primary,
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     marginBottom: 6,
   },
   heading3: {
     color: themeColors.text.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     marginBottom: 4,
   },
   paragraph: {
@@ -1036,10 +1036,10 @@ const markdownStyles = {
     marginBottom: 10,
   },
   strong: {
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
   em: {
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   link: {
     color: themeColors.accent.primary,
@@ -1056,14 +1056,14 @@ const markdownStyles = {
   code_inline: {
     backgroundColor: themeColors.elevated,
     color: themeColors.accent.info,
-    fontFamily: 'monospace',
+    fontFamily: 'monospace' as const,
     padding: 2,
     borderRadius: 4,
   },
   code_block: {
     backgroundColor: themeColors.elevated,
     color: themeColors.text.primary,
-    fontFamily: 'monospace',
+    fontFamily: 'monospace' as const,
     padding: 10,
     borderRadius: 6,
     marginBottom: 10,
