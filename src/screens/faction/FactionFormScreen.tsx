@@ -267,13 +267,19 @@ export const FactionFormScreen: React.FC = () => {
 
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Description</Text>
+          <Text style={styles.helperText}>
+            Supports Markdown formatting (bold, italic, lists, etc.)
+          </Text>
           <TextInput
             style={[styles.textArea]}
             value={formData.description}
             onChangeText={text =>
               setFormData({ ...formData, description: text })
             }
-            placeholder="Enter faction description, goals, or background"
+            placeholder={
+              'Enter faction description, goals, or background\n\n' +
+              '**Markdown** supported - use *italic*, **bold**, lists, etc.'
+            }
             placeholderTextColor={themeColors.text.muted}
             multiline
             numberOfLines={4}
@@ -351,6 +357,12 @@ const styles = StyleSheet.create({
   errorText: {
     ...commonStyles.text.danger,
     marginTop: 6,
+  },
+  helperText: {
+    fontSize: 12,
+    color: themeColors.accent.info,
+    marginBottom: 6,
+    fontStyle: 'italic',
   },
   characterCount: {
     fontSize: 12,

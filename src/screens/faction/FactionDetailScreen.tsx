@@ -7,6 +7,7 @@ import {
   Alert,
   Text,
   Image,
+  Modal,
 } from 'react-native';
 import {
   GameCharacter,
@@ -34,7 +35,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseDetailScreen, Section } from '@/components';
+import { BaseDetailScreen, Section, ErrorBoundary } from '@/components';
+import { Picker } from '@react-native-picker/picker';
+import Markdown from 'react-native-markdown-display';
 
 type FactionDetailsRouteProp = RouteProp<RootStackParamList, 'FactionDetails'>;
 type FactionDetailsNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -51,10 +54,15 @@ export const FactionDetailsScreen: React.FC = () => {
 
   const [members, setMembers] = useState<FactionMemberInfo[]>([]);
   const [nonMembers, setNonMembers] = useState<GameCharacter[]>([]);
-  const [showAddMember, setShowAddMember] = useState(false);
   const [factionDescription, setFactionDescription] = useState<string>('');
   const [factionImageUris, setFactionImageUris] = useState<string[]>([]);
   const [isRetired, setIsRetired] = useState<boolean>(false);
+  const [showStandingModal, setShowStandingModal] = useState(false);
+  const [selectedMember, setSelectedMember] =
+    useState<FactionMemberInfo | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<string>('');
+  const [selectedStanding, setSelectedStanding] =
+    useState<RelationshipStanding>(RelationshipStanding.Neutral);
 
   // Guard against missing factionName param
   React.useEffect(() => {
@@ -349,21 +357,23 @@ export const FactionDetailsScreen: React.FC = () => {
       ]}
     >
       <TouchableOpacity
-        style={styles.memberHeader}
+        style={styles.memberContainer}
         onPress={() =>
           navigation.navigate('CharacterDetail', { character: item.character })
         }
       >
-        <View style={styles.memberInfo}>
-          <Text style={styles.memberName}>{item.character.name}</Text>
-          <Text style={styles.memberSpecies}>{item.character.species}</Text>
-        </View>
+        <Text style={styles.memberName}>{item.character.name}</Text>
         <View style={styles.memberActions}>
-          <View
+          <TouchableOpacity
             style={[
               styles.standingBadge,
               getStandingStyle(item.faction.standing),
             ]}
+            onPress={e => {
+              e.stopPropagation();
+              setSelectedMember(item);
+              setShowStandingModal(true);
+            }}
           >
             <Text
               style={[
@@ -373,7 +383,7 @@ export const FactionDetailsScreen: React.FC = () => {
             >
               {item.faction.standing}
             </Text>
-          </View>
+          </TouchableOpacity>
           <View
             style={[
               styles.presentBadge,
@@ -389,76 +399,35 @@ export const FactionDetailsScreen: React.FC = () => {
               {item.character.present ? 'Present' : 'Absent'}
             </Text>
           </View>
+          <TouchableOpacity
+            style={styles.removeIconButton}
+            onPress={e => {
+              e.stopPropagation();
+              handleRemoveMember(item.character);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.removeIconText}>×</Text>
+          </TouchableOpacity>
         </View>
       </TouchableOpacity>
-
-      <View style={styles.memberControls}>
-        <Text style={styles.controlLabel}>Standing:</Text>
-        <View style={styles.standingButtons}>
-          {Object.values(RelationshipStanding).map(standing => (
-            <TouchableOpacity
-              key={standing}
-              style={[
-                styles.standingButton,
-                getStandingStyle(standing),
-                item.faction.standing === standing &&
-                  styles.standingButtonActive,
-              ]}
-              onPress={() => handleUpdateStanding(item.character, standing)}
-            >
-              <Text
-                style={[
-                  styles.standingButtonText,
-                  getStandingTextStyle(standing),
-                ]}
-              >
-                {standing}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleRemoveMember(item.character)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.removeButtonText}>Remove from Faction</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 
-  const renderNonMember = ({ item }: { item: GameCharacter }) => (
-    <View style={styles.nonMemberCard}>
-      <View style={styles.nonMemberInfo}>
-        <Text style={styles.nonMemberName}>{item.name}</Text>
-        <Text style={styles.nonMemberSpecies}>{item.species}</Text>
-      </View>
+  const handleAddMemberFromForm = async () => {
+    if (!selectedCharacter) {
+      Alert.alert('Error', 'Please select a character to add.');
+      return;
+    }
 
-      <View style={styles.addControls}>
-        <Text style={styles.controlLabel}>Add as:</Text>
-        <View style={styles.standingButtons}>
-          {Object.values(RelationshipStanding).map(standing => (
-            <TouchableOpacity
-              key={standing}
-              style={[styles.standingButton, getStandingStyle(standing)]}
-              onPress={() => handleAddMember(item, standing)}
-            >
-              <Text
-                style={[
-                  styles.standingButtonText,
-                  getStandingTextStyle(standing),
-                ]}
-              >
-                {standing}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
+    const character = nonMembers.find(c => c.id === selectedCharacter);
+    if (character) {
+      await handleAddMember(character, selectedStanding);
+      // Reset form
+      setSelectedCharacter('');
+      setSelectedStanding(RelationshipStanding.Neutral);
+    }
+  };
 
   const stats = getStats();
 
@@ -512,9 +481,21 @@ export const FactionDetailsScreen: React.FC = () => {
         <View style={styles.descriptionSection}>
           <Text style={styles.descriptionLabel}>Description</Text>
           <View style={styles.descriptionDisplay}>
-            <Text style={styles.descriptionText}>
-              {factionDescription || 'No description provided'}
-            </Text>
+            {factionDescription ? (
+              <ErrorBoundary
+                fallback={
+                  <Text style={styles.descriptionText}>
+                    {factionDescription}
+                  </Text>
+                }
+              >
+                <Markdown style={markdownStyles}>{factionDescription}</Markdown>
+              </ErrorBoundary>
+            ) : (
+              <Text style={styles.descriptionText}>
+                No description provided
+              </Text>
+            )}
           </View>
         </View>
 
@@ -598,30 +579,120 @@ export const FactionDetailsScreen: React.FC = () => {
 
       {/* Add Members Section */}
       <Section title="Add Members">
-        <View style={styles.sectionHeader}>
-          <TouchableOpacity
-            style={styles.toggleButton}
-            onPress={() => setShowAddMember(!showAddMember)}
-          >
-            <Text style={styles.toggleButtonText}>
-              {showAddMember ? 'Hide' : 'Show'} Available Characters
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {showAddMember && (
-          <>
-            <Text style={styles.sectionDescription}>
-              Add characters to {factionName} by selecting their standing:
-            </Text>
-            <View style={styles.nonMembersList}>
-              {nonMembers.map(item => (
-                <View key={item.id}>{renderNonMember({ item })}</View>
-              ))}
+        {nonMembers.length > 0 ? (
+          <View style={styles.addMemberForm}>
+            <Text style={styles.formLabel}>Select Character</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedCharacter}
+                onValueChange={itemValue => setSelectedCharacter(itemValue)}
+                style={styles.picker}
+                dropdownIconColor={themeColors.text.primary}
+              >
+                <Picker.Item label="Choose a character..." value="" />
+                {nonMembers.map(character => (
+                  <Picker.Item
+                    key={character.id}
+                    label={`${character.name} (${character.species})`}
+                    value={character.id}
+                  />
+                ))}
+              </Picker>
             </View>
-          </>
+
+            <Text style={styles.formLabel}>Select Standing</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedStanding}
+                onValueChange={itemValue => setSelectedStanding(itemValue)}
+                style={styles.picker}
+                dropdownIconColor={themeColors.text.primary}
+              >
+                {Object.values(RelationshipStanding).map(standing => (
+                  <Picker.Item
+                    key={standing}
+                    label={standing}
+                    value={standing}
+                  />
+                ))}
+              </Picker>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.addButton,
+                !selectedCharacter && styles.addButtonDisabled,
+              ]}
+              onPress={handleAddMemberFromForm}
+              disabled={!selectedCharacter}
+            >
+              <Text style={styles.addButtonText}>Add Member</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={styles.noCharactersText}>
+            All characters are already members of this faction.
+          </Text>
         )}
       </Section>
+
+      {/* Standing Selection Modal */}
+      <Modal
+        visible={showStandingModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowStandingModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Change Standing</Text>
+            <Text style={styles.modalSubtitle}>
+              {selectedMember?.character.name}
+            </Text>
+
+            <View style={styles.modalButtons}>
+              {Object.values(RelationshipStanding).map(standing => (
+                <TouchableOpacity
+                  key={standing}
+                  style={[
+                    styles.modalStandingButton,
+                    getStandingStyle(standing),
+                  ]}
+                  onPress={async () => {
+                    if (selectedMember) {
+                      await handleUpdateStanding(
+                        selectedMember.character,
+                        standing
+                      );
+                      setShowStandingModal(false);
+                      setSelectedMember(null);
+                    }
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.modalStandingText,
+                      getStandingTextStyle(standing),
+                    ]}
+                  >
+                    {standing}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => {
+                setShowStandingModal(false);
+                setSelectedMember(null);
+              }}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </BaseDetailScreen>
   );
 };
@@ -676,27 +747,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   sectionDescription: {
     fontSize: 14,
     color: themeColors.text.secondary,
     marginBottom: 16,
     lineHeight: 20,
-  },
-  toggleButton: {
-    ...commonStyles.button.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  toggleButtonText: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
   },
   membersList: {
     // Remove maxHeight constraint since we're using ScrollView now
@@ -710,96 +765,126 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: themeColors.status.present,
   },
-  memberHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  memberContainer: {
     padding: 16,
-  },
-  memberInfo: {
-    flex: 1,
   },
   memberName: {
     fontSize: 16,
     fontWeight: '600',
     color: themeColors.text.primary,
-    marginBottom: 4,
-  },
-  memberSpecies: {
-    fontSize: 14,
-    color: themeColors.text.secondary,
+    marginBottom: 12,
   },
   memberActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  memberControls: {
-    padding: 16,
-    paddingTop: 0,
-    borderTopWidth: 1,
-    borderTopColor: themeColors.border,
+  removeIconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: themeColors.accent.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  controlLabel: {
-    ...commonStyles.text.label,
-    color: themeColors.text.secondary,
-    marginBottom: 8,
-  },
-  standingButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 12,
-  },
-  standingButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  standingButtonActive: {
-    borderColor: themeColors.text.primary,
-    borderWidth: 2,
-  },
-  standingButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  removeButton: {
-    ...commonStyles.button.danger,
-    alignSelf: 'flex-start',
-    marginTop: 8,
-  },
-  removeButtonText: {
+  removeIconText: {
     color: themeColors.text.primary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 24,
   },
-  nonMembersList: {
-    // Remove maxHeight constraint since we're using ScrollView now
-  },
-  nonMemberCard: {
+  addMemberForm: {
     ...commonStyles.card.base,
+    padding: 16,
+  },
+  formLabel: {
+    ...commonStyles.text.label,
     marginBottom: 8,
+    marginTop: 12,
   },
-  nonMemberInfo: {
-    marginBottom: 12,
+  pickerContainer: {
+    backgroundColor: themeColors.elevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    overflow: 'hidden',
   },
-  nonMemberName: {
+  picker: {
+    color: themeColors.text.primary,
+    height: 50,
+  },
+  addButton: {
+    ...commonStyles.button.primary,
+    marginTop: 20,
+    paddingVertical: 12,
+  },
+  addButtonDisabled: {
+    opacity: 0.5,
+    backgroundColor: themeColors.interactive.disabled,
+  },
+  addButtonText: {
+    color: themeColors.text.primary,
     fontSize: 16,
     fontWeight: '600',
-    color: themeColors.text.primary,
-    marginBottom: 4,
+    textAlign: 'center',
   },
-  nonMemberSpecies: {
+  noCharactersText: {
     fontSize: 14,
     color: themeColors.text.secondary,
+    textAlign: 'center',
+    padding: 20,
   },
-  addControls: {
-    borderTopWidth: 1,
-    borderTopColor: themeColors.border,
-    paddingTop: 12,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: themeColors.surface,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: themeColors.text.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: themeColors.text.secondary,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    gap: 10,
+    marginBottom: 20,
+  },
+  modalStandingButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalStandingText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalCancelButton: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    color: themeColors.text.secondary,
+    fontWeight: '600',
   },
   standingBadge: {
     paddingHorizontal: 8,
@@ -927,3 +1012,66 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
+
+const markdownStyles = {
+  body: {
+    color: themeColors.text.primary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  heading1: {
+    color: themeColors.text.primary,
+    fontSize: 20,
+    fontWeight: '700' as const,
+    marginBottom: 8,
+  },
+  heading2: {
+    color: themeColors.text.primary,
+    fontSize: 18,
+    fontWeight: '600' as const,
+    marginBottom: 6,
+  },
+  heading3: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '600' as const,
+    marginBottom: 4,
+  },
+  paragraph: {
+    color: themeColors.text.primary,
+    marginBottom: 10,
+  },
+  strong: {
+    fontWeight: '700' as const,
+  },
+  em: {
+    fontStyle: 'italic' as const,
+  },
+  link: {
+    color: themeColors.accent.primary,
+  },
+  list_item: {
+    color: themeColors.text.primary,
+  },
+  bullet_list: {
+    marginBottom: 10,
+  },
+  ordered_list: {
+    marginBottom: 10,
+  },
+  code_inline: {
+    backgroundColor: themeColors.elevated,
+    color: themeColors.accent.info,
+    fontFamily: 'monospace' as const,
+    padding: 2,
+    borderRadius: 4,
+  },
+  code_block: {
+    backgroundColor: themeColors.elevated,
+    color: themeColors.text.primary,
+    fontFamily: 'monospace' as const,
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 10,
+  },
+};
