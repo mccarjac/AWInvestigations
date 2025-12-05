@@ -11,13 +11,44 @@
  *
  * @param dateString - Date string in YYYY-MM-DD format
  * @returns Date object representing the local date (without timezone conversion)
+ * @throws Error if dateString is not in valid YYYY-MM-DD format or represents an invalid date
  */
 export const parseDateString = (dateString: string): Date => {
+  // Validate format: YYYY-MM-DD
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateString)) {
+    throw new Error(
+      `Invalid date format: "${dateString}". Expected YYYY-MM-DD format.`
+    );
+  }
+
   // Split the date string to get year, month, and day
-  const [year, month, day] = dateString.split('-').map(Number);
+  const parts = dateString.split('-').map(Number);
+  const [year, month, day] = parts;
+
+  // Validate numeric values
+  if (parts.some(isNaN)) {
+    throw new Error(
+      `Invalid date values in: "${dateString}". All parts must be numeric.`
+    );
+  }
 
   // Create a date in the local timezone (month is 0-indexed in JavaScript)
-  return new Date(year, month - 1, day);
+  const date = new Date(year, month - 1, day);
+
+  // Validate that the date is valid and matches the input
+  // (catches cases like Feb 30, month 13, etc.)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    throw new Error(
+      `Invalid date: "${dateString}". The date does not exist in the calendar.`
+    );
+  }
+
+  return date;
 };
 
 /**
