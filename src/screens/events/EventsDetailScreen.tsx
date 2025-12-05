@@ -17,6 +17,7 @@ import {
 import { GameEvent } from '@models/types';
 import { colors as themeColors } from '@/styles/theme';
 import { BaseDetailScreen, Section } from '@/components';
+import { formatEventDate } from '@utils/dateUtils';
 
 type EventsDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -73,17 +74,6 @@ export const EventsDetailScreen: React.FC = () => {
     }, [loadEventDetails])
   );
 
-  const formatDate = (dateString: string, timeString?: string): string => {
-    const date = new Date(dateString);
-    const dateStr = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    return timeString ? `${dateStr} at ${timeString}` : dateStr;
-  };
-
   if (!event) {
     return (
       <BaseDetailScreen>
@@ -127,7 +117,7 @@ export const EventsDetailScreen: React.FC = () => {
       {/* Date and Time */}
       <Section title="Date & Time">
         <Text style={styles.bodyText}>
-          {formatDate(event.date, event.time)}
+          {formatEventDate(event.date, event.time)}
         </Text>
       </Section>
 
