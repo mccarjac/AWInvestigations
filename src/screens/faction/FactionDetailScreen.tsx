@@ -357,22 +357,20 @@ export const FactionDetailsScreen: React.FC = () => {
       ]}
     >
       <TouchableOpacity
-        style={styles.memberHeader}
+        style={styles.memberContainer}
         onPress={() =>
           navigation.navigate('CharacterDetail', { character: item.character })
         }
       >
-        <View style={styles.memberInfo}>
-          <Text style={styles.memberName}>{item.character.name}</Text>
-          <Text style={styles.memberSpecies}>{item.character.species}</Text>
-        </View>
+        <Text style={styles.memberName}>{item.character.name}</Text>
         <View style={styles.memberActions}>
           <TouchableOpacity
             style={[
               styles.standingBadge,
               getStandingStyle(item.faction.standing),
             ]}
-            onPress={() => {
+            onPress={e => {
+              e.stopPropagation();
               setSelectedMember(item);
               setShowStandingModal(true);
             }}
@@ -403,7 +401,10 @@ export const FactionDetailsScreen: React.FC = () => {
           </View>
           <TouchableOpacity
             style={styles.removeIconButton}
-            onPress={() => handleRemoveMember(item.character)}
+            onPress={e => {
+              e.stopPropagation();
+              handleRemoveMember(item.character);
+            }}
             activeOpacity={0.7}
           >
             <Text style={styles.removeIconText}>×</Text>
@@ -764,24 +765,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: themeColors.status.present,
   },
-  memberHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  memberContainer: {
     padding: 16,
-  },
-  memberInfo: {
-    flex: 1,
   },
   memberName: {
     fontSize: 16,
     fontWeight: '600',
     color: themeColors.text.primary,
-    marginBottom: 4,
-  },
-  memberSpecies: {
-    fontSize: 14,
-    color: themeColors.text.secondary,
+    marginBottom: 12,
   },
   memberActions: {
     flexDirection: 'row',
