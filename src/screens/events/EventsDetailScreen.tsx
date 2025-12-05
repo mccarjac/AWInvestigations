@@ -127,7 +127,7 @@ export const EventsDetailScreen: React.FC = () => {
           <Text style={styles.eventTitle}>{event.title}</Text>
           <View style={styles.overviewRow}>
             <Text style={styles.overviewLabel}>Date:</Text>
-            <Text style={styles.bodyText}>
+            <Text style={[styles.bodyText, styles.overviewValue]}>
               {formatDate(event.date, event.time)}
             </Text>
           </View>
@@ -156,7 +156,9 @@ export const EventsDetailScreen: React.FC = () => {
           {event.locationName && (
             <View style={styles.overviewRow}>
               <Text style={styles.overviewLabel}>Location:</Text>
-              <Text style={styles.bodyText}>{event.locationName}</Text>
+              <Text style={[styles.bodyText, styles.overviewValue]}>
+                {event.locationName}
+              </Text>
             </View>
           )}
         </View>
@@ -316,7 +318,7 @@ const styles = StyleSheet.create({
   },
   overviewRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
   },
   overviewLabel: {
@@ -324,6 +326,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: themeColors.text.secondary,
     minWidth: 80,
+    flexShrink: 0,
+  },
+  overviewValue: {
+    flex: 1,
+    flexWrap: 'wrap',
   },
 });
 
