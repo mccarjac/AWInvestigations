@@ -16,7 +16,8 @@ import {
 } from '@utils/characterStorage';
 import { GameEvent } from '@models/types';
 import { colors as themeColors } from '@/styles/theme';
-import { BaseDetailScreen, Section } from '@/components';
+import { BaseDetailScreen, Section, CollapsibleSection } from '@/components';
+import Markdown from 'react-native-markdown-display';
 
 type EventsDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -120,35 +121,46 @@ export const EventsDetailScreen: React.FC = () => {
         </View>
       )}
 
-      <Section title="Title">
-        <Text style={styles.bodyText}>{event.title}</Text>
-      </Section>
-
-      {/* Date and Time */}
-      <Section title="Date & Time">
-        <Text style={styles.bodyText}>
-          {formatDate(event.date, event.time)}
-        </Text>
-      </Section>
-
-      {/* Certainty Level */}
-      <Section title="Certainty Level">
-        <View style={styles.certaintyBadge}>
-          <Text
-            style={[
-              styles.certaintyText,
-              event.certaintyLevel === 'unconfirmed' &&
-                styles.certaintyUnconfirmed,
-              event.certaintyLevel === 'disputed' && styles.certaintyDisputed,
-              (!event.certaintyLevel || event.certaintyLevel === 'confirmed') &&
-                styles.certaintyConfirmed,
-            ]}
-          >
-            {event.certaintyLevel
-              ? event.certaintyLevel.charAt(0).toUpperCase() +
-                event.certaintyLevel.slice(1)
-              : 'Confirmed'}
-          </Text>
+      {/* Overview Section - Combines title, date, certainty, and location */}
+      <Section title="Overview">
+        <View style={styles.overviewContainer}>
+          <Text style={styles.eventTitle}>{event.title}</Text>
+          <View style={styles.overviewRow}>
+            <Text style={styles.overviewLabel}>Date:</Text>
+            <Text style={[styles.bodyText, styles.overviewValue]}>
+              {formatDate(event.date, event.time)}
+            </Text>
+          </View>
+          <View style={styles.overviewRow}>
+            <Text style={styles.overviewLabel}>Certainty:</Text>
+            <View style={styles.certaintyBadge}>
+              <Text
+                style={[
+                  styles.certaintyText,
+                  event.certaintyLevel === 'unconfirmed' &&
+                    styles.certaintyUnconfirmed,
+                  event.certaintyLevel === 'disputed' &&
+                    styles.certaintyDisputed,
+                  (!event.certaintyLevel ||
+                    event.certaintyLevel === 'confirmed') &&
+                    styles.certaintyConfirmed,
+                ]}
+              >
+                {event.certaintyLevel
+                  ? event.certaintyLevel.charAt(0).toUpperCase() +
+                    event.certaintyLevel.slice(1)
+                  : 'Confirmed'}
+              </Text>
+            </View>
+          </View>
+          {event.locationName && (
+            <View style={styles.overviewRow}>
+              <Text style={styles.overviewLabel}>Location:</Text>
+              <Text style={[styles.bodyText, styles.overviewValue]}>
+                {event.locationName}
+              </Text>
+            </View>
+          )}
         </View>
       </Section>
 
@@ -159,16 +171,9 @@ export const EventsDetailScreen: React.FC = () => {
         </Section>
       )}
 
-      {/* Location */}
-      {event.locationName && (
-        <Section title="Location">
-          <Text style={styles.bodyText}>{event.locationName}</Text>
-        </Section>
-      )}
-
-      {/* Characters */}
+      {/* Characters - Using CollapsibleSection */}
       {event.characterNames.length > 0 && (
-        <Section title="Characters Involved">
+        <CollapsibleSection title="Characters Involved">
           <View style={styles.list}>
             {event.characterNames.map((name, index) => (
               <View key={index} style={styles.listItem}>
@@ -177,12 +182,12 @@ export const EventsDetailScreen: React.FC = () => {
               </View>
             ))}
           </View>
-        </Section>
+        </CollapsibleSection>
       )}
 
-      {/* Factions */}
+      {/* Factions - Using CollapsibleSection */}
       {event.factionNames && event.factionNames.length > 0 && (
-        <Section title="Factions Involved">
+        <CollapsibleSection title="Factions Involved">
           <View style={styles.list}>
             {event.factionNames.map((name, index) => (
               <View key={index} style={styles.listItem}>
@@ -191,13 +196,13 @@ export const EventsDetailScreen: React.FC = () => {
               </View>
             ))}
           </View>
-        </Section>
+        </CollapsibleSection>
       )}
 
-      {/* Notes */}
+      {/* Notes - With Markdown support */}
       {event.notes && (
         <Section title="Notes">
-          <Text style={styles.bodyText}>{event.notes}</Text>
+          <Markdown style={markdownStyles}>{event.notes}</Markdown>
         </Section>
       )}
 
@@ -302,4 +307,111 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.certainty.disputed,
     color: themeColors.text.primary,
   },
+  overviewContainer: {
+    gap: 12,
+  },
+  eventTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: themeColors.text.primary,
+    marginBottom: 8,
+  },
+  overviewRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  overviewLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.text.secondary,
+    minWidth: 80,
+    flexShrink: 0,
+  },
+  overviewValue: {
+    flex: 1,
+    flexWrap: 'wrap',
+  },
 });
+
+// Markdown styles for notes section
+const markdownStyles = {
+  body: {
+    color: themeColors.text.secondary,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  heading1: {
+    color: themeColors.text.primary,
+    fontSize: 20,
+    fontWeight: '700' as const,
+    marginBottom: 8,
+  },
+  heading2: {
+    color: themeColors.text.primary,
+    fontSize: 18,
+    fontWeight: '600' as const,
+    marginBottom: 6,
+  },
+  heading3: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '600' as const,
+    marginBottom: 4,
+  },
+  paragraph: {
+    color: themeColors.text.secondary,
+    marginBottom: 10,
+    lineHeight: 24,
+  },
+  strong: {
+    fontWeight: '700' as const,
+    color: themeColors.text.primary,
+  },
+  em: {
+    fontStyle: 'italic' as const,
+  },
+  link: {
+    color: themeColors.accent.primary,
+  },
+  list_item: {
+    color: themeColors.text.secondary,
+  },
+  bullet_list: {
+    marginBottom: 10,
+  },
+  ordered_list: {
+    marginBottom: 10,
+  },
+  code_inline: {
+    backgroundColor: themeColors.elevated,
+    color: themeColors.accent.info,
+    fontFamily: 'monospace' as const,
+    padding: 2,
+    borderRadius: 4,
+  },
+  code_block: {
+    backgroundColor: themeColors.elevated,
+    color: themeColors.text.secondary,
+    fontFamily: 'monospace' as const,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  fence: {
+    backgroundColor: themeColors.elevated,
+    color: themeColors.text.secondary,
+    fontFamily: 'monospace' as const,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  blockquote: {
+    backgroundColor: themeColors.elevated,
+    borderLeftWidth: 4,
+    borderLeftColor: themeColors.accent.primary,
+    paddingLeft: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+};
