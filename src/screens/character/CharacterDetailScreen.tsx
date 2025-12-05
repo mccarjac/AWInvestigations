@@ -30,7 +30,7 @@ import {
 } from '@/utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseDetailScreen, Section } from '@/components';
+import { BaseDetailScreen, Section, CollapsibleSection } from '@/components';
 
 type CharacterDetailRouteProp = RouteProp<
   RootStackParamList,
@@ -197,7 +197,7 @@ export const CharacterDetailScreen: React.FC = () => {
     }
 
     return (
-      <Section title="Perks">
+      <CollapsibleSection title="Perks" defaultCollapsed={true}>
         {AVAILABLE_PERKS.filter(perk =>
           character.perkIds.includes(perk.id)
         ).map(perk => (
@@ -233,7 +233,7 @@ export const CharacterDetailScreen: React.FC = () => {
             )}
           </View>
         ))}
-      </Section>
+      </CollapsibleSection>
     );
   };
 
@@ -243,7 +243,7 @@ export const CharacterDetailScreen: React.FC = () => {
     }
 
     return (
-      <Section title="Distinctions">
+      <CollapsibleSection title="Distinctions" defaultCollapsed={true}>
         {AVAILABLE_DISTINCTIONS.filter(distinction =>
           character.distinctionIds.includes(distinction.id)
         ).map(distinction => (
@@ -254,7 +254,7 @@ export const CharacterDetailScreen: React.FC = () => {
             </Text>
           </View>
         ))}
-      </Section>
+      </CollapsibleSection>
     );
   };
 
@@ -264,7 +264,7 @@ export const CharacterDetailScreen: React.FC = () => {
     }
 
     return (
-      <Section title="Factions">
+      <CollapsibleSection title="Factions" defaultCollapsed={true}>
         {character.factions.map((faction, index) => (
           <View key={index} style={styles.itemContainer}>
             <View style={styles.headerContainer}>
@@ -273,7 +273,7 @@ export const CharacterDetailScreen: React.FC = () => {
             </View>
           </View>
         ))}
-      </Section>
+      </CollapsibleSection>
     );
   };
 
@@ -283,7 +283,7 @@ export const CharacterDetailScreen: React.FC = () => {
     }
 
     return (
-      <Section title="Relationships">
+      <CollapsibleSection title="Relationships" defaultCollapsed={true}>
         {character.relationships.map((relationship, index) => {
           const targetCharacter = findCharacterByName(
             relationship.characterName
@@ -330,7 +330,7 @@ export const CharacterDetailScreen: React.FC = () => {
             </TouchableOpacity>
           );
         })}
-      </Section>
+      </CollapsibleSection>
     );
   };
 

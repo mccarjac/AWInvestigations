@@ -6,4 +6,5 @@ export { HeaderAddButton } from './common/HeaderAddButton';
 export { HeaderEditButton } from './common/HeaderEditButton';
 export { HeaderDeleteButton } from './common/HeaderDeleteButton';
 export { Section } from './common/Section';
+export { CollapsibleSection } from './common/CollapsibleSection';
 export { Card } from './common/Card';

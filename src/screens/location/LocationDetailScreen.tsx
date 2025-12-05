@@ -24,7 +24,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseDetailScreen, Section } from '@/components';
+import { BaseDetailScreen, Section, CollapsibleSection } from '@/components';
 
 type LocationDetailsRouteProp = RouteProp<
   RootStackParamList,
@@ -212,7 +212,10 @@ export const LocationDetailsScreen: React.FC = () => {
       </Section>
 
       {/* Characters Section */}
-      <Section title={`Characters at this Location (${characters.length})`}>
+      <CollapsibleSection
+        title={`Characters at this Location (${characters.length})`}
+        defaultCollapsed={true}
+      >
         {characters.length > 0 ? (
           <View style={styles.charactersList}>
             {characters.map(renderCharacter)}
@@ -225,7 +228,7 @@ export const LocationDetailsScreen: React.FC = () => {
             </Text>
           </View>
         )}
-      </Section>
+      </CollapsibleSection>
     </BaseDetailScreen>
   );
 };
