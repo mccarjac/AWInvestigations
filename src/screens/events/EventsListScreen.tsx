@@ -18,6 +18,7 @@ import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { Picker } from '@react-native-picker/picker';
 import { BaseListScreen } from '@/components';
+import { formatEventDateShort, parseDateString } from '@utils/dateUtils';
 
 type EventsNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Events'>,
@@ -67,7 +68,8 @@ export const EventsTimelineScreen: React.FC = () => {
 
     // Sort by date descending (newest first)
     eventsWithDetails.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) =>
+        parseDateString(b.date).getTime() - parseDateString(a.date).getTime()
     );
 
     setEvents(eventsWithDetails);
@@ -144,16 +146,6 @@ export const EventsTimelineScreen: React.FC = () => {
     filterCertainty,
   ]);
 
-  const formatDate = (dateString: string, timeString?: string): string => {
-    const date = new Date(dateString);
-    const dateStr = date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-    return timeString ? `${dateStr} at ${timeString}` : dateStr;
-  };
-
   const renderEvent = (item: EventWithDetails) => (
     <TouchableOpacity
       style={styles.eventCard}
@@ -182,7 +174,7 @@ export const EventsTimelineScreen: React.FC = () => {
             </View>
           </View>
           <Text style={styles.eventDate}>
-            {formatDate(item.date, item.time)}
+            {formatEventDateShort(item.date, item.time)}
           </Text>
         </View>
         {item.imageUri && (

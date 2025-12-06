@@ -18,6 +18,7 @@ import { GameEvent } from '@models/types';
 import { colors as themeColors } from '@/styles/theme';
 import { BaseDetailScreen, Section, CollapsibleSection } from '@/components';
 import Markdown from 'react-native-markdown-display';
+import { formatEventDate } from '@utils/dateUtils';
 
 type EventsDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -74,17 +75,6 @@ export const EventsDetailScreen: React.FC = () => {
     }, [loadEventDetails])
   );
 
-  const formatDate = (dateString: string, timeString?: string): string => {
-    const date = new Date(dateString);
-    const dateStr = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-    return timeString ? `${dateStr} at ${timeString}` : dateStr;
-  };
-
   if (!event) {
     return (
       <BaseDetailScreen>
@@ -120,7 +110,6 @@ export const EventsDetailScreen: React.FC = () => {
           ))}
         </View>
       )}
-
       {/* Overview Section - Combines title, date, certainty, and location */}
       <Section title="Overview">
         <View style={styles.overviewContainer}>
@@ -128,7 +117,7 @@ export const EventsDetailScreen: React.FC = () => {
           <View style={styles.overviewRow}>
             <Text style={styles.overviewLabel}>Date:</Text>
             <Text style={[styles.bodyText, styles.overviewValue]}>
-              {formatDate(event.date, event.time)}
+              {formatEventDate(event.date, event.time)}
             </Text>
           </View>
           <View style={styles.overviewRow}>
