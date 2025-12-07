@@ -145,12 +145,35 @@ export const FactionFormScreen: React.FC = () => {
     }
 
     // Check if relationship already exists
-    const existingRelationship = (formData.relationships || []).find(
+    const existingRelationshipIndex = (formData.relationships || []).findIndex(
       r => r.factionName === selectedFactionForRelationship
     );
 
-    if (existingRelationship) {
-      Alert.alert('Error', 'A relationship with this faction already exists');
+    if (existingRelationshipIndex !== -1) {
+      Alert.alert(
+        'Relationship Exists',
+        `A relationship with ${selectedFactionForRelationship} already exists. Would you like to update it?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Update',
+            onPress: () => {
+              const updatedRelationships = [...(formData.relationships || [])];
+              updatedRelationships[existingRelationshipIndex] = {
+                factionName: selectedFactionForRelationship,
+                relationshipType: selectedRelationshipType,
+              };
+              setFormData({
+                ...formData,
+                relationships: updatedRelationships,
+              });
+              setSelectedFactionForRelationship('');
+              setSelectedRelationshipType(RelationshipStanding.Neutral);
+              setShowRelationshipModal(false);
+            },
+          },
+        ]
+      );
       return;
     }
 

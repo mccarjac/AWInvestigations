@@ -396,13 +396,15 @@ export const FactionStatsScreen: React.FC = () => {
                       .filter(([, count]) => count > 0)
                       .sort((a, b) => b[1] - a[1])
                       .slice(0, 8)
-                      .map(([tag, count]) =>
-                        renderPerkTagBar(
+                      .map(([tag, count], index, array) => {
+                        // Use the highest count from the sorted array, or default to 1
+                        const maxCount = array.length > 0 ? array[0][1] : 1;
+                        return renderPerkTagBar(
                           tag as PerkTag,
                           count,
-                          Object.values(combinedAnalysis.combinedPerkTags)[0]
-                        )
-                      )}
+                          maxCount
+                        );
+                      })}
                   </View>
                 </Section>
               )}

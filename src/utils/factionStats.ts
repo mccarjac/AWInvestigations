@@ -79,11 +79,10 @@ export const calculateFactionStats = (
   const totalMembers = members.length;
   const presentMembers = members.filter(m => m.present === true).length;
 
-  // Calculate perk tag counts
-  const perkTagCounts: Record<PerkTag, number> = {} as Record<PerkTag, number>;
-  Object.values(PerkTag).forEach(tag => {
-    perkTagCounts[tag] = 0;
-  });
+  // Calculate perk tag counts - initialize all tags to 0
+  const perkTagCounts: Record<PerkTag, number> = Object.fromEntries(
+    Object.values(PerkTag).map(tag => [tag, 0])
+  ) as Record<PerkTag, number>;
 
   members.forEach(member => {
     member.perkIds.forEach(perkId => {
@@ -242,6 +241,12 @@ export const calculateCombinedFactionStats = (
 
 /**
  * Get all faction statistics for display
+ *
+ * Note: This is a convenience function for getting stats for factions from a relationships map.
+ * In practice, you may want to load factions from storage directly to ensure all factions
+ * are included, not just those with relationships defined.
+ *
+ * @deprecated Consider using calculateFactionStats directly with faction list from loadFactions()
  */
 export const getAllFactionStats = (
   allCharacters: GameCharacter[],
