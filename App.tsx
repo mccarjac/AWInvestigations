@@ -11,6 +11,7 @@ import { CharacterListScreen } from './src/screens/character/CharacterListScreen
 import { CharacterDetailScreen } from './src/screens/character/CharacterDetailScreen';
 import { CharacterFormScreen } from './src/screens/character/CharacterFormScreen';
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
+import { FactionStatsScreen } from './src/screens/FactionStatsScreen';
 import { CharacterSearchScreen } from './src/screens/character/CharacterSearchScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { FactionListScreen } from './src/screens/faction/FactionListScreen';
@@ -112,8 +113,16 @@ function MainDrawer() {
         name="CharacterStats"
         component={CharacterStatsScreen}
         options={{
-          title: 'Statistics',
-          drawerLabel: 'Statistics',
+          title: 'Character Statistics',
+          drawerLabel: 'Character Statistics',
+        }}
+      />
+      <Drawer.Screen
+        name="FactionStats"
+        component={FactionStatsScreen}
+        options={{
+          title: 'Faction Statistics',
+          drawerLabel: 'Faction Statistics',
         }}
       />
       <Drawer.Screen

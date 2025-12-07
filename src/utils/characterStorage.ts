@@ -5,15 +5,23 @@ import {
   LocationDataset,
   GameEvent,
   EventDataset,
+  RelationshipStanding,
 } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 import { SafeAsyncStorageJSONParser } from './safeAsyncStorageJSONParser';
+
+export interface FactionRelationship {
+  factionName: string;
+  relationshipType: RelationshipStanding;
+  description?: string;
+}
 
 interface StoredFaction {
   name: string;
   description: string;
   imageUri?: string; // Deprecated: Use imageUris instead
   imageUris?: string[];
+  relationships?: FactionRelationship[];
   retired?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -798,6 +806,7 @@ export const loadFactions = async (): Promise<StoredFaction[]> => {
   return (dataset.factions || []).map(faction => ({
     ...faction,
     retired: faction.retired ?? false,
+    relationships: faction.relationships ?? [],
   }));
 };
 

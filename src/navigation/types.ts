@@ -3,6 +3,7 @@ import { GameCharacter, GameLocation, GameEvent } from '@models/types';
 export type RootDrawerParamList = {
   CharacterList: undefined;
   CharacterStats: undefined;
+  FactionStats: undefined;
   DataManagement: undefined;
   Factions: undefined;
   Locations: undefined;
