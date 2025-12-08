@@ -87,10 +87,8 @@ export const calculateFactionStats = (
   members.forEach(member => {
     member.perkIds.forEach(perkId => {
       const perk = AVAILABLE_PERKS.find(p => p.id === perkId);
-      if (perk && perk.tags) {
-        perk.tags.forEach(tag => {
-          perkTagCounts[tag] = (perkTagCounts[tag] || 0) + 1;
-        });
+      if (perk && perk.tag) {
+        perkTagCounts[perk.tag] = (perkTagCounts[perk.tag] || 0) + 1;
       }
     });
   });

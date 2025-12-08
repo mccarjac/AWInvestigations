@@ -184,12 +184,6 @@ export const FactionStatsScreen: React.FC = () => {
               </Text>
               <Text style={styles.quickStatLabel}>Enemies</Text>
             </View>
-            <View style={styles.quickStatItem}>
-              <Text style={styles.quickStatValue}>
-                {stats.topPerkTags.length}
-              </Text>
-              <Text style={styles.quickStatLabel}>Top Tags</Text>
-            </View>
           </View>
         </TouchableOpacity>
 
