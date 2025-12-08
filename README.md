@@ -14,7 +14,7 @@
 [![Support on Patreon](https://img.shields.io/badge/Support-Patreon-orange.svg)](https://www.patreon.com/cw/MugatuCreations)
 [![PayPal](https://img.shields.io/badge/PayPal-@mccarjac-00457C.svg?logo=paypal)](https://paypal.me/mccarjac)
 [![Venmo](https://img.shields.io/badge/Venmo-@mccarjac-3D95CE.svg?logo=venmo)](https://venmo.com/mccarjac)
-[![Cash App](https://img.shields.io/badge/Cash%20App-$mccarjac-00C244.svg?logo=cashapp)](https://cash.app/$mccarjac)
+[![Cash App](https://img.shields.io/badge/Cash%20App-$mccarjac-00C244.svg?logo=cash-app)](https://cash.app/$mccarjac)
 
 _Developed by Jacob McCarthy ([mccarjac](https://github.com/mccarjac))_
 
