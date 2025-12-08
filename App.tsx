@@ -11,6 +11,7 @@ import { CharacterListScreen } from './src/screens/character/CharacterListScreen
 import { CharacterDetailScreen } from './src/screens/character/CharacterDetailScreen';
 import { CharacterFormScreen } from './src/screens/character/CharacterFormScreen';
 import { CharacterStatsScreen } from './src/screens/CharacterStatsScreen';
+import { FactionStatsScreen } from './src/screens/FactionStatsScreen';
 import { CharacterSearchScreen } from './src/screens/character/CharacterSearchScreen';
 import { DataManagementScreen } from './src/screens/DataManagementScreen';
 import { FactionListScreen } from './src/screens/faction/FactionListScreen';
@@ -109,14 +110,6 @@ function MainDrawer() {
         }}
       />
       <Drawer.Screen
-        name="CharacterStats"
-        component={CharacterStatsScreen}
-        options={{
-          title: 'Statistics',
-          drawerLabel: 'Statistics',
-        }}
-      />
-      <Drawer.Screen
         name="InfluenceReport"
         component={InfluenceReportScreen}
         options={{
@@ -205,6 +198,16 @@ export default function App() {
                 name="CharacterSearch"
                 component={CharacterSearchScreen}
                 options={{ title: 'Search Characters' }}
+              />
+              <Stack.Screen
+                name="CharacterStats"
+                component={CharacterStatsScreen}
+                options={{ title: 'Character Statistics' }}
+              />
+              <Stack.Screen
+                name="FactionStats"
+                component={FactionStatsScreen}
+                options={{ title: 'Faction Statistics' }}
               />
               <Stack.Screen
                 name="FactionDetails"

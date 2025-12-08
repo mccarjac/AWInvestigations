@@ -5,15 +5,23 @@ import {
   LocationDataset,
   GameEvent,
   EventDataset,
+  RelationshipStanding,
 } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 import { SafeAsyncStorageJSONParser } from './safeAsyncStorageJSONParser';
+
+export interface FactionRelationship {
+  factionName: string;
+  relationshipType: RelationshipStanding;
+  description?: string;
+}
 
 interface StoredFaction {
   name: string;
   description: string;
   imageUri?: string; // Deprecated: Use imageUris instead
   imageUris?: string[];
+  relationships?: FactionRelationship[];
   retired?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -798,6 +806,7 @@ export const loadFactions = async (): Promise<StoredFaction[]> => {
   return (dataset.factions || []).map(faction => ({
     ...faction,
     retired: faction.retired ?? false,
+    relationships: faction.relationships ?? [],
   }));
 };
 
@@ -904,6 +913,7 @@ export const createFaction = async (factionData: {
   description: string;
   imageUri?: string;
   imageUris?: string[];
+  relationships?: FactionRelationship[];
 }): Promise<boolean> => {
   const existingFactions = await loadFactions();
 
@@ -921,11 +931,38 @@ export const createFaction = async (factionData: {
     description: factionData.description,
     imageUri: factionData.imageUri,
     imageUris: factionData.imageUris,
+    relationships: factionData.relationships || [],
     createdAt: now,
     updatedAt: now,
   };
 
-  await saveFactions([...existingFactions, newFaction]);
+  // Add bidirectional relationships
+  const updatedFactions = [...existingFactions, newFaction];
+  if (factionData.relationships && factionData.relationships.length > 0) {
+    factionData.relationships.forEach(relationship => {
+      const targetFaction = updatedFactions.find(
+        f => f.name === relationship.factionName
+      );
+      if (targetFaction) {
+        // Add reciprocal relationship if it doesn't exist
+        const reciprocalExists = (targetFaction.relationships || []).some(
+          r => r.factionName === factionData.name
+        );
+        if (!reciprocalExists) {
+          targetFaction.relationships = [
+            ...(targetFaction.relationships || []),
+            {
+              factionName: factionData.name,
+              relationshipType: relationship.relationshipType,
+            },
+          ];
+          targetFaction.updatedAt = now;
+        }
+      }
+    });
+  }
+
+  await saveFactions(updatedFactions);
   return true;
 };
 
@@ -936,6 +973,7 @@ export const updateFaction = async (
     description?: string;
     imageUri?: string;
     imageUris?: string[];
+    relationships?: FactionRelationship[];
   }
 ): Promise<StoredFaction | null> => {
   const factions = await loadFactions();
@@ -953,17 +991,102 @@ export const updateFaction = async (
     }
   }
 
+  const now = new Date().toISOString();
+  const oldRelationships = factions[index].relationships || [];
+
   const updatedFaction: StoredFaction = {
     ...factions[index],
     ...updates,
-    updatedAt: new Date().toISOString(),
+    updatedAt: now,
   };
 
   factions[index] = updatedFaction;
+
+  // Handle bidirectional relationships
+  if (updates.relationships !== undefined) {
+    const newRelationships = updates.relationships || [];
+
+    // Find relationships that were removed
+    const removedRelationships = oldRelationships.filter(
+      oldRel =>
+        !newRelationships.some(
+          newRel => newRel.factionName === oldRel.factionName
+        )
+    );
+
+    // Find relationships that were added
+    const addedRelationships = newRelationships.filter(
+      newRel =>
+        !oldRelationships.some(
+          oldRel => oldRel.factionName === newRel.factionName
+        )
+    );
+
+    // Find relationships that changed type
+    const changedRelationships = newRelationships.filter(newRel => {
+      const oldRel = oldRelationships.find(
+        oldR => oldR.factionName === newRel.factionName
+      );
+      return oldRel && oldRel.relationshipType !== newRel.relationshipType;
+    });
+
+    // Remove reciprocal relationships for removed relationships
+    removedRelationships.forEach(relationship => {
+      const targetFaction = factions.find(
+        f => f.name === relationship.factionName
+      );
+      if (targetFaction) {
+        targetFaction.relationships = (
+          targetFaction.relationships || []
+        ).filter(r => r.factionName !== factionName);
+        targetFaction.updatedAt = now;
+      }
+    });
+
+    // Add reciprocal relationships for added relationships
+    addedRelationships.forEach(relationship => {
+      const targetFaction = factions.find(
+        f => f.name === relationship.factionName
+      );
+      if (targetFaction) {
+        const reciprocalExists = (targetFaction.relationships || []).some(
+          r => r.factionName === factionName
+        );
+        if (!reciprocalExists) {
+          targetFaction.relationships = [
+            ...(targetFaction.relationships || []),
+            {
+              factionName: factionName,
+              relationshipType: relationship.relationshipType,
+            },
+          ];
+          targetFaction.updatedAt = now;
+        }
+      }
+    });
+
+    // Update reciprocal relationships for changed relationships
+    changedRelationships.forEach(relationship => {
+      const targetFaction = factions.find(
+        f => f.name === relationship.factionName
+      );
+      if (targetFaction) {
+        targetFaction.relationships = (targetFaction.relationships || []).map(
+          r =>
+            r.factionName === factionName
+              ? { ...r, relationshipType: relationship.relationshipType }
+              : r
+        );
+        targetFaction.updatedAt = now;
+      }
+    });
+  }
+
   await saveFactions(factions);
 
-  // If name changed, update all character faction references
+  // If name changed, update all character faction references and faction relationships
   if (updates.name && updates.name !== factionName) {
+    // Update character faction references
     const characters = await loadCharacters();
     const updatedCharacters = characters.map(character => {
       const updatedFactions = character.factions.map(faction =>
@@ -978,6 +1101,30 @@ export const updateFaction = async (
       };
     });
     await saveCharacters(updatedCharacters);
+
+    // Update all faction relationships that reference the old name
+    const updatedFactions = factions.map(faction => {
+      if (faction.name === factionName) {
+        // Skip the faction being renamed (already handled above)
+        return faction;
+      }
+      const hasRelationship = (faction.relationships || []).some(
+        r => r.factionName === factionName
+      );
+      if (hasRelationship) {
+        return {
+          ...faction,
+          relationships: (faction.relationships || []).map(r =>
+            r.factionName === factionName
+              ? { ...r, factionName: updates.name! }
+              : r
+          ),
+          updatedAt: now,
+        };
+      }
+      return faction;
+    });
+    await saveFactions(updatedFactions);
   }
 
   return updatedFaction;

@@ -56,6 +56,9 @@ export const FactionDetailsScreen: React.FC = () => {
   const [nonMembers, setNonMembers] = useState<GameCharacter[]>([]);
   const [factionDescription, setFactionDescription] = useState<string>('');
   const [factionImageUris, setFactionImageUris] = useState<string[]>([]);
+  const [factionRelationships, setFactionRelationships] = useState<
+    Array<{ factionName: string; relationshipType: RelationshipStanding }>
+  >([]);
   const [isRetired, setIsRetired] = useState<boolean>(false);
   const [showStandingModal, setShowStandingModal] = useState(false);
   const [selectedMember, setSelectedMember] =
@@ -106,14 +109,16 @@ export const FactionDetailsScreen: React.FC = () => {
     const description = await getFactionDescription(factionName);
     setFactionDescription(description);
 
-    // Load faction images and retired status
+    // Load faction images, relationships, and retired status
     const factions = await loadFactions();
     const faction = factions.find(f => f.name === factionName);
     if (faction) {
       setFactionImageUris(faction.imageUris || []);
+      setFactionRelationships(faction.relationships || []);
       setIsRetired(faction.retired ?? false);
     } else {
       setFactionImageUris([]);
+      setFactionRelationships([]);
       setIsRetired(false);
     }
   }, [factionName]);
@@ -563,6 +568,50 @@ export const FactionDetailsScreen: React.FC = () => {
         </View>
       </Section>
 
+      {/* Faction Relationships */}
+      {factionRelationships.length > 0 && (
+        <Section title="Faction Relationships">
+          <View style={styles.relationshipsContainer}>
+            {factionRelationships.map((relationship, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.relationshipCard,
+                  getStandingStyle(relationship.relationshipType),
+                ]}
+                onPress={() =>
+                  navigation.navigate('FactionDetails', {
+                    factionName: relationship.factionName,
+                  })
+                }
+              >
+                <View style={styles.relationshipCardContent}>
+                  <Text style={styles.relationshipCardName}>
+                    {relationship.factionName}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.relationshipCardType,
+                      getStandingTextStyle(relationship.relationshipType),
+                    ]}
+                  >
+                    {relationship.relationshipType}
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    styles.relationshipCardArrow,
+                    getStandingTextStyle(relationship.relationshipType),
+                  ]}
+                >
+                  →
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Section>
+      )}
+
       {/* Members Section */}
       <Section title={`All Relationships (${members.length})`}>
         <Text style={styles.sectionDescription}>
@@ -1010,6 +1059,34 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: themeColors.text.primary,
     letterSpacing: 0.2,
+  },
+  relationshipsContainer: {
+    gap: 8,
+  },
+  relationshipCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 10,
+  },
+  relationshipCardContent: {
+    flex: 1,
+  },
+  relationshipCardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+    marginBottom: 4,
+  },
+  relationshipCardType: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  relationshipCardArrow: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginLeft: 12,
   },
 });
 

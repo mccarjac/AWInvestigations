@@ -7,19 +7,23 @@ import {
   StyleSheet,
   Alert,
   Image,
+  Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
+import { RelationshipStanding } from '@models/types';
 import {
   createFaction,
   updateFaction,
   loadFactions,
+  FactionRelationship,
 } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { BaseFormScreen } from '@/components';
+import { Picker } from '@react-native-picker/picker';
 
 type FactionFormNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -33,6 +37,7 @@ interface FactionFormData {
   description: string;
   imageUri?: string;
   imageUris?: string[];
+  relationships?: FactionRelationship[];
 }
 
 export const FactionFormScreen: React.FC = () => {
@@ -45,16 +50,30 @@ export const FactionFormScreen: React.FC = () => {
     description: '',
     imageUri: undefined,
     imageUris: [],
+    relationships: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [availableFactions, setAvailableFactions] = useState<string[]>([]);
+  const [showRelationshipModal, setShowRelationshipModal] = useState(false);
+  const [selectedFactionForRelationship, setSelectedFactionForRelationship] =
+    useState<string>('');
+  const [selectedRelationshipType, setSelectedRelationshipType] =
+    useState<RelationshipStanding>(RelationshipStanding.Neutral);
 
-  // Load existing faction data if editing
+  // Load existing faction data and available factions for relationships
   useEffect(() => {
     const loadFactionData = async () => {
+      const factions = await loadFactions();
+
+      // Filter out the current faction from available factions for relationships
+      const otherFactions = factions
+        .filter(f => !f.retired && f.name !== factionName)
+        .map(f => f.name);
+      setAvailableFactions(otherFactions);
+
       if (factionName) {
-        const factions = await loadFactions();
         const faction = factions.find(f => f.name === factionName);
         if (faction) {
           setFormData({
@@ -63,6 +82,7 @@ export const FactionFormScreen: React.FC = () => {
             imageUri: faction.imageUri,
             imageUris:
               faction.imageUris || (faction.imageUri ? [faction.imageUri] : []),
+            relationships: faction.relationships || [],
           });
         }
       }
@@ -118,6 +138,100 @@ export const FactionFormScreen: React.FC = () => {
     });
   };
 
+  const handleAddRelationship = () => {
+    if (!selectedFactionForRelationship) {
+      Alert.alert('Error', 'Please select a faction');
+      return;
+    }
+
+    // Check if relationship already exists
+    const existingRelationshipIndex = (formData.relationships || []).findIndex(
+      r => r.factionName === selectedFactionForRelationship
+    );
+
+    if (existingRelationshipIndex !== -1) {
+      Alert.alert(
+        'Relationship Exists',
+        `A relationship with ${selectedFactionForRelationship} already exists. Would you like to update it?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Update',
+            onPress: () => {
+              const updatedRelationships = [...(formData.relationships || [])];
+              updatedRelationships[existingRelationshipIndex] = {
+                factionName: selectedFactionForRelationship,
+                relationshipType: selectedRelationshipType,
+              };
+              setFormData({
+                ...formData,
+                relationships: updatedRelationships,
+              });
+              setSelectedFactionForRelationship('');
+              setSelectedRelationshipType(RelationshipStanding.Neutral);
+              setShowRelationshipModal(false);
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    const newRelationship: FactionRelationship = {
+      factionName: selectedFactionForRelationship,
+      relationshipType: selectedRelationshipType,
+    };
+
+    setFormData({
+      ...formData,
+      relationships: [...(formData.relationships || []), newRelationship],
+    });
+
+    // Reset modal state
+    setSelectedFactionForRelationship('');
+    setSelectedRelationshipType(RelationshipStanding.Neutral);
+    setShowRelationshipModal(false);
+  };
+
+  const handleRemoveRelationship = (factionName: string) => {
+    Alert.alert(
+      'Remove Relationship',
+      `Remove relationship with ${factionName}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            setFormData({
+              ...formData,
+              relationships: (formData.relationships || []).filter(
+                r => r.factionName !== factionName
+              ),
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  const getStandingStyle = (standing: RelationshipStanding) => {
+    switch (standing) {
+      case RelationshipStanding.Ally:
+        return styles.standingAllied;
+      case RelationshipStanding.Friend:
+        return styles.standingFriendly;
+      case RelationshipStanding.Neutral:
+        return styles.standingNeutral;
+      case RelationshipStanding.Hostile:
+        return styles.standingHostile;
+      case RelationshipStanding.Enemy:
+        return styles.standingEnemy;
+      default:
+        return styles.standingNeutral;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) {
       return;
@@ -133,6 +247,7 @@ export const FactionFormScreen: React.FC = () => {
           description: formData.description.trim(),
           imageUri: formData.imageUri,
           imageUris: formData.imageUris,
+          relationships: formData.relationships || [],
         });
 
         if (updated) {
@@ -156,6 +271,7 @@ export const FactionFormScreen: React.FC = () => {
           description: formData.description.trim(),
           imageUri: formData.imageUri,
           imageUris: formData.imageUris,
+          relationships: formData.relationships || [],
         });
 
         if (success) {
@@ -290,7 +406,147 @@ export const FactionFormScreen: React.FC = () => {
             {formData.description.length}/500 characters
           </Text>
         </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Faction Relationships</Text>
+          <Text style={styles.helperText}>
+            Define relationships with other factions (allies, enemies, etc.)
+          </Text>
+
+          {formData.relationships && formData.relationships.length > 0 ? (
+            <View style={styles.relationshipsList}>
+              {formData.relationships.map((relationship, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.relationshipCard,
+                    getStandingStyle(relationship.relationshipType),
+                  ]}
+                >
+                  <View style={styles.relationshipCardContent}>
+                    <Text style={styles.relationshipFactionName}>
+                      {relationship.factionName}
+                    </Text>
+                    <Text style={styles.relationshipType}>
+                      {relationship.relationshipType}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.removeRelationshipButton}
+                    onPress={() =>
+                      handleRemoveRelationship(relationship.factionName)
+                    }
+                  >
+                    <Text style={styles.removeRelationshipButtonText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyRelationships}>
+              <Text style={styles.emptyRelationshipsText}>
+                No relationships defined yet
+              </Text>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.addRelationshipButton}
+            onPress={() => setShowRelationshipModal(true)}
+          >
+            <Text style={styles.addRelationshipButtonText}>
+              + Add Relationship
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Relationship Modal */}
+      <Modal
+        visible={showRelationshipModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowRelationshipModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Faction Relationship</Text>
+
+            <Text style={styles.modalLabel}>Select Faction</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedFactionForRelationship}
+                onValueChange={itemValue =>
+                  setSelectedFactionForRelationship(itemValue)
+                }
+                style={styles.picker}
+                dropdownIconColor={themeColors.text.primary}
+              >
+                <Picker.Item label="Choose a faction..." value="" />
+                {availableFactions
+                  .filter(
+                    faction =>
+                      !(formData.relationships || []).some(
+                        r => r.factionName === faction
+                      )
+                  )
+                  .map(faction => (
+                    <Picker.Item
+                      key={faction}
+                      label={faction}
+                      value={faction}
+                    />
+                  ))}
+              </Picker>
+            </View>
+
+            <Text style={styles.modalLabel}>Relationship Type</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedRelationshipType}
+                onValueChange={itemValue =>
+                  setSelectedRelationshipType(itemValue)
+                }
+                style={styles.picker}
+                dropdownIconColor={themeColors.text.primary}
+              >
+                {Object.values(RelationshipStanding).map(standing => (
+                  <Picker.Item
+                    key={standing}
+                    label={standing}
+                    value={standing}
+                  />
+                ))}
+              </Picker>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={() => {
+                  setShowRelationshipModal(false);
+                  setSelectedFactionForRelationship('');
+                  setSelectedRelationshipType(RelationshipStanding.Neutral);
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.modalAddButton,
+                  !selectedFactionForRelationship && styles.modalButtonDisabled,
+                ]}
+                onPress={handleAddRelationship}
+                disabled={!selectedFactionForRelationship}
+              >
+                <Text style={styles.modalAddButtonText}>Add</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -454,5 +710,162 @@ const styles = StyleSheet.create({
   imagePickerButtonText: {
     ...commonStyles.button.text,
     textAlign: 'center',
+  },
+  relationshipsList: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  relationshipCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  relationshipCardContent: {
+    flex: 1,
+  },
+  relationshipFactionName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+    marginBottom: 4,
+  },
+  relationshipType: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: themeColors.text.primary,
+    opacity: 0.9,
+  },
+  removeRelationshipButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: themeColors.accent.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
+  },
+  removeRelationshipButtonText: {
+    color: themeColors.text.primary,
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  emptyRelationships: {
+    padding: 20,
+    backgroundColor: themeColors.elevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  emptyRelationshipsText: {
+    fontSize: 14,
+    color: themeColors.text.muted,
+    fontStyle: 'italic',
+  },
+  addRelationshipButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: themeColors.accent.primary,
+    alignItems: 'center',
+  },
+  addRelationshipButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+  },
+  standingAllied: {
+    backgroundColor: themeColors.standing.allied,
+  },
+  standingFriendly: {
+    backgroundColor: themeColors.standing.friendly,
+  },
+  standingNeutral: {
+    backgroundColor: themeColors.standing.neutral,
+  },
+  standingHostile: {
+    backgroundColor: themeColors.standing.hostile,
+  },
+  standingEnemy: {
+    backgroundColor: themeColors.standing.enemy,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: themeColors.surface,
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: themeColors.text.primary,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    backgroundColor: themeColors.elevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    overflow: 'hidden',
+  },
+  picker: {
+    color: themeColors.text.primary,
+    height: 50,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: themeColors.elevated,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  modalAddButton: {
+    backgroundColor: themeColors.accent.primary,
+  },
+  modalButtonDisabled: {
+    opacity: 0.5,
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+  },
+  modalAddButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.text.primary,
   },
 });
