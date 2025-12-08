@@ -1,4 +1,4 @@
-![Logo](https://github.com/mccarjac/AWInvestigations/blob/master/assets/adaptive-icon.png)
+![Logo](https://github.com/mccarjac/JunktownIntelligence/blob/master/assets/adaptive-icon.png)
 
 <div align="center">
 
@@ -8,7 +8,13 @@
 [![Expo](https://img.shields.io/badge/Expo-54.0.23-000020.svg)](https://expo.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+**Support the Project:**
+
 [![Support on Patreon](https://img.shields.io/badge/Support-Patreon-orange.svg)](https://www.patreon.com/cw/MugatuCreations)
+[![PayPal](https://img.shields.io/badge/PayPal-@mccarjac-00457C.svg?logo=paypal)](https://paypal.me/mccarjac)
+[![Venmo](https://img.shields.io/badge/Venmo-@mccarjac-3D95CE.svg?logo=venmo)](https://venmo.com/mccarjac)
+[![Cash App](https://img.shields.io/badge/Cash%20App-$mccarjac-00C244.svg?logo=cash-app)](https://cash.app/$mccarjac)
 
 _Developed by Jacob McCarthy ([mccarjac](https://github.com/mccarjac))_
 
@@ -171,15 +177,15 @@ Whether you're running a sprawling post-apocalyptic campaign, organizing a LARP 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/mccarjac/AWInvestigations.git
-   cd AWInvestigations
+   git clone https://github.com/mccarjac/JunktownIntelligence.git
+   cd JunktownIntelligence
    ```
 
    Or using GitHub CLI:
 
    ```bash
-   gh repo clone mccarjac/AWInvestigations
-   cd AWInvestigations
+   gh repo clone mccarjac/JunktownIntelligence
+   cd JunktownIntelligence
    ```
 
 2. **Install dependencies**
@@ -409,6 +415,8 @@ Special thanks to those who have contributed to making Junktown Intelligence bet
 
 **Developed with ❤️ by Jacob McCarthy**
 
-[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/AWInvestigations/issues) • [Request Feature](https://github.com/mccarjac/AWInvestigations/issues) • [Support on Patreon](https://www.patreon.com/cw/MugatuCreations)
+[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/JunktownIntelligence/issues) • [Request Feature](https://github.com/mccarjac/JunktownIntelligence/issues)
+
+**Support the Project:** [Patreon](https://www.patreon.com/cw/MugatuCreations) • [PayPal](https://paypal.me/mccarjac) • [Venmo](https://venmo.com/mccarjac) • [Cash App](https://cash.app/$mccarjac)
 
 </div>
