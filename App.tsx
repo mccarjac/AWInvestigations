@@ -110,22 +110,6 @@ function MainDrawer() {
         }}
       />
       <Drawer.Screen
-        name="CharacterStats"
-        component={CharacterStatsScreen}
-        options={{
-          title: 'Character Statistics',
-          drawerLabel: 'Character Statistics',
-        }}
-      />
-      <Drawer.Screen
-        name="FactionStats"
-        component={FactionStatsScreen}
-        options={{
-          title: 'Faction Statistics',
-          drawerLabel: 'Faction Statistics',
-        }}
-      />
-      <Drawer.Screen
         name="InfluenceReport"
         component={InfluenceReportScreen}
         options={{
@@ -214,6 +198,16 @@ export default function App() {
                 name="CharacterSearch"
                 component={CharacterSearchScreen}
                 options={{ title: 'Search Characters' }}
+              />
+              <Stack.Screen
+                name="CharacterStats"
+                component={CharacterStatsScreen}
+                options={{ title: 'Character Statistics' }}
+              />
+              <Stack.Screen
+                name="FactionStats"
+                component={FactionStatsScreen}
+                options={{ title: 'Faction Statistics' }}
               />
               <Stack.Screen
                 name="FactionDetails"

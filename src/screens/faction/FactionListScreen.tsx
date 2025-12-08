@@ -22,7 +22,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseListScreen, HeaderAddButton } from '@/components';
+import {
+  BaseListScreen,
+  HeaderAddButton,
+  HeaderStatsButton,
+} from '@/components';
 
 type FactionNavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'Factions'>,
@@ -267,6 +271,7 @@ export const FactionListScreen: React.FC = () => {
           {showRetired ? 'Retired' : 'Active'}
         </Text>
       </TouchableOpacity>
+      <HeaderStatsButton onPress={() => navigation.navigate('FactionStats')} />
       <HeaderAddButton onPress={() => navigation.navigate('FactionForm', {})} />
     </View>
   );

@@ -22,7 +22,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { RootStackParamList, RootDrawerParamList } from '@/navigation/types';
 import { commonStyles } from '@/styles/commonStyles';
-import { BaseListScreen, HeaderAddButton } from '@/components';
+import {
+  BaseListScreen,
+  HeaderAddButton,
+  HeaderStatsButton,
+} from '@/components';
 
 type NavigationProp = CompositeNavigationProp<
   DrawerNavigationProp<RootDrawerParamList, 'CharacterList'>,
@@ -181,6 +185,9 @@ export const CharacterListScreen: React.FC = () => {
       >
         <Text style={styles.headerSearchButtonText}>🔍</Text>
       </TouchableOpacity>
+      <HeaderStatsButton
+        onPress={() => navigation.navigate('CharacterStats')}
+      />
       <HeaderAddButton
         onPress={() => navigation.navigate('CharacterForm', {})}
       />
