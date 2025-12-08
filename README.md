@@ -1,4 +1,4 @@
-![Logo](https://github.com/mccarjac/AWInvestigations/blob/master/assets/adaptive-icon.png)
+![Logo](https://github.com/mccarjac/JunktownIntelligence/blob/master/assets/adaptive-icon.png)
 
 <div align="center">
 
@@ -177,15 +177,15 @@ Whether you're running a sprawling post-apocalyptic campaign, organizing a LARP 
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/mccarjac/AWInvestigations.git
-   cd AWInvestigations
+   git clone https://github.com/mccarjac/JunktownIntelligence.git
+   cd JunktownIntelligence
    ```
 
    Or using GitHub CLI:
 
    ```bash
-   gh repo clone mccarjac/AWInvestigations
-   cd AWInvestigations
+   gh repo clone mccarjac/JunktownIntelligence
+   cd JunktownIntelligence
    ```
 
 2. **Install dependencies**
@@ -415,7 +415,7 @@ Special thanks to those who have contributed to making Junktown Intelligence bet
 
 **Developed with ❤️ by Jacob McCarthy**
 
-[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/AWInvestigations/issues) • [Request Feature](https://github.com/mccarjac/AWInvestigations/issues)
+[GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/JunktownIntelligence/issues) • [Request Feature](https://github.com/mccarjac/JunktownIntelligence/issues)
 
 **Support the Project:** [Patreon](https://www.patreon.com/cw/MugatuCreations) • [PayPal](https://paypal.me/mccarjac) • [Venmo](https://venmo.com/mccarjac) • [Cash App](https://cash.app/$mccarjac)
 
