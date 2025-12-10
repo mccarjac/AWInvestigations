@@ -29,6 +29,9 @@ export const InfoButton: React.FC<InfoButtonProps> = ({
         style={styles.infoButton}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`Information about ${title}`}
+        accessibilityHint="Opens a dialog with more information"
       >
         <Text style={[styles.infoIcon, { fontSize: iconSize }]}>ⓘ</Text>
       </TouchableOpacity>
@@ -48,6 +51,9 @@ export const InfoButton: React.FC<InfoButtonProps> = ({
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              accessibilityHint="Closes the information dialog"
             >
               <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
