@@ -19,7 +19,7 @@ import {
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { PerkTag } from '@/models/gameData';
-import { Section, CollapsibleSection } from '@/components';
+import { Section, CollapsibleSection, InfoButton } from '@/components';
 
 type FactionStatsNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -190,7 +190,14 @@ export const FactionStatsScreen: React.FC = () => {
         {isSelected && (
           <View style={styles.expandedContent}>
             {/* Perk Tags Analysis */}
-            <Section title="Perk Tag Analysis">
+            <View style={styles.sectionWithInfo}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Perk Tag Analysis</Text>
+                <InfoButton
+                  title="Perk Tag Analysis"
+                  content="This graph shows the distribution of perk tags among faction members. Each bar represents the total count of perks with that tag across all members. For example, if 5 members each have 2 Strength perks, the Strength bar would show 10. This helps identify the faction's collective strengths and specializations."
+                />
+              </View>
               {stats.topPerkTags.length > 0 ? (
                 <View style={styles.perkTagsContainer}>
                   {stats.topPerkTags.map(item =>
@@ -206,7 +213,7 @@ export const FactionStatsScreen: React.FC = () => {
                   No perk tags found for this faction
                 </Text>
               )}
-            </Section>
+            </View>
 
             {/* Common Perks */}
             <CollapsibleSection title="Common Perks" defaultCollapsed={true}>
@@ -333,7 +340,16 @@ export const FactionStatsScreen: React.FC = () => {
             {combinedAnalysis &&
               combinedAnalysis.factionName === stats.factionName &&
               combinedAnalysis.alliedFactions.length > 0 && (
-                <Section title="Combined Force Analysis">
+                <View style={styles.sectionWithInfo}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>
+                      Combined Force Analysis
+                    </Text>
+                    <InfoButton
+                      title="Combined Force Analysis"
+                      content="This analysis shows the total military strength when a faction and its allies work together. 'Direct Members' are the faction's own members. 'Allied Members' are members from allied factions. 'Total Combined' is the sum of all members. 'Strength Multiplier' shows how much stronger the faction is with allies compared to fighting alone. The perk tag bars below show the combined capabilities of all allied forces."
+                    />
+                  </View>
                   <View style={styles.combinedAnalysisCard}>
                     <View style={styles.combinedStatRow}>
                       <Text style={styles.combinedStatLabel}>
@@ -400,7 +416,7 @@ export const FactionStatsScreen: React.FC = () => {
                         );
                       })}
                   </View>
-                </Section>
+                </View>
               )}
 
             {/* Navigate to Faction Details */}
@@ -697,5 +713,16 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
     fontSize: 14,
     fontWeight: '600',
+  },
+  sectionWithInfo: {
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    ...commonStyles.text.h2,
   },
 });
