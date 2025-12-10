@@ -16,22 +16,77 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Check last build time
+        id: check_build_time
+        run: |
+          echo "Checking time since last build..."
+          
+          # Get the latest release
+          LATEST_RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          
+          # Check if we got a valid response
+          if echo "$LATEST_RELEASE" | jq -e '.message == "Not Found"' > /dev/null 2>&1; then
+            echo "No previous builds found. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Extract the creation date
+          CREATED_AT=$(echo "$LATEST_RELEASE" | jq -r '.created_at')
+          
+          if [ -z "$CREATED_AT" ] || [ "$CREATED_AT" = "null" ]; then
+            echo "Could not determine last build time. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Convert to Unix timestamp
+          LAST_BUILD_TIME=$(date -d "$CREATED_AT" +%s)
+          CURRENT_TIME=$(date +%s)
+          
+          # Calculate time difference in seconds
+          TIME_DIFF=$((CURRENT_TIME - LAST_BUILD_TIME))
+          
+          # 48 hours = 172800 seconds
+          THRESHOLD=172800
+          
+          # Calculate hours for display
+          HOURS_SINCE=$((TIME_DIFF / 3600))
+          
+          echo "Last build was $HOURS_SINCE hours ago"
+          echo "Threshold: 48 hours"
+          
+          if [ $TIME_DIFF -ge $THRESHOLD ]; then
+            echo "✅ More than 48 hours since last build. Proceeding with build."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+          else
+            HOURS_REMAINING=$(( (THRESHOLD - TIME_DIFF) / 3600 ))
+            echo "⏳ Last build was less than 48 hours ago. Skipping build."
+            echo "Time remaining until next build: $HOURS_REMAINING hours"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node.js
+        if: steps.check_build_time.outputs.should_build == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Setup Expo and EAS
+        if: steps.check_build_time.outputs.should_build == 'true'
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
+        if: steps.check_build_time.outputs.should_build == 'true'
         run: npm ci
 
       - name: Build Android APK
+        if: steps.check_build_time.outputs.should_build == 'true'
         id: build_apk
         run: |
           echo "Starting EAS build for Android APK..."
@@ -124,8 +179,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Build Skipped Notice
+        if: steps.check_build_time.outputs.should_build == 'false'
+        run: |
+          echo "⏳ Build skipped: Less than 48 hours since last build"
+          echo "This helps avoid hitting Expo's free tier build limits (15 builds/month)"
+          echo "The next build will be allowed after the 48-hour threshold has passed"
+      
       - name: Build Failed Notice
-        if: steps.build_apk.outputs.build_status != 'FINISHED'
+        if: steps.check_build_time.outputs.should_build == 'true' && steps.build_apk.outputs.build_status != 'FINISHED'
         run: |
           echo "❌ Build did not complete successfully"
           echo "Status: ${{ steps.build_apk.outputs.build_status }}"
