@@ -65,10 +65,13 @@ Once you've added the `EXPO_TOKEN` secret:
 The GitHub Action workflow:
 
 1. **Triggers**: Automatically runs when code is pushed to the `master` branch
-2. **Setup**: Installs Node.js, Expo CLI, and project dependencies
-3. **Build**: Submits an APK build to Expo Application Services (EAS) and waits for completion
-4. **Duration**: The workflow takes 10-20 minutes (waits for EAS to complete the build)
-5. **Release**: Creates a GitHub Release with the APK download URL
+2. **Build Throttling**: Checks if the last build was >= 48 hours ago to avoid hitting Expo's free tier limits (15 builds/month)
+   - If less than 48 hours: Build is skipped with an informative message
+   - If >= 48 hours or no previous build: Proceeds with the build
+3. **Setup**: Installs Node.js, Expo CLI, and project dependencies
+4. **Build**: Submits an APK build to Expo Application Services (EAS) and waits for completion
+5. **Duration**: The workflow takes 10-20 minutes (waits for EAS to complete the build)
+6. **Release**: Creates a GitHub Release with the APK download URL
 
 ## Accessing Your Built APK
 
@@ -113,6 +116,25 @@ Available profiles:
 - `preview` - APK for testing (current)
 - `production` - APK for wider distribution
 - `development` - Development build with debugging tools
+
+## Build Throttling (48-Hour Rule)
+
+To avoid hitting Expo's free tier build limits (15 builds per month), the workflow automatically throttles builds:
+
+- **Automatic Check**: Before each build, the workflow checks when the last build was created
+- **48-Hour Threshold**: Builds are only allowed if >= 48 hours have passed since the last build
+- **Skipped Builds**: If less than 48 hours have passed, the workflow skips the build and shows an informative message
+- **First Build**: If no previous builds exist, the build proceeds normally
+
+This ensures you can push code to `master` as often as needed without worrying about build quota, while still getting regular APK builds approximately every 2 days.
+
+### Overriding the Throttle
+
+If you need to force a build before 48 hours have passed, you can:
+
+1. Manually delete the most recent GitHub release
+2. Push a new commit to trigger the workflow
+3. Or manually trigger a build using EAS CLI: `eas build --platform android --profile preview`
 
 ## Troubleshooting
 
