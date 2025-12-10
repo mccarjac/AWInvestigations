@@ -9,3 +9,4 @@ export { HeaderStatsButton } from './common/HeaderStatsButton';
 export { Section } from './common/Section';
 export { CollapsibleSection } from './common/CollapsibleSection';
 export { Card } from './common/Card';
+export { InfoButton } from './common/InfoButton';
