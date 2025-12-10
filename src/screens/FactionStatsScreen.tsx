@@ -19,7 +19,7 @@ import {
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { PerkTag } from '@/models/gameData';
-import { Section, CollapsibleSection, InfoButton } from '@/components';
+import { CollapsibleSection, InfoButton } from '@/components';
 
 type FactionStatsNavigationProp = StackNavigationProp<RootStackParamList>;
 

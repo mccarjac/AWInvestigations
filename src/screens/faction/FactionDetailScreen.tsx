@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -441,6 +441,23 @@ export const FactionDetailsScreen: React.FC = () => {
 
   const stats = getStats();
 
+  // Memoize positive and negative member lists
+  const positiveMembers = useMemo(
+    () =>
+      members.filter(member =>
+        POSITIVE_RELATIONSHIP_TYPE.includes(member.faction.standing)
+      ),
+    [members]
+  );
+
+  const negativeMembers = useMemo(
+    () =>
+      members.filter(member =>
+        NEGATIVE_RELATIONSHIP_TYPE.includes(member.faction.standing)
+      ),
+    [members]
+  );
+
   return (
     <BaseDetailScreen
       onEditPress={() =>
@@ -621,50 +638,40 @@ export const FactionDetailsScreen: React.FC = () => {
       )}
 
       {/* Positive Relationships Section */}
-      {(() => {
-        const positiveMembers = members.filter(member =>
-          POSITIVE_RELATIONSHIP_TYPE.includes(member.faction.standing)
-        );
-        return positiveMembers.length > 0 ? (
-          <CollapsibleSection
-            title={`Positive Relationships (${positiveMembers.length})`}
-            defaultCollapsed={false}
-          >
-            <Text style={styles.sectionDescription}>
-              Characters with positive relationships (Ally/Friend). These count
-              as members in statistics.
-            </Text>
-            <View style={styles.membersList}>
-              {positiveMembers.map(item => (
-                <View key={item.character.id}>{renderMember({ item })}</View>
-              ))}
-            </View>
-          </CollapsibleSection>
-        ) : null;
-      })()}
+      {positiveMembers.length > 0 && (
+        <CollapsibleSection
+          title={`Positive Relationships (${positiveMembers.length})`}
+          defaultCollapsed={false}
+        >
+          <Text style={styles.sectionDescription}>
+            Characters with positive relationships (Ally/Friend). These count as
+            members in statistics.
+          </Text>
+          <View style={styles.membersList}>
+            {positiveMembers.map(item => (
+              <View key={item.character.id}>{renderMember({ item })}</View>
+            ))}
+          </View>
+        </CollapsibleSection>
+      )}
 
       {/* Negative Relationships Section */}
-      {(() => {
-        const negativeMembers = members.filter(member =>
-          NEGATIVE_RELATIONSHIP_TYPE.includes(member.faction.standing)
-        );
-        return negativeMembers.length > 0 ? (
-          <CollapsibleSection
-            title={`Negative Relationships (${negativeMembers.length})`}
-            defaultCollapsed={false}
-          >
-            <Text style={styles.sectionDescription}>
-              Characters with negative relationships (Hostile/Enemy). These do
-              not count as members in statistics.
-            </Text>
-            <View style={styles.membersList}>
-              {negativeMembers.map(item => (
-                <View key={item.character.id}>{renderMember({ item })}</View>
-              ))}
-            </View>
-          </CollapsibleSection>
-        ) : null;
-      })()}
+      {negativeMembers.length > 0 && (
+        <CollapsibleSection
+          title={`Negative Relationships (${negativeMembers.length})`}
+          defaultCollapsed={false}
+        >
+          <Text style={styles.sectionDescription}>
+            Characters with negative relationships (Hostile/Enemy). These do not
+            count as members in statistics.
+          </Text>
+          <View style={styles.membersList}>
+            {negativeMembers.map(item => (
+              <View key={item.character.id}>{renderMember({ item })}</View>
+            ))}
+          </View>
+        </CollapsibleSection>
+      )}
 
       {/* Add Members Section */}
       <Section title="Add Members">

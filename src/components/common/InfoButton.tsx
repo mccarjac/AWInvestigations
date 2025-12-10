@@ -98,7 +98,8 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
   },
   closeButton: {
-    ...commonStyles.button.primary,
+    backgroundColor: themeColors.accent.primary,
+    borderRadius: 8,
     marginTop: 20,
     paddingVertical: 12,
   },
