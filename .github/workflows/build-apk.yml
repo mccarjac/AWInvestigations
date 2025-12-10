@@ -25,11 +25,14 @@ jobs:
           LATEST_RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/releases/latest")
           
-          # Check if we got a valid response
-          if echo "$LATEST_RELEASE" | jq -e '.message == "Not Found"' > /dev/null 2>&1; then
-            echo "No previous builds found. Proceeding with build."
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            exit 0
+          # Check if we got a valid response (no releases exist)
+          if echo "$LATEST_RELEASE" | jq -e '.message' > /dev/null 2>&1; then
+            MESSAGE=$(echo "$LATEST_RELEASE" | jq -r '.message')
+            if [[ "$MESSAGE" == *"Not Found"* ]] || [ -z "$LATEST_RELEASE" ]; then
+              echo "No previous builds found. Proceeding with build."
+              echo "should_build=true" >> $GITHUB_OUTPUT
+              exit 0
+            fi
           fi
           
           # Extract the creation date
@@ -41,8 +44,13 @@ jobs:
             exit 0
           fi
           
-          # Convert to Unix timestamp
-          LAST_BUILD_TIME=$(date -d "$CREATED_AT" +%s)
+          # Convert to Unix timestamp with error handling
+          if ! LAST_BUILD_TIME=$(date -d "$CREATED_AT" +%s 2>&1); then
+            echo "Failed to parse date format: $CREATED_AT"
+            echo "Proceeding with build to be safe."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           CURRENT_TIME=$(date +%s)
           
           # Calculate time difference in seconds
