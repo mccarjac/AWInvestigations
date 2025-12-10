@@ -641,7 +641,7 @@ export const FactionDetailsScreen: React.FC = () => {
       {positiveMembers.length > 0 && (
         <CollapsibleSection
           title={`Positive Relationships (${positiveMembers.length})`}
-          defaultCollapsed={false}
+          defaultCollapsed={true}
         >
           <Text style={styles.sectionDescription}>
             Characters with positive relationships (Ally/Friend). These count as
@@ -659,7 +659,7 @@ export const FactionDetailsScreen: React.FC = () => {
       {negativeMembers.length > 0 && (
         <CollapsibleSection
           title={`Negative Relationships (${negativeMembers.length})`}
-          defaultCollapsed={false}
+          defaultCollapsed={true}
         >
           <Text style={styles.sectionDescription}>
             Characters with negative relationships (Hostile/Enemy). These do not
