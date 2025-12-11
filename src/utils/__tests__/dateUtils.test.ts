@@ -28,7 +28,9 @@ describe('dateUtils', () => {
         'Invalid date format'
       );
       expect(() => parseDateString('2025-11-1')).toThrow('Invalid date format');
-      expect(() => parseDateString('not-a-date')).toThrow('Invalid date format');
+      expect(() => parseDateString('not-a-date')).toThrow(
+        'Invalid date format'
+      );
     });
 
     it('should throw error for non-numeric values', () => {

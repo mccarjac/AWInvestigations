@@ -97,6 +97,38 @@ module.exports = [
     },
   },
 
+  // Configuration for test files
+  {
+    files: ['**/__tests__/**/*.{ts,tsx,js,jsx}', '**/*.{test,spec}.{ts,tsx,js,jsx}'],
+    languageOptions: {
+      parser: typescriptParser,
+      globals: {
+        // Jest globals
+        jest: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        // Node/common globals
+        __DEV__: 'readonly',
+        console: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        process: 'readonly',
+        global: 'readonly',
+      },
+    },
+    rules: {
+      // Relax some rules for test files
+      '@typescript-eslint/no-explicit-any': 'off', // Allow any in tests for mocking
+      'no-console': 'off', // Allow console in tests
+    },
+  },
+
   // Prettier config to disable conflicting rules
   prettierConfig,
 

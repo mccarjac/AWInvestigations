@@ -228,7 +228,9 @@ describe('characterStats', () => {
           species: 'Human',
           perkIds: [],
           distinctionIds: [],
-          factions: [{ name: 'TestFaction', standing: RelationshipStanding.Ally }],
+          factions: [
+            { name: 'TestFaction', standing: RelationshipStanding.Ally },
+          ],
           relationships: [],
           createdAt: '2025-01-01',
           updatedAt: '2025-01-01',
@@ -278,7 +280,9 @@ describe('characterStats', () => {
           species: 'Human',
           perkIds: [],
           distinctionIds: [],
-          factions: [{ name: 'TestFaction', standing: RelationshipStanding.Enemy }],
+          factions: [
+            { name: 'TestFaction', standing: RelationshipStanding.Enemy },
+          ],
           relationships: [],
           createdAt: '2025-01-01',
           updatedAt: '2025-01-01',
