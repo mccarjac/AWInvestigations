@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAsyncStorageJSONParser } from '../safeAsyncStorageJSONParser';
+import { SafeAsyncStorageJSONParser } from '@/utils/safeAsyncStorageJSONParser';
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage');

@@ -1,4 +1,4 @@
-import { calculateCharacterStats } from '../characterStats';
+import { calculateCharacterStats } from '@/utils/characterStats';
 import { GameCharacter, RelationshipStanding } from '@/models/types';
 
 describe('characterStats', () => {

@@ -17,7 +17,6 @@ module.exports = {
     'src/utils/**/*.{ts,tsx}',
     '!src/utils/**/*.d.ts',
     '!src/utils/**/index.{ts,tsx}',
-    '!src/utils/__tests__/**',
     // Exclude files without tests (for now)
     '!src/utils/characterStorage.ts',
     '!src/utils/exportImport.ts',
@@ -34,8 +33,6 @@ module.exports = {
     },
   },
   coverageReporters: ['text', 'lcov', 'html'],
-  testMatch: [
-    '**/__tests__/**/*.(test|spec).(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)',
-  ],
+  testMatch: ['<rootDir>/tst/**/*.(test|spec).(ts|tsx|js)'],
+  roots: ['<rootDir>/tst'],
 };

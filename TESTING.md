@@ -20,16 +20,17 @@ npm run check-all
 
 ## Test Structure
 
-Tests are located alongside the files they test in `__tests__` directories:
+Tests are located in the `tst/` directory, which mirrors the structure of `src/`:
 
 ```
+tst/
+  utils/
+    dateUtils.test.ts
+    derivedStats.test.ts
+    characterStats.test.ts
+    safeAsyncStorageJSONParser.test.ts
 src/
   utils/
-    __tests__/
-      dateUtils.test.ts
-      derivedStats.test.ts
-      characterStats.test.ts
-      safeAsyncStorageJSONParser.test.ts
     dateUtils.ts
     derivedStats.ts
     ...
@@ -40,6 +41,7 @@ src/
 Coverage reports are generated in the `coverage/` directory when running `npm run test:coverage`.
 
 Current coverage thresholds:
+
 - **Statements**: 75%
 - **Branches**: 55%
 - **Functions**: 60%
@@ -103,7 +105,8 @@ If tests fail, the build will not proceed.
 
 When adding new utility functions or features:
 
-1. Create a test file in the `__tests__` directory alongside the file being tested
+1. Create a test file in the `tst/` directory that mirrors the structure of the file being tested
+   - For example, to test `src/utils/myFile.ts`, create `tst/utils/myFile.test.ts`
 2. Import the function(s) to test
 3. Write test cases using `describe` and `it` blocks
 4. Mock any external dependencies (AsyncStorage, file system, etc.)
@@ -153,6 +156,7 @@ Additional files that could benefit from unit tests:
 ### Import Path Issues
 
 Make sure you're using the configured path aliases:
+
 - `@/` for `src/`
 - `@utils/` for `src/utils/`
 - `@models/` for `src/models/`

@@ -99,7 +99,7 @@ module.exports = [
 
   // Configuration for test files
   {
-    files: ['**/__tests__/**/*.{ts,tsx,js,jsx}', '**/*.{test,spec}.{ts,tsx,js,jsx}'],
+    files: ['tst/**/*.{ts,tsx,js,jsx}', '**/*.{test,spec}.{ts,tsx,js,jsx}'],
     languageOptions: {
       parser: typescriptParser,
       globals: {

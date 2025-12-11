@@ -1,4 +1,4 @@
-import { calculateDerivedStats } from '../derivedStats';
+import { calculateDerivedStats } from '@/utils/derivedStats';
 import { GameCharacter } from '@/models/types';
 import { PerkTag } from '@/models/gameData';
 

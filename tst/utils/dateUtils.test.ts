@@ -2,7 +2,7 @@ import {
   parseDateString,
   formatEventDate,
   formatEventDateShort,
-} from '../dateUtils';
+} from '@/utils/dateUtils';
 
 describe('dateUtils', () => {
   describe('parseDateString', () => {
