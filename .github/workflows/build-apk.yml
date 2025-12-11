@@ -93,6 +93,10 @@ jobs:
         if: steps.check_build_time.outputs.should_build == 'true'
         run: npm ci
 
+      - name: Run tests
+        if: steps.check_build_time.outputs.should_build == 'true'
+        run: npm test
+
       - name: Build Android APK
         if: steps.check_build_time.outputs.should_build == 'true'
         id: build_apk

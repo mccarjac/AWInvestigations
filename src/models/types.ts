@@ -220,7 +220,7 @@ export interface CyberwareStatModifiers {
   limitModifier?: number;
   healthCapModifier?: number;
   limitCapModifier?: number;
-  tagModifiers?: Record<PerkTag, number>;
+  tagModifiers?: Partial<Record<PerkTag, number>>;
 }
 
 export interface Cyberware {
