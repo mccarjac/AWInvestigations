@@ -12,6 +12,7 @@
 **Support the Project:**
 
 [![Support on Patreon](https://img.shields.io/badge/Support-Patreon-orange.svg)](https://www.patreon.com/cw/MugatuCreations)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-mugatucreations-FFDD00.svg?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/mugatucreations)
 [![PayPal](https://img.shields.io/badge/PayPal-@mccarjac-00457C.svg?logo=paypal)](https://paypal.me/mccarjac)
 [![Venmo](https://img.shields.io/badge/Venmo-@mccarjac-3D95CE.svg?logo=venmo)](https://venmo.com/mccarjac)
 [![Cash App](https://img.shields.io/badge/Cash%20App-$mccarjac-00C244.svg?logo=cash-app)](https://cash.app/$mccarjac)
@@ -417,6 +418,6 @@ Special thanks to those who have contributed to making Junktown Intelligence bet
 
 [GitHub](https://github.com/mccarjac) • [Report Bug](https://github.com/mccarjac/JunktownIntelligence/issues) • [Request Feature](https://github.com/mccarjac/JunktownIntelligence/issues)
 
-**Support the Project:** [Patreon](https://www.patreon.com/cw/MugatuCreations) • [PayPal](https://paypal.me/mccarjac) • [Venmo](https://venmo.com/mccarjac) • [Cash App](https://cash.app/$mccarjac)
+**Support the Project:** [Patreon](https://www.patreon.com/cw/MugatuCreations) • [Buy Me a Coffee](https://buymeacoffee.com/mugatucreations) • [PayPal](https://paypal.me/mccarjac) • [Venmo](https://venmo.com/mccarjac) • [Cash App](https://cash.app/$mccarjac)
 
 </div>
