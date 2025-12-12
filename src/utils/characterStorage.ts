@@ -16,7 +16,7 @@ export interface FactionRelationship {
   description?: string;
 }
 
-interface StoredFaction {
+export interface StoredFaction {
   name: string;
   description: string;
   imageUri?: string; // Deprecated: Use imageUris instead

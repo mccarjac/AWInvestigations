@@ -299,5 +299,321 @@ describe('characterStats', () => {
         Enemy: 1,
       });
     });
+
+    describe('Perk Statistics', () => {
+      it('should calculate most common perks', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: ['agility_1', 'defense_1', 'strength_1'],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+          {
+            id: '2',
+            name: 'Char2',
+            species: 'Human',
+            perkIds: ['agility_1', 'defense_1'],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+          {
+            id: '3',
+            name: 'Char3',
+            species: 'Human',
+            perkIds: ['agility_1'],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonPerks).toHaveLength(3);
+        expect(stats.commonPerks[0]).toEqual({
+          name: 'Agile Strikes',
+          count: 3,
+        });
+        expect(stats.commonPerks[1].count).toBe(2);
+        expect(stats.commonPerks[2].count).toBe(1);
+      });
+
+      it('should handle unknown perk IDs', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: ['unknown_perk_id', 'agility_1'],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonPerks).toHaveLength(2);
+        const unknownPerk = stats.commonPerks.find(
+          p => p.name === 'Unknown Perk'
+        );
+        expect(unknownPerk).toBeDefined();
+        expect(unknownPerk?.count).toBe(1);
+      });
+
+      it('should limit common perks to top 5', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [
+              'agility_1',
+              'agility_2',
+              'agility_3',
+              'defense_1',
+              'defense_2',
+              'strength_1',
+              'strength_2',
+            ],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonPerks).toHaveLength(5);
+      });
+
+      it('should handle characters with no perks', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonPerks).toHaveLength(0);
+      });
+
+      it('should sort perks by count descending', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: ['agility_1', 'defense_1', 'defense_1'],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+          {
+            id: '2',
+            name: 'Char2',
+            species: 'Human',
+            perkIds: ['defense_1', 'strength_1'],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        // defense_1 appears 3 times, agility_1 once, strength_1 once
+        expect(stats.commonPerks[0].count).toBeGreaterThanOrEqual(
+          stats.commonPerks[1]?.count || 0
+        );
+        if (stats.commonPerks[1]) {
+          expect(stats.commonPerks[1].count).toBeGreaterThanOrEqual(
+            stats.commonPerks[2]?.count || 0
+          );
+        }
+      });
+    });
+
+    describe('Distinction Statistics', () => {
+      it('should calculate most common distinctions', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['d1', 'd2', 'd3'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+          {
+            id: '2',
+            name: 'Char2',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['d1', 'd2'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+          {
+            id: '3',
+            name: 'Char3',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['d1'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonDistinctions).toHaveLength(3);
+        expect(stats.commonDistinctions[0]).toEqual({
+          name: 'Apathetic',
+          count: 3,
+        });
+        expect(stats.commonDistinctions[1].count).toBe(2);
+        expect(stats.commonDistinctions[2].count).toBe(1);
+      });
+
+      it('should handle unknown distinction IDs', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['unknown_distinction_id', 'd1'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonDistinctions).toHaveLength(2);
+        const unknownDistinction = stats.commonDistinctions.find(
+          d => d.name === 'Unknown Distinction'
+        );
+        expect(unknownDistinction).toBeDefined();
+        expect(unknownDistinction?.count).toBe(1);
+      });
+
+      it('should limit common distinctions to top 5', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonDistinctions).toHaveLength(5);
+      });
+
+      it('should handle characters with no distinctions', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: [],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        expect(stats.commonDistinctions).toHaveLength(0);
+      });
+
+      it('should sort distinctions by count descending', () => {
+        const characters: GameCharacter[] = [
+          {
+            id: '1',
+            name: 'Char1',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['d1', 'd2', 'd2'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+          {
+            id: '2',
+            name: 'Char2',
+            species: 'Human',
+            perkIds: [],
+            distinctionIds: ['d2', 'd3'],
+            factions: [],
+            relationships: [],
+            createdAt: '2025-01-01',
+            updatedAt: '2025-01-01',
+          },
+        ];
+
+        const stats = calculateCharacterStats(characters);
+
+        // d2 appears 3 times, d1 once, d3 once
+        expect(stats.commonDistinctions[0].count).toBeGreaterThanOrEqual(
+          stats.commonDistinctions[1]?.count || 0
+        );
+        if (stats.commonDistinctions[1]) {
+          expect(stats.commonDistinctions[1].count).toBeGreaterThanOrEqual(
+            stats.commonDistinctions[2]?.count || 0
+          );
+        }
+      });
+    });
   });
 });

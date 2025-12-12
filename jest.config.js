@@ -18,7 +18,6 @@ module.exports = {
     '!src/utils/**/*.d.ts',
     '!src/utils/**/index.{ts,tsx}',
     // Exclude files without tests (for now)
-    '!src/utils/characterStorage.ts',
     '!src/utils/exportImport.ts',
     '!src/utils/factionStats.ts',
     '!src/utils/gitIntegration.ts',

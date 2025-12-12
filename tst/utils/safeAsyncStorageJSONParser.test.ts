@@ -269,4 +269,111 @@ describe('SafeAsyncStorageJSONParser', () => {
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
   });
+
+  describe('Development mode logging', () => {
+    const originalDev = global.__DEV__;
+    let consoleWarnSpy: jest.SpyInstance;
+    let consoleErrorSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      // Enable dev mode for these tests
+      global.__DEV__ = true;
+      consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      global.__DEV__ = originalDev;
+      consoleWarnSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should log warning for corrupted JSON in getItem', async () => {
+      (AsyncStorage.getItem as jest.Mock).mockResolvedValue('invalid-json{');
+
+      await SafeAsyncStorageJSONParser.getItem('corrupt-key');
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Failed to parse stored data for key "corrupt-key":',
+        expect.any(Error)
+      );
+    });
+
+    it('should log error for storage failure in getItem', async () => {
+      const mockError = new Error('Storage error');
+      (AsyncStorage.getItem as jest.Mock).mockRejectedValue(mockError);
+
+      await SafeAsyncStorageJSONParser.getItem('error-key');
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to get item from storage (key: "error-key"):',
+        mockError
+      );
+    });
+
+    it('should log error for storage failure in setItem', async () => {
+      const mockError = new Error('Storage error');
+      (AsyncStorage.setItem as jest.Mock).mockRejectedValue(mockError);
+
+      await SafeAsyncStorageJSONParser.setItem('error-key', { data: 'test' });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to set item in storage (key: "error-key"):',
+        mockError
+      );
+    });
+
+    it('should log error for storage failure in removeItem', async () => {
+      const mockError = new Error('Storage error');
+      (AsyncStorage.removeItem as jest.Mock).mockRejectedValue(mockError);
+
+      await SafeAsyncStorageJSONParser.removeItem('error-key');
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to remove item from storage (key: "error-key"):',
+        mockError
+      );
+    });
+
+    it('should log error for storage failure in clear', async () => {
+      const mockError = new Error('Storage error');
+      (AsyncStorage.clear as jest.Mock).mockRejectedValue(mockError);
+
+      await SafeAsyncStorageJSONParser.clear();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to clear storage:',
+        mockError
+      );
+    });
+
+    it('should log warning for corrupted JSON in multiGet', async () => {
+      const mockData = [
+        ['key1', JSON.stringify({ value: 1 })],
+        ['key2', 'invalid-json{'],
+      ];
+      (AsyncStorage.multiGet as jest.Mock).mockResolvedValue(mockData);
+
+      await SafeAsyncStorageJSONParser.multiGet(['key1', 'key2']);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Failed to parse stored data for key "key2":',
+        expect.any(Error)
+      );
+    });
+
+    it('should log error for storage failure in multiGet', async () => {
+      const mockError = new Error('Storage error');
+      (AsyncStorage.multiGet as jest.Mock).mockRejectedValue(mockError);
+
+      await SafeAsyncStorageJSONParser.multiGet(['key1', 'key2']);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to get multiple items from storage:',
+        mockError
+      );
+    });
+  });
 });
