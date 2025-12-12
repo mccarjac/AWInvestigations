@@ -38,6 +38,60 @@ jest.mock('react-native-zip-archive', () => ({
   unzip: jest.fn(),
 }));
 
+// Mock React Navigation
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    setOptions: jest.fn(),
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  }),
+  useFocusEffect: jest.fn(callback => callback()),
+  useRoute: () => ({
+    params: {},
+  }),
+  useIsFocused: () => true,
+}));
+
+jest.mock('@react-navigation/drawer', () => ({
+  ...jest.requireActual('@react-navigation/drawer'),
+  DrawerNavigationProp: jest.fn(),
+}));
+
+jest.mock('@react-navigation/stack', () => ({
+  ...jest.requireActual('@react-navigation/stack'),
+  StackNavigationProp: jest.fn(),
+}));
+
+// Mock react-native-safe-area-context
+jest.mock('react-native-safe-area-context', () => ({
+  SafeAreaProvider: ({ children }) => children,
+  SafeAreaView: ({ children }) => children,
+  useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+}));
+
+// Mock react-native-gesture-handler
+jest.mock('react-native-gesture-handler', () => ({
+  TouchableOpacity: 'TouchableOpacity',
+  ScrollView: 'ScrollView',
+  State: {},
+  PanGestureHandler: 'PanGestureHandler',
+  TouchableWithoutFeedback: 'TouchableWithoutFeedback',
+  FlatList: 'FlatList',
+}));
+
+// Mock react-native-reanimated
+jest.mock('react-native-reanimated', () => ({
+  default: {
+    createAnimatedComponent: component => component,
+  },
+  Easing: {
+    bezier: () => ({ factory: () => x => x }),
+  },
+}));
+
 // Global __DEV__ variable for development checks
 global.__DEV__ = false;
 

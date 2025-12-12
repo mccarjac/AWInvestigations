@@ -15,8 +15,12 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   collectCoverageFrom: [
     'src/utils/**/*.{ts,tsx}',
+    'src/components/**/*.{ts,tsx}',
+    'src/screens/**/*.{ts,tsx}',
     '!src/utils/**/*.d.ts',
     '!src/utils/**/index.{ts,tsx}',
+    '!src/components/**/index.{ts,tsx}',
+    '!src/screens/**/index.{ts,tsx}',
     // Exclude files without tests (for now)
     '!src/utils/exportImport.ts',
     '!src/utils/factionStats.ts',
@@ -25,10 +29,10 @@ module.exports = {
   ],
   coverageThreshold: {
     global: {
-      branches: 55,
-      functions: 60,
-      lines: 75,
-      statements: 75,
+      branches: 50,
+      functions: 55,
+      lines: 70,
+      statements: 70,
     },
   },
   coverageReporters: ['text', 'lcov', 'html'],

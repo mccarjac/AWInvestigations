@@ -145,6 +145,7 @@ module.exports = [
       '.idea/',
       '*.config.js',
       'babel.config.js',
+      'jest.setup.js',
       '*.min.js',
     ],
   },
