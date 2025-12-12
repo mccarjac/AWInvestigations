@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Text } from 'react-native';
-import { BaseListScreen } from '@/components/screens/BaseListScreen';
+import { BaseListScreen } from '@/components';
 
 interface TestItem {
   id: string;
