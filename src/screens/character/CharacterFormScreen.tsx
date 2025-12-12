@@ -21,12 +21,11 @@ import { RootStackParamList } from '@/navigation/types';
 import {
   CharacterFormData,
   GameCharacter,
-  Species,
-  SPECIES_BASE_STATS,
   GameLocation,
   Relationship,
   RelationshipStanding,
 } from '@models/types';
+import { Species, SPECIES_BASE_STATS } from '@models/speciesTypes';
 import {
   addCharacter,
   updateCharacter,
@@ -545,9 +544,7 @@ export const CharacterFormScreen: React.FC = () => {
                     <Text style={styles.modifierLabel}>Health:</Text>
                     <TextInput
                       style={styles.modifierField}
-                      value={
-                        cyber.statModifiers?.healthModifier?.toString() || ''
-                      }
+                      value={cyber.statModifiers?.health?.toString() || ''}
                       onChangeText={value => {
                         const newCyberware = [...(form.cyberware || [])];
                         const numValue =
@@ -556,7 +553,7 @@ export const CharacterFormScreen: React.FC = () => {
                           ...cyber,
                           statModifiers: {
                             ...cyber.statModifiers,
-                            healthModifier: numValue,
+                            health: numValue,
                           },
                         };
                         handleChange('cyberware', newCyberware);
@@ -569,9 +566,7 @@ export const CharacterFormScreen: React.FC = () => {
                     <Text style={styles.modifierLabel}>Limit:</Text>
                     <TextInput
                       style={styles.modifierField}
-                      value={
-                        cyber.statModifiers?.limitModifier?.toString() || ''
-                      }
+                      value={cyber.statModifiers?.limit?.toString() || ''}
                       onChangeText={value => {
                         const newCyberware = [...(form.cyberware || [])];
                         const numValue =
@@ -580,7 +575,7 @@ export const CharacterFormScreen: React.FC = () => {
                           ...cyber,
                           statModifiers: {
                             ...cyber.statModifiers,
-                            limitModifier: numValue,
+                            limit: numValue,
                           },
                         };
                         handleChange('cyberware', newCyberware);
@@ -595,9 +590,7 @@ export const CharacterFormScreen: React.FC = () => {
                     <Text style={styles.modifierLabel}>Health Cap:</Text>
                     <TextInput
                       style={styles.modifierField}
-                      value={
-                        cyber.statModifiers?.healthCapModifier?.toString() || ''
-                      }
+                      value={cyber.statModifiers?.healthCap?.toString() || ''}
                       onChangeText={value => {
                         const newCyberware = [...(form.cyberware || [])];
                         const numValue =
@@ -606,7 +599,7 @@ export const CharacterFormScreen: React.FC = () => {
                           ...cyber,
                           statModifiers: {
                             ...cyber.statModifiers,
-                            healthCapModifier: numValue,
+                            healthCap: numValue,
                           },
                         };
                         handleChange('cyberware', newCyberware);
@@ -619,9 +612,7 @@ export const CharacterFormScreen: React.FC = () => {
                     <Text style={styles.modifierLabel}>Limit Cap:</Text>
                     <TextInput
                       style={styles.modifierField}
-                      value={
-                        cyber.statModifiers?.limitCapModifier?.toString() || ''
-                      }
+                      value={cyber.statModifiers?.limitCap?.toString() || ''}
                       onChangeText={value => {
                         const newCyberware = [...(form.cyberware || [])];
                         const numValue =
@@ -630,7 +621,7 @@ export const CharacterFormScreen: React.FC = () => {
                           ...cyber,
                           statModifiers: {
                             ...cyber.statModifiers,
-                            limitCapModifier: numValue,
+                            limitCap: numValue,
                           },
                         };
                         handleChange('cyberware', newCyberware);

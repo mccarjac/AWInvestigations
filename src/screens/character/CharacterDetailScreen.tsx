@@ -350,31 +350,28 @@ export const CharacterDetailScreen: React.FC = () => {
                 <Text style={styles.cyberwareModifiersTitle}>
                   Stat Modifiers:
                 </Text>
-                {cyber.statModifiers.healthModifier !== undefined && (
+                {cyber.statModifiers.health !== undefined && (
                   <Text style={styles.cyberwareModifier}>
-                    • Health:{' '}
-                    {cyber.statModifiers.healthModifier > 0 ? '+' : ''}
-                    {cyber.statModifiers.healthModifier}
+                    • Health: {cyber.statModifiers.health > 0 ? '+' : ''}
+                    {cyber.statModifiers.health}
                   </Text>
                 )}
-                {cyber.statModifiers.limitModifier !== undefined && (
+                {cyber.statModifiers.limit !== undefined && (
                   <Text style={styles.cyberwareModifier}>
-                    • Limit: {cyber.statModifiers.limitModifier > 0 ? '+' : ''}
-                    {cyber.statModifiers.limitModifier}
+                    • Limit: {cyber.statModifiers.limit > 0 ? '+' : ''}
+                    {cyber.statModifiers.limit}
                   </Text>
                 )}
-                {cyber.statModifiers.healthCapModifier !== undefined && (
+                {cyber.statModifiers.healthCap !== undefined && (
                   <Text style={styles.cyberwareModifier}>
-                    • Health Cap:{' '}
-                    {cyber.statModifiers.healthCapModifier > 0 ? '+' : ''}
-                    {cyber.statModifiers.healthCapModifier}
+                    • Health Cap: {cyber.statModifiers.healthCap > 0 ? '+' : ''}
+                    {cyber.statModifiers.healthCap}
                   </Text>
                 )}
-                {cyber.statModifiers.limitCapModifier !== undefined && (
+                {cyber.statModifiers.limitCap !== undefined && (
                   <Text style={styles.cyberwareModifier}>
-                    • Limit Cap:{' '}
-                    {cyber.statModifiers.limitCapModifier > 0 ? '+' : ''}
-                    {cyber.statModifiers.limitCapModifier}
+                    • Limit Cap: {cyber.statModifiers.limitCap > 0 ? '+' : ''}
+                    {cyber.statModifiers.limitCap}
                   </Text>
                 )}
                 {cyber.statModifiers.tagModifiers &&

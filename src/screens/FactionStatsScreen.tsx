@@ -106,7 +106,7 @@ export const FactionStatsScreen: React.FC = () => {
 
   const renderPerkTagBar = (tag: PerkTag, count: number, maxCount: number) => {
     const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
-    const width = `${Math.max(percentage, 5)}%`; // Minimum 5% width for visibility
+    const widthPercentage = `${Math.max(percentage, 5)}%` as const; // Minimum 5% width for visibility
 
     return (
       <View key={tag} style={styles.perkTagRow}>
@@ -116,7 +116,7 @@ export const FactionStatsScreen: React.FC = () => {
             style={[
               styles.perkTagBar,
               {
-                width,
+                width: widthPercentage,
                 backgroundColor: getPerkTagColor(tag),
               },
             ]}

@@ -101,7 +101,7 @@ describe('derivedStats', () => {
             name: 'Super Health Cyberware',
             description: 'Adds lots of health',
             statModifiers: {
-              healthModifier: 100, // Way over cap
+              health: 100, // Way over cap
             },
           },
         ],
@@ -129,7 +129,7 @@ describe('derivedStats', () => {
             name: 'Super Limit Cyberware',
             description: 'Adds lots of limit',
             statModifiers: {
-              limitModifier: 100, // Way over cap
+              limit: 100, // Way over cap
             },
           },
         ],
@@ -157,7 +157,7 @@ describe('derivedStats', () => {
             name: 'Health Boost',
             description: 'Adds 1 health',
             statModifiers: {
-              healthModifier: 1,
+              health: 1,
             },
           },
         ],
@@ -185,7 +185,7 @@ describe('derivedStats', () => {
             name: 'Limit Boost',
             description: 'Adds 2 limit',
             statModifiers: {
-              limitModifier: 2,
+              limit: 2,
             },
           },
         ],
@@ -213,14 +213,14 @@ describe('derivedStats', () => {
             name: 'Health Boost',
             description: 'Adds 1 health',
             statModifiers: {
-              healthModifier: 1,
+              health: 1,
             },
           },
           {
             name: 'Limit Boost',
             description: 'Adds 1 limit',
             statModifiers: {
-              limitModifier: 1,
+              limit: 1,
             },
           },
         ],
@@ -249,8 +249,8 @@ describe('derivedStats', () => {
             name: 'Cap Increase',
             description: 'Increases health cap',
             statModifiers: {
-              healthModifier: 10, // Lots of health
-              healthCapModifier: 10, // But also increase the cap
+              health: 10, // Lots of health
+              healthCap: 10, // But also increase the cap
             },
           },
         ],

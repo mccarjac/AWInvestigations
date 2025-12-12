@@ -1,8 +1,5 @@
-import {
-  GameCharacter,
-  SPECIES_BASE_STATS,
-  MUTANT_SPECIES,
-} from '@/models/types';
+import { GameCharacter } from '@/models/types';
+import { SPECIES_BASE_STATS, MUTANT_SPECIES } from '@/models/speciesTypes';
 import { AVAILABLE_PERKS, PerkTag, TAG_SCORE_BONUSES } from '@/models/gameData';
 
 export interface CharacterDerivedStats {
@@ -72,17 +69,17 @@ export const calculateDerivedStats = (
   if (character.cyberware && character.cyberware.length > 0) {
     character.cyberware.forEach(cyber => {
       if (cyber.statModifiers) {
-        if (cyber.statModifiers.healthModifier) {
-          maxHealth += cyber.statModifiers.healthModifier;
+        if (cyber.statModifiers.health) {
+          maxHealth += cyber.statModifiers.health;
         }
-        if (cyber.statModifiers.limitModifier) {
-          maxLimit += cyber.statModifiers.limitModifier;
+        if (cyber.statModifiers.limit) {
+          maxLimit += cyber.statModifiers.limit;
         }
-        if (cyber.statModifiers.healthCapModifier) {
-          baseStats.healthCap += cyber.statModifiers.healthCapModifier;
+        if (cyber.statModifiers.healthCap) {
+          baseStats.healthCap += cyber.statModifiers.healthCap;
         }
-        if (cyber.statModifiers.limitCapModifier) {
-          baseStats.limitCap += cyber.statModifiers.limitCapModifier;
+        if (cyber.statModifiers.limitCap) {
+          baseStats.limitCap += cyber.statModifiers.limitCap;
         }
         // Tag modifiers can be added to tag scores if needed
         if (cyber.statModifiers.tagModifiers) {

@@ -1,12 +1,11 @@
+import { Recipe, Distinction } from './types';
 import {
   Species,
-  Recipe,
-  Distinction,
   ORGANIC_SPECIES,
   ROBOTIC_SPECIES,
   MUTANT_SPECIES,
   ANDROID_SPECIES,
-} from './types';
+} from './speciesTypes';
 
 export enum PerkTag {
   Agility = 'Agility',
@@ -23,11 +22,12 @@ export enum PerkTag {
   Technical = 'Technical',
 }
 
-export interface PerkStatModifiers {
+export interface StatModifiers {
   health?: number;
   limit?: number;
   healthCap?: number;
   limitCap?: number;
+  tagModifiers?: Partial<Record<PerkTag, number>>;
 }
 
 export interface TagScoreBonus {
@@ -149,7 +149,7 @@ export interface Perk {
   name: string;
   description: string;
   tag: PerkTag;
-  statModifiers?: PerkStatModifiers;
+  statModifiers?: StatModifiers;
   allowedSpecies?: Species[];
   recipeIds?: RecipeId[];
 }
