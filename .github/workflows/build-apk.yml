@@ -109,28 +109,34 @@ jobs:
           fi
           
           # Check for changes in /src directory since last build
-          if git diff --quiet "$LAST_BUILD_COMMIT" HEAD -- src/; then
+          if git diff --quiet "$LAST_BUILD_COMMIT" HEAD -- 'src/'; then
             echo "⏭️  No changes detected in /src directory since last build."
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "✅ Source file changes detected in /src directory."
             # Show what changed
             echo "Changed files:"
-            git diff --name-only "$LAST_BUILD_COMMIT" HEAD -- src/ | sed 's/^/  - /'
+            git diff --name-only "$LAST_BUILD_COMMIT" HEAD -- 'src/' | sed 's/^/  - /'
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Determine build decision
         id: should_build
         run: |
+          # Set variables with defaults to handle unexpected failures
           TIME_CHECK="${{ steps.check_build_time.outputs.time_check_passed }}"
           HAS_CHANGES="${{ steps.check_source_changes.outputs.has_changes }}"
           SKIP_REASON="${{ steps.check_build_time.outputs.skip_reason }}"
           
+          # Default to empty string if not set
+          TIME_CHECK="${TIME_CHECK:-}"
+          HAS_CHANGES="${HAS_CHANGES:-}"
+          SKIP_REASON="${SKIP_REASON:-}"
+          
           echo "Decision variables:"
-          echo "  TIME_CHECK=$TIME_CHECK"
-          echo "  HAS_CHANGES=$HAS_CHANGES"
-          echo "  SKIP_REASON=$SKIP_REASON"
+          echo "  TIME_CHECK='$TIME_CHECK'"
+          echo "  HAS_CHANGES='$HAS_CHANGES'"
+          echo "  SKIP_REASON='$SKIP_REASON'"
           echo ""
           
           # Check time threshold first (if failed, source check was skipped)
