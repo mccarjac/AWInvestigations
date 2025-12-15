@@ -127,21 +127,33 @@ jobs:
           HAS_CHANGES="${{ steps.check_source_changes.outputs.has_changes }}"
           SKIP_REASON="${{ steps.check_build_time.outputs.skip_reason }}"
           
-          # Build if time check passed AND source changes exist
-          if [ "$TIME_CHECK" = "true" ] && [ "$HAS_CHANGES" = "true" ]; then
-            echo "✅ Build conditions met: Time check passed and source changes detected."
-            echo "should_build=true" >> $GITHUB_OUTPUT
-            echo "skip_reason=" >> $GITHUB_OUTPUT
-          elif [ "$TIME_CHECK" = "false" ]; then
+          echo "Decision variables:"
+          echo "  TIME_CHECK=$TIME_CHECK"
+          echo "  HAS_CHANGES=$HAS_CHANGES"
+          echo "  SKIP_REASON=$SKIP_REASON"
+          echo ""
+          
+          # Check time threshold first (if failed, source check was skipped)
+          if [ "$TIME_CHECK" = "false" ]; then
             echo "⏳ Build skipped: $SKIP_REASON"
             echo "should_build=false" >> $GITHUB_OUTPUT
             echo "skip_reason=$SKIP_REASON" >> $GITHUB_OUTPUT
-          elif [ "$HAS_CHANGES" = "false" ]; then
+          # Time check passed, now check if source changes exist
+          elif [ "$TIME_CHECK" = "true" ] && [ "$HAS_CHANGES" = "true" ]; then
+            echo "✅ Build conditions met: Time check passed and source changes detected."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=" >> $GITHUB_OUTPUT
+          # Time check passed but no source changes
+          elif [ "$TIME_CHECK" = "true" ] && [ "$HAS_CHANGES" = "false" ]; then
             echo "⏭️  Build skipped: No source file changes in /src directory since last build"
             echo "should_build=false" >> $GITHUB_OUTPUT
             echo "skip_reason=No source file changes in /src directory" >> $GITHUB_OUTPUT
+          # Unexpected state - log values and proceed with build to be safe
           else
-            echo "⚠️  Unexpected state. Proceeding with build to be safe."
+            echo "⚠️  Unexpected state detected:"
+            echo "  TIME_CHECK='$TIME_CHECK' (expected: 'true' or 'false')"
+            echo "  HAS_CHANGES='$HAS_CHANGES' (expected: 'true' or 'false' when TIME_CHECK=true)"
+            echo "  Proceeding with build to be safe."
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "skip_reason=" >> $GITHUB_OUTPUT
           fi
