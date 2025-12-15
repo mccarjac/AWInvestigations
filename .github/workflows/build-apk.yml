@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history to compare with previous build commits
 
       - name: Check last build time
         id: check_build_time
@@ -29,26 +31,30 @@ jobs:
           if echo "$LATEST_RELEASE" | jq -e '.message' > /dev/null 2>&1; then
             MESSAGE=$(echo "$LATEST_RELEASE" | jq -r '.message')
             if [[ "$MESSAGE" == *"Not Found"* ]] || [ -z "$LATEST_RELEASE" ]; then
-              echo "No previous builds found. Proceeding with build."
-              echo "should_build=true" >> $GITHUB_OUTPUT
+              echo "No previous builds found. Will check for source changes."
+              echo "time_check_passed=true" >> $GITHUB_OUTPUT
+              echo "skip_reason=" >> $GITHUB_OUTPUT
               exit 0
             fi
           fi
           
-          # Extract the creation date
+          # Extract the creation date and commit SHA
           CREATED_AT=$(echo "$LATEST_RELEASE" | jq -r '.created_at')
+          LAST_BUILD_COMMIT=$(echo "$LATEST_RELEASE" | jq -r '.target_commitish // empty')
           
           if [ -z "$CREATED_AT" ] || [ "$CREATED_AT" = "null" ]; then
-            echo "Could not determine last build time. Proceeding with build."
-            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Could not determine last build time. Will check for source changes."
+            echo "time_check_passed=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=" >> $GITHUB_OUTPUT
             exit 0
           fi
           
           # Convert to Unix timestamp with error handling
           if ! LAST_BUILD_TIME=$(date -d "$CREATED_AT" +%s 2>&1); then
             echo "Failed to parse date format: $CREATED_AT"
-            echo "Proceeding with build to be safe."
-            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "Will check for source changes to be safe."
+            echo "time_check_passed=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=" >> $GITHUB_OUTPUT
             exit 0
           fi
           CURRENT_TIME=$(date +%s)
@@ -66,39 +72,122 @@ jobs:
           echo "Threshold: 48 hours"
           
           if [ $TIME_DIFF -ge $THRESHOLD ]; then
-            echo "✅ More than 48 hours since last build. Proceeding with build."
-            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "✅ More than 48 hours since last build. Will check for source changes."
+            echo "time_check_passed=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=" >> $GITHUB_OUTPUT
           else
             HOURS_REMAINING=$(( (THRESHOLD - TIME_DIFF) / 3600 ))
-            echo "⏳ Last build was less than 48 hours ago. Skipping build."
+            echo "⏳ Last build was less than 48 hours ago."
             echo "Time remaining until next build: $HOURS_REMAINING hours"
+            echo "time_check_passed=false" >> $GITHUB_OUTPUT
+            echo "skip_reason=Less than 48 hours since last build ($HOURS_REMAINING hours remaining)" >> $GITHUB_OUTPUT
+          fi
+          
+          # Store last build commit for source change check
+          echo "last_build_commit=$LAST_BUILD_COMMIT" >> $GITHUB_OUTPUT
+
+      - name: Check for source changes
+        id: check_source_changes
+        if: steps.check_build_time.outputs.time_check_passed == 'true'
+        run: |
+          echo "Checking for source file changes..."
+          
+          LAST_BUILD_COMMIT="${{ steps.check_build_time.outputs.last_build_commit }}"
+          
+          # If no last build commit, assume changes exist
+          if [ -z "$LAST_BUILD_COMMIT" ] || [ "$LAST_BUILD_COMMIT" = "null" ]; then
+            echo "No previous build commit found. Proceeding with build."
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if commit exists in repository
+          if ! git cat-file -e "$LAST_BUILD_COMMIT" 2>/dev/null; then
+            echo "Last build commit not found in repository. Proceeding with build."
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check for changes in /src directory since last build
+          if git diff --quiet "$LAST_BUILD_COMMIT" HEAD -- 'src/'; then
+            echo "⏭️  No changes detected in /src directory since last build."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Source file changes detected in /src directory."
+            # Show what changed
+            echo "Changed files:"
+            git diff --name-only "$LAST_BUILD_COMMIT" HEAD -- 'src/' | sed 's/^/  - /'
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine build decision
+        id: should_build
+        run: |
+          # Set variables with defaults to handle unexpected failures
+          TIME_CHECK="${{ steps.check_build_time.outputs.time_check_passed }}"
+          HAS_CHANGES="${{ steps.check_source_changes.outputs.has_changes }}"
+          SKIP_REASON="${{ steps.check_build_time.outputs.skip_reason }}"
+          
+          # Default to empty string if not set
+          TIME_CHECK="${TIME_CHECK:-}"
+          HAS_CHANGES="${HAS_CHANGES:-}"
+          SKIP_REASON="${SKIP_REASON:-}"
+          
+          echo "Decision variables:"
+          echo "  TIME_CHECK='$TIME_CHECK'"
+          echo "  HAS_CHANGES='$HAS_CHANGES'"
+          echo "  SKIP_REASON='$SKIP_REASON'"
+          echo ""
+          
+          # Check time threshold first (if failed, source check was skipped)
+          if [ "$TIME_CHECK" = "false" ]; then
+            echo "⏳ Build skipped: $SKIP_REASON"
             echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "skip_reason=$SKIP_REASON" >> $GITHUB_OUTPUT
+          # Time check passed, now check if source changes exist
+          elif [ "$TIME_CHECK" = "true" ] && [ "$HAS_CHANGES" = "true" ]; then
+            echo "✅ Build conditions met: Time check passed and source changes detected."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=" >> $GITHUB_OUTPUT
+          # Time check passed but no source changes
+          elif [ "$TIME_CHECK" = "true" ] && [ "$HAS_CHANGES" = "false" ]; then
+            echo "⏭️  Build skipped: No source file changes in /src directory since last build"
+            echo "should_build=false" >> $GITHUB_OUTPUT
+            echo "skip_reason=No source file changes in /src directory" >> $GITHUB_OUTPUT
+          # Unexpected state - log values and proceed with build to be safe
+          else
+            echo "⚠️  Unexpected state detected:"
+            echo "  TIME_CHECK='$TIME_CHECK' (expected: 'true' or 'false')"
+            echo "  HAS_CHANGES='$HAS_CHANGES' (expected: 'true' or 'false' when TIME_CHECK=true)"
+            echo "  Proceeding with build to be safe."
+            echo "should_build=true" >> $GITHUB_OUTPUT
+            echo "skip_reason=" >> $GITHUB_OUTPUT
           fi
 
       - name: Setup Node.js
-        if: steps.check_build_time.outputs.should_build == 'true'
+        if: steps.should_build.outputs.should_build == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
       - name: Setup Expo and EAS
-        if: steps.check_build_time.outputs.should_build == 'true'
+        if: steps.should_build.outputs.should_build == 'true'
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
-        if: steps.check_build_time.outputs.should_build == 'true'
+        if: steps.should_build.outputs.should_build == 'true'
         run: npm ci
 
       - name: Run tests
-        if: steps.check_build_time.outputs.should_build == 'true'
+        if: steps.should_build.outputs.should_build == 'true'
         run: npm test
 
       - name: Build Android APK
-        if: steps.check_build_time.outputs.should_build == 'true'
+        if: steps.should_build.outputs.should_build == 'true'
         id: build_apk
         run: |
           echo "Starting EAS build for Android APK..."
@@ -192,14 +281,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Build Skipped Notice
-        if: steps.check_build_time.outputs.should_build == 'false'
+        if: steps.should_build.outputs.should_build == 'false'
         run: |
-          echo "⏳ Build skipped: Less than 48 hours since last build"
-          echo "This helps avoid hitting Expo's free tier build limits (15 builds/month)"
-          echo "The next build will be allowed after the 48-hour threshold has passed"
+          SKIP_REASON="${{ steps.should_build.outputs.skip_reason }}"
+          echo "⏭️  Build skipped: $SKIP_REASON"
+          echo ""
+          echo "Build requirements:"
+          echo "  ✓ Must be >= 48 hours since last build (helps avoid hitting Expo's free tier build limits)"
+          echo "  ✓ Must have changes in /src directory since last build"
+          echo ""
+          echo "The next build will be allowed when both conditions are met."
       
       - name: Build Failed Notice
-        if: steps.check_build_time.outputs.should_build == 'true' && steps.build_apk.outputs.build_status != 'FINISHED'
+        if: steps.should_build.outputs.should_build == 'true' && steps.build_apk.outputs.build_status != 'FINISHED'
         run: |
           echo "❌ Build did not complete successfully"
           echo "Status: ${{ steps.build_apk.outputs.build_status }}"

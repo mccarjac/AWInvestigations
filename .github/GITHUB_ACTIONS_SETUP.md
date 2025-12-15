@@ -65,9 +65,10 @@ Once you've added the `EXPO_TOKEN` secret:
 The GitHub Action workflow:
 
 1. **Triggers**: Automatically runs when code is pushed to the `master` branch
-2. **Build Throttling**: Checks if the last build was >= 48 hours ago to avoid hitting Expo's free tier limits (15 builds/month)
-   - If less than 48 hours: Build is skipped with an informative message
-   - If >= 48 hours or no previous build: Proceeds with the build
+2. **Build Requirements**: The workflow checks two conditions before building:
+   - **Time Check**: Must be >= 48 hours since the last build (to avoid hitting Expo's free tier limits)
+   - **Source Change Check**: Must have changes in the `/src` directory since the last build
+   - **Result**: Build only proceeds if BOTH conditions are met
 3. **Setup**: Installs Node.js, Expo CLI, and project dependencies
 4. **Build**: Submits an APK build to Expo Application Services (EAS) and waits for completion
 5. **Duration**: The workflow takes 10-20 minutes (waits for EAS to complete the build)
@@ -117,23 +118,38 @@ Available profiles:
 - `production` - APK for wider distribution
 - `development` - Development build with debugging tools
 
-## Build Throttling (48-Hour Rule)
+## Build Requirements and Throttling
 
-To avoid hitting Expo's free tier build limits (15 builds per month), the workflow automatically throttles builds:
+To avoid hitting Expo's free tier build limits (15 builds per month) and prevent unnecessary builds, the workflow checks two conditions:
+
+### 1. Time Throttling (48-Hour Rule)
 
 - **Automatic Check**: Before each build, the workflow checks when the last build was created
 - **48-Hour Threshold**: Builds are only allowed if >= 48 hours have passed since the last build
 - **Skipped Builds**: If less than 48 hours have passed, the workflow skips the build and shows an informative message
-- **First Build**: If no previous builds exist, the build proceeds normally
+- **First Build**: If no previous builds exist, the time check passes
 
-This ensures you can push code to `master` as often as needed without worrying about build quota, while still getting regular APK builds approximately every 2 days.
+### 2. Source Change Detection
 
-### Overriding the Throttle
+- **Automatic Check**: The workflow checks if any files in the `/src` directory have changed since the last build
+- **Change Detection**: Compares the current commit with the commit from the last successful build
+- **Skipped Builds**: If no source files have changed, the workflow skips the build
+- **First Build**: If no previous builds exist, the source check passes
 
-If you need to force a build before 48 hours have passed, you can:
+### Combined Behavior
 
-1. Manually delete the most recent GitHub release
-2. Push a new commit to trigger the workflow
+**Both conditions must be met** for a build to proceed:
+- ✅ Time >= 48 hours AND source changes detected = **Build proceeds**
+- ❌ Time < 48 hours OR no source changes = **Build skipped**
+
+This ensures you can push documentation, configuration, or test changes to `master` without triggering unnecessary builds, while still getting regular APK builds when actual source code changes.
+
+### Overriding the Checks
+
+If you need to force a build, you can:
+
+1. Manually delete the most recent GitHub release (bypasses both checks)
+2. Push a commit with source file changes in `/src` directory after 48 hours
 3. Or manually trigger a build using EAS CLI: `eas build --platform android --profile preview`
 
 ## Troubleshooting
