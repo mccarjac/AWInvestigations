@@ -25,6 +25,8 @@ import { EventsTimelineScreen } from './src/screens/events/EventsListScreen';
 import { EventsFormScreen } from './src/screens/events/EventsFormScreen';
 import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
+import { DiscordConfigScreen } from './src/screens/discord/DiscordConfigScreen';
+import { DiscordUserMappingScreen } from './src/screens/discord/DiscordUserMappingScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './src/components';
@@ -123,6 +125,22 @@ function MainDrawer() {
         options={{
           title: 'Data Management',
           drawerLabel: 'Data Management',
+        }}
+      />
+      <Drawer.Screen
+        name="DiscordConfig"
+        component={DiscordConfigScreen}
+        options={{
+          title: 'Discord Setup',
+          drawerLabel: 'Discord Setup',
+        }}
+      />
+      <Drawer.Screen
+        name="DiscordUserMapping"
+        component={DiscordUserMappingScreen}
+        options={{
+          title: 'Discord User Mapping',
+          drawerLabel: 'Discord User Mapping',
         }}
       />
     </Drawer.Navigator>

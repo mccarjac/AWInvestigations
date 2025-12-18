@@ -7,6 +7,8 @@ export type RootDrawerParamList = {
   Locations: undefined;
   Events: undefined;
   InfluenceReport: undefined;
+  DiscordConfig: undefined;
+  DiscordUserMapping: undefined;
 };
 
 export type RootStackParamList = {
