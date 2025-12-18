@@ -5,6 +5,7 @@ import {
   saveDiscordConfig,
   addDiscordMessages,
   getCharacterIdForDiscordUser,
+  getDiscordMessages,
 } from './discordStorage';
 
 // Discord API base URL
@@ -15,12 +16,7 @@ const DISCORD_API_BASE = 'https://discord.com/api/v10';
  */
 export const isDiscordConfigured = async (): Promise<boolean> => {
   const config = await getDiscordConfig();
-  return (
-    config.enabled &&
-    !!config.botToken &&
-    !!config.guildId &&
-    !!config.channelId
-  );
+  return config.enabled && !!config.botToken && !!config.channelId;
 };
 
 /**
@@ -233,13 +229,11 @@ export const syncDiscordMessages = async (
 
   // Store messages
   onProgress?.('Saving messages to local storage...');
-  const beforeCount = (
-    await import('./discordStorage').then(m => m.getDiscordMessages())
-  ).length;
+  const existingMessages = await getDiscordMessages();
+  const beforeCount = existingMessages.length;
   await addDiscordMessages(allMessages);
-  const afterCount = (
-    await import('./discordStorage').then(m => m.getDiscordMessages())
-  ).length;
+  const updatedMessages = await getDiscordMessages();
+  const afterCount = updatedMessages.length;
 
   // Update last sync timestamp
   const config = await getDiscordConfig();

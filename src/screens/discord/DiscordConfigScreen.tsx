@@ -359,30 +359,30 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    backgroundColor: themeColors.primary,
+    backgroundColor: themeColors.accent.primary,
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 12,
   },
   buttonPrimary: {
-    backgroundColor: themeColors.primary,
+    backgroundColor: themeColors.accent.primary,
   },
   buttonSecondary: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: themeColors.primary,
+    borderColor: themeColors.accent.primary,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
-    color: themeColors.primary,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   buttonTextSecondary: {
-    color: themeColors.primary,
+    color: themeColors.accent.primary,
   },
   syncStatusContainer: {
     padding: 12,

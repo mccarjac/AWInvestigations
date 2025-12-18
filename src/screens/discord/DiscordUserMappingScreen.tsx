@@ -250,13 +250,13 @@ const styles = StyleSheet.create({
     color: themeColors.text.primary,
   },
   addButton: {
-    backgroundColor: themeColors.primary,
+    backgroundColor: themeColors.accent.primary,
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
   },
   addButtonText: {
-    color: themeColors.primary,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   deleteButtonText: {
-    color: themeColors.primary,
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
