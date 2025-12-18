@@ -101,6 +101,9 @@ const exportCharacterDataNative = async (): Promise<void> => {
     await FileSystem.makeDirectoryAsync(tempDir + 'images/factions/', {
       intermediates: true,
     });
+    await FileSystem.makeDirectoryAsync(tempDir + 'images/discord/', {
+      intermediates: true,
+    });
 
     // Track image references and replace URIs with file paths
     let imageCounter = 0;
@@ -469,6 +472,39 @@ const exportCharacterDataNative = async (): Promise<void> => {
             } catch {
               // Image file not accessible, skip
             }
+          }
+        }
+      }
+    }
+
+    // Process Discord message images
+    if (dataset.discord && dataset.discord.messages) {
+      for (const message of dataset.discord.messages) {
+        if (message.imageUris && message.imageUris.length > 0) {
+          const processedUris: string[] = [];
+          for (let i = 0; i < message.imageUris.length; i++) {
+            const uri = message.imageUris[i];
+            if (uri) {
+              if (uri.startsWith('file://') || uri.startsWith('/')) {
+                // Handle file URI - copy file directly
+                try {
+                  const extension =
+                    uri.split('.').pop()?.toLowerCase() || 'jpg';
+                  const filename = `images/discord/${message.id}_${i}.${extension}`;
+                  const filePath = tempDir + filename;
+                  await FileSystem.copyAsync({ from: uri, to: filePath });
+                  processedUris.push(filename);
+                  imageCounter++;
+                } catch {
+                  // Image file not accessible, skip
+                }
+              } else {
+                processedUris.push(uri);
+              }
+            }
+          }
+          if (processedUris.length > 0) {
+            message.imageUris = processedUris;
           }
         }
       }

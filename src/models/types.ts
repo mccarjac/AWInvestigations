@@ -134,3 +134,50 @@ export interface EventDataset {
 }
 
 export type CertaintyLevel = 'unconfirmed' | 'confirmed' | 'disputed';
+
+// Discord Integration Types
+export interface DiscordConfig {
+  botToken?: string;
+  guildId?: string; // Discord server ID
+  channelId?: string; // Discord channel ID
+  enabled: boolean;
+  lastSync?: string; // ISO timestamp of last sync
+  autoSync: boolean; // Auto-sync when internet is available
+}
+
+export interface DiscordUserMapping {
+  discordUserId: string; // Discord user ID
+  discordUsername: string; // Discord username for display
+  characterId: string; // GameCharacter.id
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiscordMessage {
+  id: string; // Discord message ID
+  channelId: string; // Discord channel ID
+  authorId: string; // Discord user ID
+  authorUsername: string; // Discord username
+  content: string; // Message content
+  timestamp: string; // ISO timestamp
+  characterId?: string; // Mapped character ID (if available)
+  imageUris?: string[]; // Downloaded image URIs
+  attachments?: DiscordAttachment[]; // Original attachment metadata
+  createdAt: string; // When stored locally
+}
+
+export interface DiscordAttachment {
+  id: string;
+  filename: string;
+  url: string;
+  contentType?: string;
+  size: number;
+}
+
+export interface DiscordDataset {
+  config: DiscordConfig;
+  userMappings: DiscordUserMapping[];
+  messages: DiscordMessage[];
+  version: string;
+  lastUpdated: string;
+}
