@@ -161,9 +161,20 @@ export interface DiscordMessage {
   content: string; // Message content
   timestamp: string; // ISO timestamp
   characterId?: string; // Mapped character ID (if available)
+  extractedCharacterName?: string; // Character name extracted from >[Name] format
   imageUris?: string[]; // Downloaded image URIs
   attachments?: DiscordAttachment[]; // Original attachment metadata
   createdAt: string; // When stored locally
+}
+
+export interface DiscordCharacterAlias {
+  alias: string; // The nickname or shortened name
+  characterId: string; // The actual character ID it maps to
+  discordUserId: string; // The Discord user who uses this alias
+  confidence: number; // How confident we are in this mapping (0-1)
+  usageCount: number; // How many times this alias has been used
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DiscordAttachment {
@@ -178,6 +189,7 @@ export interface DiscordDataset {
   config: DiscordConfig;
   userMappings: DiscordUserMapping[];
   messages: DiscordMessage[];
+  characterAliases: DiscordCharacterAlias[];
   version: string;
   lastUpdated: string;
 }

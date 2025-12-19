@@ -9,6 +9,7 @@ export type RootDrawerParamList = {
   InfluenceReport: undefined;
   DiscordConfig: undefined;
   DiscordUserMapping: undefined;
+  DiscordCharacterMapping: undefined;
 };
 
 export type RootStackParamList = {

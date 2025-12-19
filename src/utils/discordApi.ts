@@ -7,6 +7,10 @@ import {
   getCharacterIdForDiscordUser,
   getDiscordMessages,
 } from './discordStorage';
+import {
+  extractCharacterName,
+  resolveCharacterFromName,
+} from './discordCharacterExtraction';
 
 // Discord API base URL
 const DISCORD_API_BASE = 'https://discord.com/api/v10';
@@ -108,7 +112,29 @@ export const fetchDiscordMessages = async (
   // Convert to our format and fetch character mappings
   const convertedMessages: DiscordMessage[] = await Promise.all(
     messages.map(async msg => {
-      const characterId = await getCharacterIdForDiscordUser(msg.author.id);
+      // First try to get character from user mapping
+      let characterId = await getCharacterIdForDiscordUser(msg.author.id);
+      let extractedCharacterName: string | undefined;
+
+      // If no direct mapping, try to extract character name from message content
+      if (!characterId) {
+        const extractedName = extractCharacterName(msg.content);
+        if (extractedName) {
+          extractedCharacterName = extractedName;
+          
+          // Try to resolve the character
+          const resolution = await resolveCharacterFromName(
+            extractedName,
+            msg.author.id
+          );
+
+          if (resolution.characterId) {
+            characterId = resolution.characterId;
+          }
+          // If needsManualSelection is true, we'll store the extracted name
+          // and the user can manually map it later
+        }
+      }
 
       // Download attachments if they are images
       const imageUris: string[] = [];
@@ -153,6 +179,7 @@ export const fetchDiscordMessages = async (
         content: msg.content,
         timestamp: msg.timestamp,
         characterId,
+        extractedCharacterName,
         imageUris: imageUris.length > 0 ? imageUris : undefined,
         attachments: attachments.length > 0 ? attachments : undefined,
         createdAt: new Date().toISOString(),

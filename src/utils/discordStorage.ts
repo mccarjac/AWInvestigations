@@ -3,12 +3,14 @@ import {
   DiscordUserMapping,
   DiscordMessage,
   DiscordDataset,
+  DiscordCharacterAlias,
 } from '@models/types';
 import { SafeAsyncStorageJSONParser } from './safeAsyncStorageJSONParser';
 
 const DISCORD_CONFIG_KEY = 'gameCharacterManager_discord_config';
 const DISCORD_MAPPINGS_KEY = 'gameCharacterManager_discord_mappings';
 const DISCORD_MESSAGES_KEY = 'gameCharacterManager_discord_messages';
+const DISCORD_ALIASES_KEY = 'gameCharacterManager_discord_aliases';
 
 /**
  * Get Discord configuration
@@ -171,6 +173,179 @@ export const clearDiscordData = async (): Promise<void> => {
   await SafeAsyncStorageJSONParser.removeItem(DISCORD_CONFIG_KEY);
   await SafeAsyncStorageJSONParser.removeItem(DISCORD_MAPPINGS_KEY);
   await SafeAsyncStorageJSONParser.removeItem(DISCORD_MESSAGES_KEY);
+  await SafeAsyncStorageJSONParser.removeItem(DISCORD_ALIASES_KEY);
+};
+
+/**
+ * Get all Discord character aliases
+ */
+export const getDiscordCharacterAliases = async (): Promise<
+  DiscordCharacterAlias[]
+> => {
+  const aliases =
+    await SafeAsyncStorageJSONParser.getItem<DiscordCharacterAlias[]>(
+      DISCORD_ALIASES_KEY
+    );
+  return aliases || [];
+};
+
+/**
+ * Save Discord character aliases
+ */
+export const saveDiscordCharacterAliases = async (
+  aliases: DiscordCharacterAlias[]
+): Promise<void> => {
+  await SafeAsyncStorageJSONParser.setItem(DISCORD_ALIASES_KEY, aliases);
+};
+
+/**
+ * Add or update a character alias
+ */
+export const addOrUpdateCharacterAlias = async (
+  alias: string,
+  characterId: string,
+  discordUserId: string,
+  confidence: number = 1.0
+): Promise<DiscordCharacterAlias> => {
+  const aliases = await getDiscordCharacterAliases();
+  const normalizedAlias = alias.toLowerCase().trim();
+
+  // Find existing alias for this user
+  const existingIndex = aliases.findIndex(
+    a =>
+      a.alias.toLowerCase() === normalizedAlias &&
+      a.discordUserId === discordUserId
+  );
+
+  const now = new Date().toISOString();
+
+  if (existingIndex >= 0) {
+    // Update existing alias
+    const existing = aliases[existingIndex];
+    aliases[existingIndex] = {
+      ...existing,
+      characterId,
+      confidence: Math.max(confidence, existing.confidence),
+      usageCount: existing.usageCount + 1,
+      updatedAt: now,
+    };
+    await saveDiscordCharacterAliases(aliases);
+    return aliases[existingIndex];
+  } else {
+    // Create new alias
+    const newAlias: DiscordCharacterAlias = {
+      alias: normalizedAlias,
+      characterId,
+      discordUserId,
+      confidence,
+      usageCount: 1,
+      createdAt: now,
+      updatedAt: now,
+    };
+    aliases.push(newAlias);
+    await saveDiscordCharacterAliases(aliases);
+    return newAlias;
+  }
+};
+
+/**
+ * Get character ID for an alias
+ */
+export const getCharacterIdForAlias = async (
+  alias: string,
+  discordUserId: string
+): Promise<string | undefined> => {
+  const aliases = await getDiscordCharacterAliases();
+  const normalizedAlias = alias.toLowerCase().trim();
+
+  // First try exact match for this user
+  const exactMatch = aliases.find(
+    a =>
+      a.alias.toLowerCase() === normalizedAlias &&
+      a.discordUserId === discordUserId
+  );
+
+  if (exactMatch && exactMatch.confidence > 0.5) {
+    return exactMatch.characterId;
+  }
+
+  return undefined;
+};
+
+/**
+ * Find potential character matches for an alias
+ */
+export const findPotentialCharacterMatches = async (
+  alias: string,
+  discordUserId: string,
+  allCharacters: Array<{ id: string; name: string }>
+): Promise<Array<{ characterId: string; name: string; confidence: number }>> => {
+  const normalizedAlias = alias.toLowerCase().trim();
+  const matches: Array<{ characterId: string; name: string; confidence: number }> = [];
+
+  // Check existing aliases first
+  const aliases = await getDiscordCharacterAliases();
+  const existingAlias = aliases.find(
+    a =>
+      a.alias.toLowerCase() === normalizedAlias &&
+      a.discordUserId === discordUserId
+  );
+
+  if (existingAlias) {
+    const character = allCharacters.find(c => c.id === existingAlias.characterId);
+    if (character) {
+      matches.push({
+        characterId: character.id,
+        name: character.name,
+        confidence: existingAlias.confidence,
+      });
+    }
+  }
+
+  // Try fuzzy matching against all characters
+  for (const character of allCharacters) {
+    const normalizedCharName = character.name.toLowerCase().trim();
+    
+    // Exact match
+    if (normalizedCharName === normalizedAlias) {
+      if (!matches.find(m => m.characterId === character.id)) {
+        matches.push({
+          characterId: character.id,
+          name: character.name,
+          confidence: 1.0,
+        });
+      }
+      continue;
+    }
+
+    // Starts with
+    if (normalizedCharName.startsWith(normalizedAlias)) {
+      if (!matches.find(m => m.characterId === character.id)) {
+        matches.push({
+          characterId: character.id,
+          name: character.name,
+          confidence: 0.8,
+        });
+      }
+      continue;
+    }
+
+    // Contains
+    if (normalizedCharName.includes(normalizedAlias)) {
+      if (!matches.find(m => m.characterId === character.id)) {
+        matches.push({
+          characterId: character.id,
+          name: character.name,
+          confidence: 0.6,
+        });
+      }
+    }
+  }
+
+  // Sort by confidence descending
+  matches.sort((a, b) => b.confidence - a.confidence);
+
+  return matches;
 };
 
 /**
@@ -180,11 +355,13 @@ export const exportDiscordDataset = async (): Promise<DiscordDataset> => {
   const config = await getDiscordConfig();
   const userMappings = await getDiscordUserMappings();
   const messages = await getDiscordMessages();
+  const characterAliases = await getDiscordCharacterAliases();
 
   return {
     config,
     userMappings,
     messages,
+    characterAliases,
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
@@ -202,11 +379,13 @@ export const importDiscordDataset = async (
     await saveDiscordConfig(dataset.config);
     await saveDiscordUserMappings(dataset.userMappings);
     await saveDiscordMessages(dataset.messages);
+    await saveDiscordCharacterAliases(dataset.characterAliases || []);
   } else {
     // Merge data
     const existingConfig = await getDiscordConfig();
     const existingMappings = await getDiscordUserMappings();
     const existingMessages = await getDiscordMessages();
+    const existingAliases = await getDiscordCharacterAliases();
 
     // Merge config (prefer imported if enabled)
     const mergedConfig = dataset.config.enabled
@@ -219,6 +398,16 @@ export const importDiscordDataset = async (
     existingMappings.forEach(m => mappingMap.set(m.discordUserId, m));
     dataset.userMappings.forEach(m => mappingMap.set(m.discordUserId, m));
     await saveDiscordUserMappings(Array.from(mappingMap.values()));
+
+    // Merge aliases (by alias + user ID)
+    const aliasMap = new Map<string, DiscordCharacterAlias>();
+    existingAliases.forEach(a =>
+      aliasMap.set(`${a.alias}-${a.discordUserId}`, a)
+    );
+    (dataset.characterAliases || []).forEach(a =>
+      aliasMap.set(`${a.alias}-${a.discordUserId}`, a)
+    );
+    await saveDiscordCharacterAliases(Array.from(aliasMap.values()));
 
     // Merge messages (by message ID)
     const messageMap = new Map<string, DiscordMessage>();
