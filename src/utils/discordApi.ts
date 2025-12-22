@@ -114,8 +114,20 @@ export const fetchDiscordMessages = async (
   );
   if (messages.length > 0) {
     console.log(
+      `[Discord API] Sample raw message:`,
+      JSON.stringify(messages[0], null, 2)
+    );
+    console.log(
       `[Discord API] Sample message content:`,
       messages[0].content?.substring(0, 100) || '(empty)'
+    );
+    console.log(
+      `[Discord API] Content field type:`,
+      typeof messages[0].content,
+      `| Is undefined:`,
+      messages[0].content === undefined,
+      `| Is empty string:`,
+      messages[0].content === ''
     );
   }
 
@@ -207,6 +219,28 @@ export const fetchDiscordMessages = async (
         extractedName: convertedMessages[0].extractedCharacterName,
       })
     );
+
+    // Check if all messages have empty content - likely missing MESSAGE_CONTENT intent
+    const emptyContentCount = convertedMessages.filter(
+      m => !m.content || m.content.trim() === ''
+    ).length;
+    if (
+      emptyContentCount === convertedMessages.length &&
+      convertedMessages.length > 0
+    ) {
+      console.warn(
+        `[Discord API] WARNING: All ${convertedMessages.length} messages have empty content!`
+      );
+      console.warn(
+        `[Discord API] This usually means your Discord bot is missing the MESSAGE_CONTENT intent.`
+      );
+      console.warn(
+        `[Discord API] Fix: Go to Discord Developer Portal → Your Bot → Bot tab → Enable "MESSAGE CONTENT INTENT"`
+      );
+      console.warn(
+        `[Discord API] See DISCORD_MESSAGE_CONTENT_INTENT.md for detailed instructions.`
+      );
+    }
   }
 
   return convertedMessages;
