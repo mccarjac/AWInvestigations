@@ -22,12 +22,13 @@ import {
   AVAILABLE_RECIPES,
 } from '@models/gameData';
 import { calculateDerivedStats } from '@/utils/derivedStats';
-import { GameCharacter, GameLocation } from '@/models/types';
+import { GameCharacter, GameLocation, DiscordMessage } from '@/models/types';
 import {
   loadCharacters,
   loadLocations,
   deleteCharacter,
 } from '@/utils/characterStorage';
+import { getDiscordMessagesForCharacter } from '@/utils/discordStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { BaseDetailScreen, Section, CollapsibleSection } from '@/components';
@@ -47,6 +48,7 @@ export const CharacterDetailScreen: React.FC = () => {
   const { character } = route.params || {};
   const [allCharacters, setAllCharacters] = useState<GameCharacter[]>([]);
   const [locations, setLocations] = useState<GameLocation[]>([]);
+  const [discordMessages, setDiscordMessages] = useState<DiscordMessage[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isValidating, setIsValidating] = useState(true);
 
@@ -99,6 +101,14 @@ export const CharacterDetailScreen: React.FC = () => {
       setAllCharacters(characters);
       setLocations(locs);
 
+      // Load Discord messages for this character
+      if (character?.id) {
+        const messages = await getDiscordMessagesForCharacter(character.id);
+        // eslint-disable-next-line no-console
+        console.log(`[CharacterDetail] Loaded ${messages.length} Discord messages`);
+        setDiscordMessages(messages);
+      }
+
       // Update the current character with the latest data
       // Note: We don't update navigation params here to avoid infinite loop
       // The character object is already in state via allCharacters
@@ -111,7 +121,7 @@ export const CharacterDetailScreen: React.FC = () => {
         { text: 'OK' },
       ]);
     }
-  }, []);
+  }, [character]);
 
   // Refresh character data when screen comes back into focus
   useFocusEffect(
@@ -391,6 +401,44 @@ export const CharacterDetailScreen: React.FC = () => {
     );
   };
 
+  const renderDiscordConversations = () => {
+    if (!discordMessages || discordMessages.length === 0) {
+      return null;
+    }
+
+    // Sort messages by timestamp (newest first)
+    const sortedMessages = [...discordMessages].sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    return (
+      <CollapsibleSection
+        title={`Discord Conversations (${discordMessages.length})`}
+        defaultCollapsed={true}
+      >
+        {sortedMessages.map((msg, index) => (
+          <View key={msg.id || index} style={styles.discordMessageContainer}>
+            <View style={styles.discordMessageHeader}>
+              <Text style={styles.discordAuthor}>{msg.authorUsername}</Text>
+              <Text style={styles.discordTimestamp}>
+                {new Date(msg.timestamp).toLocaleDateString()}
+              </Text>
+            </View>
+            <Text style={styles.discordContent} numberOfLines={5}>
+              {msg.content || '[No content]'}
+            </Text>
+            {msg.images && msg.images.length > 0 && (
+              <Text style={styles.discordImageIndicator}>
+                📷 {msg.images.length} image{msg.images.length !== 1 ? 's' : ''}
+              </Text>
+            )}
+          </View>
+        ))}
+      </CollapsibleSection>
+    );
+  };
+
   return (
     <BaseDetailScreen
       onEditPress={handleEdit}
@@ -468,6 +516,7 @@ export const CharacterDetailScreen: React.FC = () => {
       {renderCyberware()}
       {renderFactions()}
       {renderRelationships()}
+      {renderDiscordConversations()}
       {character.notes && (
         <Section title="Notes">
           <Text style={styles.notes}>{character.notes}</Text>
@@ -672,5 +721,39 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginBottom: 4,
     color: themeColors.text.secondary,
+  },
+  discordMessageContainer: {
+    backgroundColor: themeColors.elevated,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  discordMessageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  discordAuthor: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.accent.primary,
+  },
+  discordTimestamp: {
+    fontSize: 12,
+    color: themeColors.text.secondary,
+  },
+  discordContent: {
+    fontSize: 14,
+    color: themeColors.text.primary,
+    lineHeight: 20,
+  },
+  discordImageIndicator: {
+    fontSize: 12,
+    color: themeColors.text.secondary,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });

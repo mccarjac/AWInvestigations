@@ -11,10 +11,12 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { colors as themeColors } from '@/styles/theme';
-import { GameCharacter } from '@models/types';
+import { GameCharacter, DiscordCharacterAlias } from '@models/types';
 import {
   getDiscordMessages,
   saveDiscordMessages,
+  getDiscordCharacterAliases,
+  saveDiscordCharacterAliases,
 } from '@/utils/discordStorage';
 import { loadCharacters } from '@/utils/characterStorage';
 import { confirmCharacterMapping } from '@/utils/discordCharacterExtraction';
@@ -25,10 +27,16 @@ interface UnmappedMessage {
   extractedName: string;
 }
 
+type ViewMode = 'unmapped' | 'existing';
+
 export const DiscordCharacterMappingScreen: React.FC = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('unmapped');
   const [unmappedMessages, setUnmappedMessages] = useState<UnmappedMessage[]>(
     []
   );
+  const [existingAliases, setExistingAliases] = useState<
+    DiscordCharacterAlias[]
+  >([]);
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
   const [selectedMappings, setSelectedMappings] = useState<
     Map<string, string>
@@ -39,9 +47,10 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [messages, chars] = await Promise.all([
+      const [messages, chars, aliases] = await Promise.all([
         getDiscordMessages(),
         loadCharacters(),
+        getDiscordCharacterAliases(),
       ]);
 
       // Find messages with extracted character names but no character ID
@@ -60,11 +69,10 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
       );
 
       setUnmappedMessages(uniqueUnmapped);
+      setExistingAliases(aliases);
       setCharacters(chars);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load unmapped messages', [
-        { text: 'OK' },
-      ]);
+      Alert.alert('Error', 'Failed to load mapping data', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }
@@ -154,6 +162,74 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
     });
   };
 
+  const handleDeleteAlias = async (alias: DiscordCharacterAlias) => {
+    Alert.alert(
+      'Delete Mapping',
+      `Delete mapping "${alias.alias}" → ${getCharacterName(alias.characterId)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const aliases = await getDiscordCharacterAliases();
+              const updated = aliases.filter(
+                a =>
+                  !(
+                    a.alias === alias.alias &&
+                    a.discordUserId === alias.discordUserId &&
+                    a.characterId === alias.characterId
+                  )
+              );
+              await saveDiscordCharacterAliases(updated);
+              await loadData();
+              Alert.alert('Success', 'Mapping deleted successfully');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete mapping');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getCharacterName = (characterId: string): string => {
+    const char = characters.find(c => c.id === characterId);
+    return char ? char.name : 'Unknown';
+  };
+
+  const renderExistingAlias = ({ item }: { item: DiscordCharacterAlias }) => {
+    const characterName = getCharacterName(item.characterId);
+    return (
+      <View style={styles.aliasCard}>
+        <View style={styles.aliasHeader}>
+          <Text style={styles.aliasName}>"{item.alias}"</Text>
+          <TouchableOpacity
+            onPress={() => handleDeleteAlias(item)}
+            style={styles.deleteButton}
+          >
+            <Text style={styles.deleteButtonText}>🗑️</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.aliasInfo}>
+          Mapped to: <Text style={styles.characterNameText}>{characterName}</Text>
+        </Text>
+        <Text style={styles.aliasInfo}>
+          User ID: {item.discordUserId.substring(0, 18)}...
+        </Text>
+        <View style={styles.aliasStats}>
+          <Text style={styles.aliasStatText}>
+            Used {item.usageCount} time{item.usageCount !== 1 ? 's' : ''}
+          </Text>
+          <Text style={styles.aliasStatText}>
+            Confidence: {(item.confidence * 100).toFixed(0)}%
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderUnmappedItem = ({ item }: { item: UnmappedMessage }) => {
     const selectedCharacterId = selectedMappings.get(item.extractedName) || '';
 
@@ -216,51 +292,105 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
         </Text>
       </View>
 
-      {unmappedMessages.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            No unmapped character names found.
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            viewMode === 'unmapped' && styles.toggleButtonActive,
+          ]}
+          onPress={() => setViewMode('unmapped')}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              viewMode === 'unmapped' && styles.toggleButtonTextActive,
+            ]}
+          >
+            Needs Mapping ({unmappedMessages.length})
           </Text>
-          <Text style={styles.emptySubtext}>
-            Messages with &gt;[Name] format that match existing characters are
-            automatically mapped.
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            viewMode === 'existing' && styles.toggleButtonActive,
+          ]}
+          onPress={() => setViewMode('existing')}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              viewMode === 'existing' && styles.toggleButtonTextActive,
+            ]}
+          >
+            Existing Mappings ({existingAliases.length})
           </Text>
-        </View>
-      ) : (
-        <>
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsText}>
-              {unmappedMessages.length} unique name{unmappedMessages.length !== 1 ? 's' : ''} need mapping
+        </TouchableOpacity>
+      </View>
+
+      {viewMode === 'unmapped' ? (
+        unmappedMessages.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              No unmapped character names found.
             </Text>
-            <Text style={styles.statsText}>
-              {selectedMappings.size} selected
+            <Text style={styles.emptySubtext}>
+              Messages with &gt;[Name] format that match existing characters are
+              automatically mapped.
             </Text>
           </View>
+        ) : (
+          <>
+            <View style={styles.statsContainer}>
+              <Text style={styles.statsText}>
+                {unmappedMessages.length} unique name{unmappedMessages.length !== 1 ? 's' : ''} need mapping
+              </Text>
+              <Text style={styles.statsText}>
+                {selectedMappings.size} selected
+              </Text>
+            </View>
 
+            <FlatList
+              data={unmappedMessages}
+              renderItem={renderUnmappedItem}
+              keyExtractor={item => item.extractedName}
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+            />
+
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.saveButton, saving && styles.buttonDisabled]}
+                onPress={handleSaveMappings}
+                disabled={saving || selectedMappings.size === 0}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.saveButtonText}>
+                    Save {selectedMappings.size} Mapping{selectedMappings.size !== 1 ? 's' : ''}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        )
+      ) : (
+        existingAliases.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No existing mappings found.</Text>
+            <Text style={styles.emptySubtext}>
+              Create mappings by linking Discord messages to characters.
+            </Text>
+          </View>
+        ) : (
           <FlatList
-            data={unmappedMessages}
-            renderItem={renderUnmappedItem}
-            keyExtractor={item => item.extractedName}
+            data={existingAliases}
+            renderItem={renderExistingAlias}
+            keyExtractor={(item, index) => `${item.alias}-${item.discordUserId}-${index}`}
             style={styles.list}
             contentContainerStyle={styles.listContent}
           />
-
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.saveButton, saving && styles.buttonDisabled]}
-              onPress={handleSaveMappings}
-              disabled={saving || selectedMappings.size === 0}
-            >
-              {saving ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.saveButtonText}>
-                  Save {selectedMappings.size} Mapping{selectedMappings.size !== 1 ? 's' : ''}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </>
+        )
       )}
     </View>
   );
@@ -411,5 +541,84 @@ const styles = StyleSheet.create({
     color: themeColors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    padding: 12,
+    backgroundColor: themeColors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.border,
+    gap: 8,
+  },
+  toggleButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: themeColors.elevated,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: themeColors.accent.primary,
+    borderColor: themeColors.accent.primary,
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.text.secondary,
+  },
+  toggleButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  aliasCard: {
+    backgroundColor: themeColors.surface,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  aliasHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aliasName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: themeColors.accent.primary,
+    flex: 1,
+  },
+  deleteButton: {
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: themeColors.elevated,
+  },
+  deleteButtonText: {
+    fontSize: 18,
+  },
+  aliasInfo: {
+    fontSize: 14,
+    color: themeColors.text.secondary,
+    marginBottom: 4,
+  },
+  characterNameText: {
+    fontWeight: '600',
+    color: themeColors.text.primary,
+  },
+  aliasStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: themeColors.border,
+  },
+  aliasStatText: {
+    fontSize: 12,
+    color: themeColors.text.secondary,
+    fontWeight: '500',
   },
 });

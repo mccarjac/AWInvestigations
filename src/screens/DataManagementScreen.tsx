@@ -25,6 +25,7 @@ import {
   saveGitHubConfig,
   getGitHubConfig,
 } from '@utils/gitIntegration';
+import { clearDiscordData } from '@/utils/discordStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 
@@ -95,6 +96,7 @@ export const DataManagementScreen: React.FC = () => {
     const shouldClear = await confirmClear();
     if (shouldClear) {
       await clearStorage();
+      await clearDiscordData();
       Alert.alert('Success', 'All game data has been deleted.', [
         { text: 'OK' },
       ]);
