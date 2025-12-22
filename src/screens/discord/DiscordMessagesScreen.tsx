@@ -18,6 +18,7 @@ import type { DiscordMessage, GameCharacter } from '@models/types';
 import {
   getDiscordMessages,
   saveDiscordMessages,
+  applyAliasToMessages,
 } from '@/utils/discordStorage';
 import { loadCharacters } from '@/utils/characterStorage';
 import { confirmCharacterMapping } from '@/utils/discordCharacterExtraction';
@@ -121,11 +122,28 @@ export const DiscordMessagesScreen: React.FC = () => {
       await saveDiscordMessages(updatedMessages);
 
       // If there's an extracted character name, save it as an alias
+      // and apply to ALL messages from this user with the same extracted name
+      let bulkUpdateCount = 0;
       if (selectedMessage.extractedCharacterName) {
+        console.log(
+          `[Discord Messages] Creating alias: "${selectedMessage.extractedCharacterName}" -> ${selectedCharacterId}`
+        );
+
         await confirmCharacterMapping(
           selectedMessage.extractedCharacterName,
           selectedCharacterId,
           selectedMessage.authorId
+        );
+
+        // Apply this mapping to all other messages with the same extracted name
+        bulkUpdateCount = await applyAliasToMessages(
+          selectedMessage.extractedCharacterName,
+          selectedCharacterId,
+          selectedMessage.authorId
+        );
+
+        console.log(
+          `[Discord Messages] Bulk updated ${bulkUpdateCount} messages with same extracted name`
         );
       }
 
@@ -134,7 +152,12 @@ export const DiscordMessagesScreen: React.FC = () => {
       setSelectedCharacterId('');
       await loadData();
 
-      Alert.alert('Success', 'Character mapping saved', [{ text: 'OK' }]);
+      const message =
+        bulkUpdateCount > 1
+          ? `Character mapping saved and applied to ${bulkUpdateCount} messages`
+          : 'Character mapping saved';
+
+      Alert.alert('Success', message, [{ text: 'OK' }]);
     } catch (error) {
       Alert.alert('Error', 'Failed to save character mapping', [
         { text: 'OK' },

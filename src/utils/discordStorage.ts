@@ -316,6 +316,45 @@ export const getCharacterIdForAlias = async (
 };
 
 /**
+ * Apply an alias to all matching messages
+ * Updates all messages from the same user with the same extracted name
+ */
+export const applyAliasToMessages = async (
+  alias: string,
+  characterId: string,
+  discordUserId: string
+): Promise<number> => {
+  const messages = await getDiscordMessages();
+  const normalizedAlias = alias.toLowerCase().trim();
+  let updateCount = 0;
+
+  const updatedMessages = messages.map(msg => {
+    // Check if this message is from the same user and has matching extracted name
+    if (
+      msg.authorId === discordUserId &&
+      msg.extractedCharacterName &&
+      msg.extractedCharacterName.toLowerCase().trim() === normalizedAlias
+    ) {
+      updateCount++;
+      return {
+        ...msg,
+        characterId,
+      };
+    }
+    return msg;
+  });
+
+  if (updateCount > 0) {
+    await saveDiscordMessages(updatedMessages);
+    console.log(
+      `[Discord Storage] Applied alias "${alias}" to ${updateCount} messages`
+    );
+  }
+
+  return updateCount;
+};
+
+/**
  * Find potential character matches for an alias
  */
 export const findPotentialCharacterMatches = async (

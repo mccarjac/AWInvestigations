@@ -220,6 +220,29 @@ export const fetchDiscordMessages = async (
       })
     );
 
+    // Log auto-matching statistics
+    const withExtractedNames = convertedMessages.filter(
+      m => m.extractedCharacterName
+    );
+    const autoMatched = convertedMessages.filter(
+      m => m.extractedCharacterName && m.characterId
+    );
+    const needsManual = convertedMessages.filter(
+      m => m.extractedCharacterName && !m.characterId
+    );
+
+    if (withExtractedNames.length > 0) {
+      console.log(
+        `[Discord API] Character name extraction: ${withExtractedNames.length} messages had names`
+      );
+      console.log(
+        `[Discord API] Auto-matched: ${autoMatched.length} messages (confidence ≥0.9)`
+      );
+      console.log(
+        `[Discord API] Need manual selection: ${needsManual.length} messages`
+      );
+    }
+
     // Check if all messages have empty content - likely missing MESSAGE_CONTENT intent
     const emptyContentCount = convertedMessages.filter(
       m => !m.content || m.content.trim() === ''
