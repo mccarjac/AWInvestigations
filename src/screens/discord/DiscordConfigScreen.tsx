@@ -112,20 +112,26 @@ export const DiscordConfigScreen: React.FC = () => {
     setSyncing(true);
     setSyncStatus('Starting sync...');
     try {
+      console.log('[Discord Config] Starting message sync...');
       const result = await syncDiscordMessages(status => {
+        console.log(`[Discord Sync Progress] ${status}`);
         setSyncStatus(status);
       });
 
       const config = await getDiscordConfig();
       setLastSync(config.lastSync);
 
+      console.log(
+        `[Discord Config] Sync complete: ${result.newMessages} new, ${result.totalMessages} total`
+      );
       Alert.alert(
         'Sync Complete',
-        `Synced ${result.newMessages} new messages.\nTotal messages: ${result.totalMessages}`,
+        `Synced ${result.newMessages} new messages.\nTotal messages: ${result.totalMessages}\n\nCheck console logs for content details.`,
         [{ text: 'OK' }]
       );
       setSyncStatus('');
     } catch (error) {
+      console.error('[Discord Config] Sync error:', error);
       Alert.alert(
         'Sync Failed',
         error instanceof Error ? error.message : 'Unknown error',

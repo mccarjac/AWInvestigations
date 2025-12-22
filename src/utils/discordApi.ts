@@ -109,6 +109,16 @@ export const fetchDiscordMessages = async (
 
   const messages: DiscordApiMessage[] = await response.json();
 
+  console.log(
+    `[Discord API] Fetched ${messages.length} messages from Discord API`
+  );
+  if (messages.length > 0) {
+    console.log(
+      `[Discord API] Sample message content:`,
+      messages[0].content?.substring(0, 100) || '(empty)'
+    );
+  }
+
   // Convert to our format and fetch character mappings
   const convertedMessages: DiscordMessage[] = await Promise.all(
     messages.map(async msg => {
@@ -121,7 +131,7 @@ export const fetchDiscordMessages = async (
         const extractedName = extractCharacterName(msg.content);
         if (extractedName) {
           extractedCharacterName = extractedName;
-          
+
           // Try to resolve the character
           const resolution = await resolveCharacterFromName(
             extractedName,
@@ -186,6 +196,18 @@ export const fetchDiscordMessages = async (
       };
     })
   );
+
+  console.log(`[Discord API] Converted ${convertedMessages.length} messages`);
+  if (convertedMessages.length > 0) {
+    console.log(
+      `[Discord API] Sample converted message:`,
+      JSON.stringify({
+        id: convertedMessages[0].id,
+        content: convertedMessages[0].content?.substring(0, 100) || '(empty)',
+        extractedName: convertedMessages[0].extractedCharacterName,
+      })
+    );
+  }
 
   return convertedMessages;
 };

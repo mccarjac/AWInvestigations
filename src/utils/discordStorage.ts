@@ -142,6 +142,16 @@ export const addDiscordMessages = async (
   const existingMessages = await getDiscordMessages();
   const existingIds = new Set(existingMessages.map(m => m.id));
 
+  console.log(
+    `[Discord Storage] Adding messages - existing: ${existingMessages.length}, new: ${newMessages.length}`
+  );
+  if (newMessages.length > 0) {
+    console.log(
+      `[Discord Storage] Sample new message content:`,
+      newMessages[0].content?.substring(0, 100) || '(empty)'
+    );
+  }
+
   // Only add messages that don't already exist
   const uniqueNewMessages = newMessages.filter(m => !existingIds.has(m.id));
 
@@ -153,6 +163,11 @@ export const addDiscordMessages = async (
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     await saveDiscordMessages(allMessages);
+    console.log(
+      `[Discord Storage] Added ${uniqueNewMessages.length} unique messages, total: ${allMessages.length}`
+    );
+  } else {
+    console.log(`[Discord Storage] No new unique messages to add`);
   }
 };
 
@@ -279,9 +294,15 @@ export const findPotentialCharacterMatches = async (
   alias: string,
   discordUserId: string,
   allCharacters: Array<{ id: string; name: string }>
-): Promise<Array<{ characterId: string; name: string; confidence: number }>> => {
+): Promise<
+  Array<{ characterId: string; name: string; confidence: number }>
+> => {
   const normalizedAlias = alias.toLowerCase().trim();
-  const matches: Array<{ characterId: string; name: string; confidence: number }> = [];
+  const matches: Array<{
+    characterId: string;
+    name: string;
+    confidence: number;
+  }> = [];
 
   // Check existing aliases first
   const aliases = await getDiscordCharacterAliases();
@@ -292,7 +313,9 @@ export const findPotentialCharacterMatches = async (
   );
 
   if (existingAlias) {
-    const character = allCharacters.find(c => c.id === existingAlias.characterId);
+    const character = allCharacters.find(
+      c => c.id === existingAlias.characterId
+    );
     if (character) {
       matches.push({
         characterId: character.id,
@@ -305,7 +328,7 @@ export const findPotentialCharacterMatches = async (
   // Try fuzzy matching against all characters
   for (const character of allCharacters) {
     const normalizedCharName = character.name.toLowerCase().trim();
-    
+
     // Exact match
     if (normalizedCharName === normalizedAlias) {
       if (!matches.find(m => m.characterId === character.id)) {

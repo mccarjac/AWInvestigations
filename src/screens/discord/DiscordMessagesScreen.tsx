@@ -47,6 +47,19 @@ export const DiscordMessagesScreen: React.FC = () => {
         loadCharacters(),
       ]);
 
+      console.log(`[Discord Messages Screen] Loaded ${msgs.length} messages`);
+      if (msgs.length > 0) {
+        console.log(
+          `[Discord Messages Screen] Sample message:`,
+          JSON.stringify({
+            id: msgs[0].id,
+            content: msgs[0].content?.substring(0, 100) || '(empty)',
+            contentLength: msgs[0].content?.length || 0,
+            contentType: typeof msgs[0].content,
+          })
+        );
+      }
+
       // Sort messages by timestamp (newest first)
       const sortedMsgs = msgs.sort(
         (a, b) =>
@@ -57,6 +70,7 @@ export const DiscordMessagesScreen: React.FC = () => {
       setCharacters(chars);
       applyFilter(sortedMsgs, filter);
     } catch (error) {
+      console.error('[Discord Messages Screen] Error loading data:', error);
       Alert.alert('Error', 'Failed to load Discord messages', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
