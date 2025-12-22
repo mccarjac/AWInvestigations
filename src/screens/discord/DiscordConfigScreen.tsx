@@ -11,7 +11,11 @@ import {
   Switch,
 } from 'react-native';
 import { colors as themeColors } from '@/styles/theme';
-import { getDiscordConfig, saveDiscordConfig } from '@/utils/discordStorage';
+import {
+  getDiscordConfig,
+  saveDiscordConfig,
+  clearDiscordMessages,
+} from '@/utils/discordStorage';
 import { testDiscordConnection, syncDiscordMessages } from '@/utils/discordApi';
 
 export const DiscordConfigScreen: React.FC = () => {
@@ -143,6 +147,38 @@ export const DiscordConfigScreen: React.FC = () => {
     }
   };
 
+  const handleClearMessages = async () => {
+    Alert.alert(
+      'Clear All Messages?',
+      'This will delete all synced Discord messages. You can re-sync to fetch them again. This is useful if messages were synced before enabling MESSAGE_CONTENT intent.\n\nContinue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Messages',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await clearDiscordMessages();
+              Alert.alert(
+                'Messages Cleared',
+                'All Discord messages have been deleted. Use "Sync Messages Now" to fetch them again.',
+                [{ text: 'OK' }]
+              );
+            } catch (error) {
+              console.error('[Discord Config] Clear messages error:', error);
+              Alert.alert(
+                'Error',
+                'Failed to clear messages: ' +
+                  (error instanceof Error ? error.message : 'Unknown error'),
+                [{ text: 'OK' }]
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const formatLastSync = () => {
     if (!lastSync) return 'Never';
     const date = new Date(lastSync);
@@ -259,6 +295,15 @@ export const DiscordConfigScreen: React.FC = () => {
                 Sync Messages Now
               </Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.buttonDanger]}
+            onPress={handleClearMessages}
+          >
+            <Text style={[styles.buttonText, styles.buttonTextDanger]}>
+              Clear All Messages
+            </Text>
           </TouchableOpacity>
 
           {syncStatus && (
@@ -389,6 +434,14 @@ const styles = StyleSheet.create({
   },
   buttonTextSecondary: {
     color: themeColors.accent.primary,
+  },
+  buttonDanger: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#F44336',
+  },
+  buttonTextDanger: {
+    color: '#F44336',
   },
   syncStatusContainer: {
     padding: 12,

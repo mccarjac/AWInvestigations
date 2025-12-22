@@ -135,12 +135,13 @@ export const saveDiscordMessages = async (
 
 /**
  * Add Discord messages (bulk)
+ * Updates existing messages and adds new ones
  */
 export const addDiscordMessages = async (
   newMessages: DiscordMessage[]
 ): Promise<void> => {
   const existingMessages = await getDiscordMessages();
-  const existingIds = new Set(existingMessages.map(m => m.id));
+  const existingMap = new Map(existingMessages.map(m => [m.id, m]));
 
   console.log(
     `[Discord Storage] Adding messages - existing: ${existingMessages.length}, new: ${newMessages.length}`
@@ -152,23 +153,42 @@ export const addDiscordMessages = async (
     );
   }
 
-  // Only add messages that don't already exist
-  const uniqueNewMessages = newMessages.filter(m => !existingIds.has(m.id));
+  let updatedCount = 0;
+  let addedCount = 0;
 
-  if (uniqueNewMessages.length > 0) {
-    const allMessages = [...existingMessages, ...uniqueNewMessages];
-    // Sort by timestamp (oldest first)
-    allMessages.sort(
-      (a, b) =>
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-    await saveDiscordMessages(allMessages);
-    console.log(
-      `[Discord Storage] Added ${uniqueNewMessages.length} unique messages, total: ${allMessages.length}`
-    );
-  } else {
-    console.log(`[Discord Storage] No new unique messages to add`);
-  }
+  // Merge new messages with existing ones
+  newMessages.forEach(newMsg => {
+    const existing = existingMap.get(newMsg.id);
+    if (existing) {
+      // Update existing message - merge fields, preferring non-empty content
+      existingMap.set(newMsg.id, {
+        ...existing,
+        ...newMsg,
+        // Preserve existing non-empty content if new content is empty
+        content:
+          newMsg.content && newMsg.content.trim() !== ''
+            ? newMsg.content
+            : existing.content,
+      });
+      updatedCount++;
+    } else {
+      // Add new message
+      existingMap.set(newMsg.id, newMsg);
+      addedCount++;
+    }
+  });
+
+  const allMessages = Array.from(existingMap.values());
+  // Sort by timestamp (oldest first)
+  allMessages.sort(
+    (a, b) =>
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
+  await saveDiscordMessages(allMessages);
+  console.log(
+    `[Discord Storage] Updated ${updatedCount} messages, added ${addedCount} messages, total: ${allMessages.length}`
+  );
 };
 
 /**
@@ -179,6 +199,14 @@ export const getDiscordMessagesForCharacter = async (
 ): Promise<DiscordMessage[]> => {
   const messages = await getDiscordMessages();
   return messages.filter(m => m.characterId === characterId);
+};
+
+/**
+ * Clear all Discord messages only
+ */
+export const clearDiscordMessages = async (): Promise<void> => {
+  await SafeAsyncStorageJSONParser.removeItem(DISCORD_MESSAGES_KEY);
+  console.log('[Discord Storage] Cleared all Discord messages');
 };
 
 /**
