@@ -173,13 +173,13 @@ export const DiscordMessagesScreen: React.FC = () => {
           <View style={styles.extractedNameContainer}>
             <Text style={styles.extractedNameLabel}>Extracted Name:</Text>
             <Text style={styles.extractedName}>
-              &gt;[{item.extractedCharacterName}]
+              &gt;&gt;[{item.extractedCharacterName}]
             </Text>
           </View>
         )}
 
         <Text style={styles.messageContent} numberOfLines={4}>
-          {item.content}
+          {item.content || '(Empty message)'}
         </Text>
 
         {item.imageUris && item.imageUris.length > 0 && (
@@ -224,15 +224,15 @@ export const DiscordMessagesScreen: React.FC = () => {
                 <View style={styles.modalSection}>
                   <Text style={styles.modalLabel}>Extracted Name:</Text>
                   <Text style={styles.modalValue}>
-                    &gt;[{selectedMessage.extractedCharacterName}]
+                    &gt;&gt;[{selectedMessage.extractedCharacterName}]
                   </Text>
                 </View>
               )}
 
               <View style={styles.modalSection}>
                 <Text style={styles.modalLabel}>Message Preview:</Text>
-                <Text style={styles.modalValue} numberOfLines={3}>
-                  {selectedMessage.content}
+                <Text style={styles.modalValue} numberOfLines={5}>
+                  {selectedMessage.content || '(Empty message)'}
                 </Text>
               </View>
 

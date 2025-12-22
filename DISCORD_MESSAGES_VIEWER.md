@@ -10,7 +10,7 @@ The main screen displays all Discord messages with the following information:
 
 - **Discord Username** - The Discord user who sent the message
 - **Discord User ID** - The unique Discord identifier (for mapping purposes)
-- **Extracted Character Name** - If the message starts with `>[Name]`, that name is shown
+- **Extracted Character Name** - If the message starts with `>>[Name]`, that name is shown
 - **Message Content** - Preview of the message text
 - **Images** - Indicator if the message has attached images
 - **Timestamp** - When the message was sent
@@ -30,7 +30,7 @@ Each filter button displays the count of messages in that category.
 
 - **Untagged Messages**: Have an orange left border and "UNTAGGED" badge
 - **Tagged Messages**: Show a green badge with the linked character's name
-- **Extracted Names**: Displayed in a blue highlighted box with `>[Name]` format
+- **Extracted Names**: Displayed in a blue highlighted box with `>>[Name]` format
 
 ### Character Linking
 
@@ -41,7 +41,7 @@ Click any message to open the linking modal, which shows:
    - User ID (for reference)
 
 2. **Extracted Character Name** (if present)
-   - Shows the name extracted from `>[Name]` format
+   - Shows the name extracted from `>>[Name]` format
 
 3. **Message Preview**
    - Full message content
@@ -92,7 +92,7 @@ When you save a character mapping:
 ## Tips
 
 - **Use Discord User IDs** to identify who you're mapping
-- **Extracted names** (>[Name]) provide hints for character selection
+- **Extracted names** (>>[Name]) provide hints for character selection
 - **Save early, save often** - Once mapped, aliases make future messages auto-link
 - **Check images** - Thumbnails in the modal help identify the conversation context
 - **Filter counts** - Use the badge numbers to track your progress
@@ -101,7 +101,7 @@ When you save a character mapping:
 
 ### Character Name Mapping Screen
 
-- Shows only messages with extracted `>[Name]` that need mapping
+- Shows only messages with extracted `>>[Name]` that need mapping
 - Groups by unique extracted name
 - Bulk mapping interface
 
@@ -135,7 +135,7 @@ Both screens work together:
 - Future messages will auto-link based on your mappings
 
 **Q: Character name extraction isn't working**
-- A: Messages must start with exactly `>[Name]` format
+- A: Messages must start with exactly `>>[Name]` format
 - Example: `>[Marcus] Hello there!`
 - Spaces around brackets are okay: `> [Marcus] Hello`
 

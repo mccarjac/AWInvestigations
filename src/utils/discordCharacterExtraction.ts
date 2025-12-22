@@ -7,11 +7,11 @@ import {
 
 /**
  * Extract character name from message content
- * Looks for patterns like >[Name] at the beginning of the message
+ * Looks for patterns like >>[Name] at the beginning of the message
  */
 export const extractCharacterName = (content: string): string | null => {
-  // Match >[Name] at the start, with optional whitespace
-  const match = content.match(/^>\s*\[([^\]]+)\]/);
+  // Match >>[Name] at the start, with optional whitespace
+  const match = content.match(/^>>\s*\[([^\]]+)\]/);
   if (match && match[1]) {
     return match[1].trim();
   }
@@ -22,7 +22,7 @@ export const extractCharacterName = (content: string): string | null => {
  * Get the message content without the character name prefix
  */
 export const stripCharacterNameFromContent = (content: string): string => {
-  const match = content.match(/^>\s*\[[^\]]+\]\s*(.*)/s);
+  const match = content.match(/^>>\s*\[[^\]]+\]\s*(.*)/s);
   if (match && match[1]) {
     return match[1].trim();
   }
