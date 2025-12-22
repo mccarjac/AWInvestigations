@@ -10,6 +10,7 @@ export type RootDrawerParamList = {
   DiscordConfig: undefined;
   DiscordUserMapping: undefined;
   DiscordCharacterMapping: undefined;
+  DiscordMessages: undefined;
 };
 
 export type RootStackParamList = {

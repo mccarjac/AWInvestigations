@@ -28,6 +28,7 @@ import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
 import { DiscordConfigScreen } from './src/screens/discord/DiscordConfigScreen';
 import { DiscordUserMappingScreen } from './src/screens/discord/DiscordUserMappingScreen';
 import { DiscordCharacterMappingScreen } from './src/screens/discord/DiscordCharacterMappingScreen';
+import { DiscordMessagesScreen } from './src/screens/discord/DiscordMessagesScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './src/components';
@@ -150,6 +151,14 @@ function MainDrawer() {
         options={{
           title: 'Character Name Mapping',
           drawerLabel: 'Character Name Mapping',
+        }}
+      />
+      <Drawer.Screen
+        name="DiscordMessages"
+        component={DiscordMessagesScreen}
+        options={{
+          title: 'Discord Messages',
+          drawerLabel: 'Discord Messages',
         }}
       />
     </Drawer.Navigator>
