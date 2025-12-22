@@ -25,28 +25,37 @@ const stripMarkdown = (text: string): string => {
  * Strips markdown formatting from the extracted name
  */
 export const extractCharacterName = (content: string): string | null => {
+  console.log(
+    `[Character Extraction] Testing content: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`
+  );
+
   // First try to match >[Name] format with brackets
+  console.log(`[Character Extraction] Trying bracketed format >[Name]...`);
   let match = content.match(/^>\s*\[([^\]]+)\]/);
   if (match && match[1]) {
     const rawName = match[1].trim();
     const cleanName = stripMarkdown(rawName);
     console.log(
-      `[Character Extraction] Extracted "${cleanName}" from bracketed format >[${rawName}] in: "${content.substring(0, 50)}..."`
+      `[Character Extraction] MATCHED bracketed format! Raw: "${rawName}", Clean: "${cleanName}"`
     );
     return cleanName;
   }
+  console.log(`[Character Extraction] Bracketed format: NO MATCH`);
 
   // Try to match >Name format without brackets (followed by newline or space)
-  match = content.match(/^>\s*([^\n\s]+)/);
+  console.log(`[Character Extraction] Trying simple format >Name...`);
+  match = content.match(/^>\s*([A-Za-z0-9_*\-]+)/);
   if (match && match[1]) {
     const rawName = match[1].trim();
     const cleanName = stripMarkdown(rawName);
     console.log(
-      `[Character Extraction] Extracted "${cleanName}" from simple format >${rawName} in: "${content.substring(0, 50)}..."`
+      `[Character Extraction] MATCHED simple format! Raw: "${rawName}", Clean: "${cleanName}"`
     );
     return cleanName;
   }
+  console.log(`[Character Extraction] Simple format: NO MATCH`);
 
+  console.log(`[Character Extraction] No character name pattern found`);
   return null;
 };
 
