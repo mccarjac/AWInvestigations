@@ -21,17 +21,32 @@ const stripMarkdown = (text: string): string => {
 
 /**
  * Extract character name from message content
- * Looks for patterns like >>[Name] at the beginning of the message
+ * Looks for patterns like >[Name] or >Name at the beginning of the message
  * Strips markdown formatting from the extracted name
  */
 export const extractCharacterName = (content: string): string | null => {
-  // Match >>[Name] at the start, with optional whitespace
-  const match = content.match(/^>>\s*\[([^\]]+)\]/);
+  // First try to match >[Name] format with brackets
+  let match = content.match(/^>\s*\[([^\]]+)\]/);
   if (match && match[1]) {
     const rawName = match[1].trim();
     const cleanName = stripMarkdown(rawName);
+    console.log(
+      `[Character Extraction] Extracted "${cleanName}" from bracketed format >[${rawName}] in: "${content.substring(0, 50)}..."`
+    );
     return cleanName;
   }
+
+  // Try to match >Name format without brackets (followed by newline or space)
+  match = content.match(/^>\s*([^\n\s]+)/);
+  if (match && match[1]) {
+    const rawName = match[1].trim();
+    const cleanName = stripMarkdown(rawName);
+    console.log(
+      `[Character Extraction] Extracted "${cleanName}" from simple format >${rawName} in: "${content.substring(0, 50)}..."`
+    );
+    return cleanName;
+  }
+
   return null;
 };
 
@@ -39,7 +54,13 @@ export const extractCharacterName = (content: string): string | null => {
  * Get the message content without the character name prefix
  */
 export const stripCharacterNameFromContent = (content: string): string => {
-  const match = content.match(/^>>\s*\[[^\]]+\]\s*(.*)/s);
+  // Try bracketed format first >[Name]
+  let match = content.match(/^>\s*\[[^\]]+\]\s*(.*)/s);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+  // Try simple format >Name
+  match = content.match(/^>\s*[^\n\s]+\s*(.*)/s);
   if (match && match[1]) {
     return match[1].trim();
   }

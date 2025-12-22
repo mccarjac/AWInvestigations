@@ -160,7 +160,9 @@ export const addDiscordMessages = async (
   newMessages.forEach(newMsg => {
     const existing = existingMap.get(newMsg.id);
     if (existing) {
-      // Update existing message - merge fields, preferring non-empty content
+      // Update existing message - merge fields carefully
+      // IMPORTANT: Preserve existing characterId if it exists (user manually mapped it)
+      // Only update characterId if new message has one and existing doesn't
       existingMap.set(newMsg.id, {
         ...existing,
         ...newMsg,
@@ -169,8 +171,17 @@ export const addDiscordMessages = async (
           newMsg.content && newMsg.content.trim() !== ''
             ? newMsg.content
             : existing.content,
+        // CRITICAL: Preserve existing characterId (don't overwrite user mappings)
+        // Only use new characterId if existing doesn't have one
+        characterId: existing.characterId || newMsg.characterId,
+        // Also preserve extracted name if it exists
+        extractedCharacterName:
+          existing.extractedCharacterName || newMsg.extractedCharacterName,
       });
       updatedCount++;
+      console.log(
+        `[Discord Storage] Updated message ${newMsg.id.substring(0, 8)}... - preserving characterId: ${existing.characterId ? 'YES' : 'NO'}`
+      );
     } else {
       // Add new message
       existingMap.set(newMsg.id, newMsg);
@@ -273,6 +284,9 @@ export const addOrUpdateCharacterAlias = async (
       updatedAt: now,
     };
     await saveDiscordCharacterAliases(aliases);
+    console.log(
+      `[Discord Aliases] Updated alias "${normalizedAlias}" -> Character ${characterId.substring(0, 8)}... (usage: ${aliases[existingIndex].usageCount}, confidence: ${aliases[existingIndex].confidence})`
+    );
     return aliases[existingIndex];
   } else {
     // Create new alias
@@ -287,6 +301,9 @@ export const addOrUpdateCharacterAlias = async (
     };
     aliases.push(newAlias);
     await saveDiscordCharacterAliases(aliases);
+    console.log(
+      `[Discord Aliases] Created NEW alias "${normalizedAlias}" -> Character ${characterId.substring(0, 8)}... for user ${discordUserId.substring(0, 8)}...`
+    );
     return newAlias;
   }
 };
@@ -309,9 +326,15 @@ export const getCharacterIdForAlias = async (
   );
 
   if (exactMatch && exactMatch.confidence > 0.5) {
+    console.log(
+      `[Discord Aliases] Found existing alias "${normalizedAlias}" -> Character ${exactMatch.characterId.substring(0, 8)}... (confidence: ${exactMatch.confidence})`
+    );
     return exactMatch.characterId;
   }
 
+  console.log(
+    `[Discord Aliases] No alias found for "${normalizedAlias}" and user ${discordUserId.substring(0, 8)}...`
+  );
   return undefined;
 };
 
