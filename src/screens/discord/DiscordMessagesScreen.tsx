@@ -179,7 +179,7 @@ export const DiscordMessagesScreen: React.FC = () => {
         )}
 
         <Text style={styles.messageContent} numberOfLines={4}>
-          {item.content || '(Empty message)'}
+          {item.content}
         </Text>
 
         {item.imageUris && item.imageUris.length > 0 && (
@@ -232,7 +232,7 @@ export const DiscordMessagesScreen: React.FC = () => {
               <View style={styles.modalSection}>
                 <Text style={styles.modalLabel}>Message Preview:</Text>
                 <Text style={styles.modalValue} numberOfLines={5}>
-                  {selectedMessage.content || '(Empty message)'}
+                  {selectedMessage.content}
                 </Text>
               </View>
 
