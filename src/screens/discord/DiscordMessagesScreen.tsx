@@ -159,7 +159,7 @@ export const DiscordMessagesScreen: React.FC = () => {
 
       Alert.alert('Success', message, [{ text: 'OK' }]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save character mapping', [
+      Alert.alert(`Error: ${error}`, 'Failed to save character mapping', [
         { text: 'OK' },
       ]);
     } finally {
@@ -210,7 +210,7 @@ export const DiscordMessagesScreen: React.FC = () => {
           <View style={styles.extractedNameContainer}>
             <Text style={styles.extractedNameLabel}>Extracted Name:</Text>
             <Text style={styles.extractedName}>
-              &gt;&gt;[{item.extractedCharacterName}]
+              {item.extractedCharacterName}
             </Text>
           </View>
         )}
@@ -261,7 +261,7 @@ export const DiscordMessagesScreen: React.FC = () => {
                 <View style={styles.modalSection}>
                   <Text style={styles.modalLabel}>Extracted Name:</Text>
                   <Text style={styles.modalValue}>
-                    &gt;&gt;[{selectedMessage.extractedCharacterName}]
+                    {selectedMessage.extractedCharacterName}
                   </Text>
                 </View>
               )}

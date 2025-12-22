@@ -29,9 +29,9 @@ export const extractCharacterName = (content: string): string | null => {
     `[Character Extraction] Testing content: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`
   );
 
-  // First try to match >[Name] format with brackets
-  console.log(`[Character Extraction] Trying bracketed format >[Name]...`);
-  let match = content.match(/^>\s*\[([^\]]+)\]/);
+  // First try to match >>NAME format with brackets
+  console.log(`[Character Extraction] Trying bracketed format >>NAME...`);
+  let match = content.match(/^>>\s*([A-Za-z0-9_*-]+)/);
   if (match && match[1]) {
     const rawName = match[1].trim();
     const cleanName = stripMarkdown(rawName);
@@ -44,7 +44,7 @@ export const extractCharacterName = (content: string): string | null => {
 
   // Try to match >Name format without brackets (followed by newline or space)
   console.log(`[Character Extraction] Trying simple format >Name...`);
-  match = content.match(/^>\s*([A-Za-z0-9_*\-]+)/);
+  match = content.match(/^>\s*([A-Za-z0-9_*-]+)/);
   if (match && match[1]) {
     const rawName = match[1].trim();
     const cleanName = stripMarkdown(rawName);
@@ -63,8 +63,8 @@ export const extractCharacterName = (content: string): string | null => {
  * Get the message content without the character name prefix
  */
 export const stripCharacterNameFromContent = (content: string): string => {
-  // Try bracketed format first >[Name]
-  let match = content.match(/^>\s*\[[^\]]+\]\s*(.*)/s);
+  // Try >>NAME format
+  let match = content.match(/^>>\s*[^\n\s]+\s*(.*)/s);
   if (match && match[1]) {
     return match[1].trim();
   }
