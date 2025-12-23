@@ -136,13 +136,26 @@ export interface EventDataset {
 export type CertaintyLevel = 'unconfirmed' | 'confirmed' | 'disputed';
 
 // Discord Integration Types
+export interface DiscordServerConfig {
+  id: string; // Unique ID for this server/channel config
+  name: string; // User-friendly name for this server/channel
+  botToken: string; // Discord bot token (can be same across configs)
+  guildId?: string; // Discord server ID (optional)
+  channelId: string; // Discord channel ID
+  enabled: boolean; // Whether this specific config is enabled
+  lastSync?: string; // ISO timestamp of last sync for this channel
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DiscordConfig {
-  botToken?: string;
-  guildId?: string; // Discord server ID
-  channelId?: string; // Discord channel ID
-  enabled: boolean;
-  lastSync?: string; // ISO timestamp of last sync
+  botToken?: string; // Legacy: Primary bot token (deprecated, use serverConfigs)
+  guildId?: string; // Legacy: Discord server ID (deprecated)
+  channelId?: string; // Legacy: Discord channel ID (deprecated)
+  enabled: boolean; // Global enable/disable for Discord integration
+  lastSync?: string; // Legacy: ISO timestamp of last sync (deprecated)
   autoSync: boolean; // Auto-sync when internet is available
+  serverConfigs: DiscordServerConfig[]; // Multiple server/channel configurations
 }
 
 export interface DiscordUserMapping {
@@ -156,6 +169,8 @@ export interface DiscordUserMapping {
 export interface DiscordMessage {
   id: string; // Discord message ID
   channelId: string; // Discord channel ID
+  guildId?: string; // Discord server/guild ID (for organization)
+  serverConfigId?: string; // Reference to DiscordServerConfig.id
   authorId: string; // Discord user ID
   authorUsername: string; // Discord username
   content: string; // Message content
@@ -188,6 +203,7 @@ export interface DiscordAttachment {
 
 export interface DiscordDataset {
   config: DiscordConfig;
+  serverConfigs?: DiscordServerConfig[]; // For export/import of multi-server configs
   userMappings: DiscordUserMapping[];
   messages: DiscordMessage[];
   characterAliases: DiscordCharacterAlias[];

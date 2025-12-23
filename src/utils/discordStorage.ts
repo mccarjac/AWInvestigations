@@ -1,5 +1,6 @@
 import {
   DiscordConfig,
+  DiscordServerConfig,
   DiscordUserMapping,
   DiscordMessage,
   DiscordDataset,
@@ -13,17 +14,48 @@ const DISCORD_MESSAGES_KEY = 'gameCharacterManager_discord_messages';
 const DISCORD_ALIASES_KEY = 'gameCharacterManager_discord_aliases';
 
 /**
- * Get Discord configuration
+ * Get Discord configuration with migration support
  */
 export const getDiscordConfig = async (): Promise<DiscordConfig> => {
   const config =
     await SafeAsyncStorageJSONParser.getItem<DiscordConfig>(DISCORD_CONFIG_KEY);
-  return (
-    config || {
+  
+  if (!config) {
+    return {
       enabled: false,
       autoSync: true,
+      serverConfigs: [],
+    };
+  }
+
+  // Migration: Convert legacy single-server config to multi-server format
+  if (!config.serverConfigs && (config.botToken || config.channelId)) {
+    config.serverConfigs = [];
+    if (config.botToken && config.channelId) {
+      const legacyConfig: DiscordServerConfig = {
+        id: 'legacy-default',
+        name: 'Default Server',
+        botToken: config.botToken,
+        guildId: config.guildId,
+        channelId: config.channelId,
+        enabled: config.enabled,
+        lastSync: config.lastSync,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      config.serverConfigs.push(legacyConfig);
+      // Save migrated config
+      await saveDiscordConfig(config);
+      console.log('[Discord Storage] Migrated legacy config to multi-server format');
     }
-  );
+  }
+
+  // Ensure serverConfigs exists
+  if (!config.serverConfigs) {
+    config.serverConfigs = [];
+  }
+
+  return config;
 };
 
 /**
@@ -33,6 +65,94 @@ export const saveDiscordConfig = async (
   config: DiscordConfig
 ): Promise<void> => {
   await SafeAsyncStorageJSONParser.setItem(DISCORD_CONFIG_KEY, config);
+};
+
+/**
+ * Get all Discord server configurations
+ */
+export const getDiscordServerConfigs = async (): Promise<
+  DiscordServerConfig[]
+> => {
+  const config = await getDiscordConfig();
+  return config.serverConfigs || [];
+};
+
+/**
+ * Add a Discord server configuration
+ */
+export const addDiscordServerConfig = async (
+  serverConfig: Omit<DiscordServerConfig, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<DiscordServerConfig> => {
+  const config = await getDiscordConfig();
+  const now = new Date().toISOString();
+  
+  const newServerConfig: DiscordServerConfig = {
+    ...serverConfig,
+    id: `server-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  config.serverConfigs = config.serverConfigs || [];
+  config.serverConfigs.push(newServerConfig);
+  
+  await saveDiscordConfig(config);
+  console.log(`[Discord Storage] Added server config: ${newServerConfig.name} (${newServerConfig.id})`);
+  
+  return newServerConfig;
+};
+
+/**
+ * Update a Discord server configuration
+ */
+export const updateDiscordServerConfig = async (
+  serverConfigId: string,
+  updates: Partial<Omit<DiscordServerConfig, 'id' | 'createdAt'>>
+): Promise<DiscordServerConfig | null> => {
+  const config = await getDiscordConfig();
+  const serverConfigs = config.serverConfigs || [];
+  
+  const index = serverConfigs.findIndex(sc => sc.id === serverConfigId);
+  if (index === -1) {
+    console.error(`[Discord Storage] Server config not found: ${serverConfigId}`);
+    return null;
+  }
+
+  const updatedServerConfig: DiscordServerConfig = {
+    ...serverConfigs[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+
+  serverConfigs[index] = updatedServerConfig;
+  await saveDiscordConfig(config);
+  console.log(`[Discord Storage] Updated server config: ${updatedServerConfig.name} (${serverConfigId})`);
+  
+  return updatedServerConfig;
+};
+
+/**
+ * Remove a Discord server configuration
+ */
+export const removeDiscordServerConfig = async (
+  serverConfigId: string
+): Promise<void> => {
+  const config = await getDiscordConfig();
+  const serverConfigs = config.serverConfigs || [];
+  
+  config.serverConfigs = serverConfigs.filter(sc => sc.id !== serverConfigId);
+  await saveDiscordConfig(config);
+  console.log(`[Discord Storage] Removed server config: ${serverConfigId}`);
+};
+
+/**
+ * Get a specific Discord server configuration
+ */
+export const getDiscordServerConfig = async (
+  serverConfigId: string
+): Promise<DiscordServerConfig | null> => {
+  const serverConfigs = await getDiscordServerConfigs();
+  return serverConfigs.find(sc => sc.id === serverConfigId) || null;
 };
 
 /**
@@ -114,14 +234,23 @@ export const getCharacterIdForDiscordUser = async (
 };
 
 /**
- * Get all Discord messages
+ * Get all Discord messages, optionally filtered by server config
  */
-export const getDiscordMessages = async (): Promise<DiscordMessage[]> => {
+export const getDiscordMessages = async (
+  serverConfigId?: string
+): Promise<DiscordMessage[]> => {
   const messages =
     await SafeAsyncStorageJSONParser.getItem<DiscordMessage[]>(
       DISCORD_MESSAGES_KEY
     );
-  return messages || [];
+  const allMessages = messages || [];
+  
+  if (!serverConfigId) {
+    return allMessages;
+  }
+  
+  // Filter by server config ID
+  return allMessages.filter(m => m.serverConfigId === serverConfigId);
 };
 
 /**
@@ -202,13 +331,25 @@ export const addDiscordMessages = async (
 };
 
 /**
- * Get Discord messages for a specific character
+ * Get Discord messages for a specific character, optionally filtered by server config
  */
 export const getDiscordMessagesForCharacter = async (
-  characterId: string
+  characterId: string,
+  serverConfigId?: string
 ): Promise<DiscordMessage[]> => {
-  const messages = await getDiscordMessages();
+  const messages = await getDiscordMessages(serverConfigId);
   return messages.filter(m => m.characterId === characterId);
+};
+
+/**
+ * Get Discord messages for a specific channel (for context views)
+ */
+export const getDiscordMessagesForChannel = async (
+  channelId: string,
+  serverConfigId?: string
+): Promise<DiscordMessage[]> => {
+  const messages = await getDiscordMessages(serverConfigId);
+  return messages.filter(m => m.channelId === channelId);
 };
 
 /**
@@ -471,10 +612,11 @@ export const exportDiscordDataset = async (): Promise<DiscordDataset> => {
 
   return {
     config,
+    serverConfigs: config.serverConfigs || [],
     userMappings,
     messages,
     characterAliases,
-    version: '1.0',
+    version: '2.0', // Bumped version for multi-server support
     lastUpdated: new Date().toISOString(),
   };
 };
@@ -488,7 +630,12 @@ export const importDiscordDataset = async (
 ): Promise<void> => {
   if (!merge) {
     // Replace all data
-    await saveDiscordConfig(dataset.config);
+    // Ensure serverConfigs is properly set
+    const configToSave = {
+      ...dataset.config,
+      serverConfigs: dataset.serverConfigs || dataset.config.serverConfigs || [],
+    };
+    await saveDiscordConfig(configToSave);
     await saveDiscordUserMappings(dataset.userMappings);
     await saveDiscordMessages(dataset.messages);
     await saveDiscordCharacterAliases(dataset.characterAliases || []);
@@ -499,10 +646,20 @@ export const importDiscordDataset = async (
     const existingMessages = await getDiscordMessages();
     const existingAliases = await getDiscordCharacterAliases();
 
-    // Merge config (prefer imported if enabled)
-    const mergedConfig = dataset.config.enabled
-      ? dataset.config
-      : existingConfig;
+    // Merge server configs (by ID)
+    const serverConfigMap = new Map<string, DiscordServerConfig>();
+    (existingConfig.serverConfigs || []).forEach(sc =>
+      serverConfigMap.set(sc.id, sc)
+    );
+    (dataset.serverConfigs || dataset.config.serverConfigs || []).forEach(sc =>
+      serverConfigMap.set(sc.id, sc)
+    );
+
+    // Merge config (prefer imported if enabled, but keep server configs merged)
+    const mergedConfig: DiscordConfig = {
+      ...(dataset.config.enabled ? dataset.config : existingConfig),
+      serverConfigs: Array.from(serverConfigMap.values()),
+    };
     await saveDiscordConfig(mergedConfig);
 
     // Merge mappings (by Discord user ID)
