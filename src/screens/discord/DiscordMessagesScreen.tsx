@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import Markdown from 'react-native-markdown-display';
 import { colors as themeColors } from '@/styles/theme';
 import type { DiscordMessage, GameCharacter } from '@models/types';
 import {
@@ -270,13 +269,9 @@ export const DiscordMessagesScreen: React.FC = () => {
             </View>
           )}
 
-          <View style={styles.messageContentContainer}>
-            {item.content ? (
-              <Markdown style={markdownStyles}>{item.content}</Markdown>
-            ) : (
-              <Text style={styles.messageContent}>[No text content]</Text>
-            )}
-          </View>
+          <Text style={styles.messageContent} numberOfLines={4}>
+            {item.content ? item.content : '[No text content]'}
+          </Text>
 
           {item.imageUris && item.imageUris.length > 0 && (
             <View style={styles.imagesContainer}>
@@ -688,13 +683,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: themeColors.accent.primary,
   },
-  messageContentContainer: {
-    marginBottom: 8,
-  },
   messageContent: {
     fontSize: 14,
     color: themeColors.text.primary,
     lineHeight: 20,
+    marginBottom: 8,
   },
   imagesContainer: {
     marginBottom: 8,
@@ -837,66 +830,3 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
-
-const markdownStyles = {
-  body: {
-    color: themeColors.text.primary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  heading1: {
-    color: themeColors.text.primary,
-    fontSize: 18,
-    fontWeight: '700' as const,
-    marginBottom: 6,
-  },
-  heading2: {
-    color: themeColors.text.primary,
-    fontSize: 16,
-    fontWeight: '600' as const,
-    marginBottom: 4,
-  },
-  heading3: {
-    color: themeColors.text.primary,
-    fontSize: 15,
-    fontWeight: '600' as const,
-    marginBottom: 3,
-  },
-  paragraph: {
-    color: themeColors.text.primary,
-    marginBottom: 6,
-  },
-  strong: {
-    fontWeight: '700' as const,
-  },
-  em: {
-    fontStyle: 'italic' as const,
-  },
-  link: {
-    color: themeColors.accent.primary,
-  },
-  list_item: {
-    color: themeColors.text.primary,
-  },
-  bullet_list: {
-    marginBottom: 6,
-  },
-  ordered_list: {
-    marginBottom: 6,
-  },
-  code_inline: {
-    backgroundColor: themeColors.elevated,
-    color: themeColors.accent.info,
-    fontFamily: 'monospace' as const,
-    padding: 2,
-    borderRadius: 3,
-  },
-  code_block: {
-    backgroundColor: themeColors.elevated,
-    color: themeColors.text.primary,
-    fontFamily: 'monospace' as const,
-    padding: 8,
-    borderRadius: 4,
-    marginBottom: 6,
-  },
-};

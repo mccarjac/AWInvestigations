@@ -7,17 +7,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { RouteProp, useRoute } from '@react-navigation/native';
-import Markdown from 'react-native-markdown-display';
 import { RootStackParamList } from '@/navigation/types';
 import { DiscordMessage } from '@/models/types';
 import { getDiscordMessages } from '@/utils/discordStorage';
-import {
-  colors,
-  typography,
-  spacing,
-  borderRadius,
-  shadows,
-} from '@/styles/theme';
+import { colors, typography, spacing, borderRadius, shadows } from '@/styles/theme';
 
 type DiscordMessageContextRouteProp = RouteProp<
   RootStackParamList,
@@ -39,7 +32,7 @@ export const DiscordMessageContextScreen: React.FC = () => {
   const loadMessages = async () => {
     try {
       const allMessages = await getDiscordMessages();
-
+      
       // Show ALL messages, not filtered by character
       // Sort by timestamp (oldest first for conversation context)
       const sorted = allMessages.sort(
@@ -117,13 +110,7 @@ export const DiscordMessageContextScreen: React.FC = () => {
                 {new Date(msg.timestamp).toLocaleString()}
               </Text>
             </View>
-            <View style={styles.messageContentContainer}>
-              {msg.content ? (
-                <Markdown style={markdownStyles}>{msg.content}</Markdown>
-              ) : (
-                <Text style={styles.messageContent}>[No content]</Text>
-              )}
-            </View>
+            <Text style={styles.messageContent}>{msg.content || '[No content]'}</Text>
             {msg.images && msg.images.length > 0 && (
               <Text style={styles.imageIndicator}>
                 📷 {msg.images.length} image{msg.images.length !== 1 ? 's' : ''}
@@ -201,9 +188,6 @@ const styles = StyleSheet.create({
     color: colors.text.muted,
     fontWeight: typography.fontWeight.normal,
   },
-  messageContentContainer: {
-    marginBottom: spacing.sm,
-  },
   messageContent: {
     fontSize: typography.fontSize.base,
     color: colors.text.primary,
@@ -216,66 +200,3 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
-
-const markdownStyles = {
-  body: {
-    color: colors.text.primary,
-    fontSize: typography.fontSize.base,
-    lineHeight: typography.lineHeight.relaxed,
-  },
-  heading1: {
-    color: colors.text.primary,
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold as const,
-    marginBottom: spacing.sm,
-  },
-  heading2: {
-    color: colors.text.primary,
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold as const,
-    marginBottom: spacing.sm,
-  },
-  heading3: {
-    color: colors.text.primary,
-    fontSize: typography.fontSize.md,
-    fontWeight: typography.fontWeight.semibold as const,
-    marginBottom: spacing.xs,
-  },
-  paragraph: {
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
-  },
-  strong: {
-    fontWeight: typography.fontWeight.bold as const,
-  },
-  em: {
-    fontStyle: 'italic' as const,
-  },
-  link: {
-    color: colors.accent.primary,
-  },
-  list_item: {
-    color: colors.text.primary,
-  },
-  bullet_list: {
-    marginBottom: spacing.sm,
-  },
-  ordered_list: {
-    marginBottom: spacing.sm,
-  },
-  code_inline: {
-    backgroundColor: colors.elevated,
-    color: colors.accent.info,
-    fontFamily: 'monospace' as const,
-    padding: 2,
-    borderRadius: borderRadius.sm,
-  },
-  code_block: {
-    backgroundColor: colors.elevated,
-    color: colors.text.primary,
-    fontFamily: 'monospace' as const,
-    padding: spacing.sm,
-    borderRadius: borderRadius.base,
-    marginBottom: spacing.sm,
-  },
-};
