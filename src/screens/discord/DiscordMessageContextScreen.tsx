@@ -33,13 +33,9 @@ export const DiscordMessageContextScreen: React.FC = () => {
     try {
       const allMessages = await getDiscordMessages();
       
-      // Filter messages by characterId if provided, otherwise show all
-      const filtered = characterId
-        ? allMessages.filter(msg => msg.characterId === characterId)
-        : allMessages;
-
+      // Show ALL messages, not filtered by character
       // Sort by timestamp (oldest first for conversation context)
-      const sorted = filtered.sort(
+      const sorted = allMessages.sort(
         (a, b) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
@@ -160,36 +156,50 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     backgroundColor: colors.card,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   highlightedMessage: {
-    backgroundColor: '#3A3520',
+    backgroundColor: '#4A4520',
     borderColor: '#FFA500',
-    borderWidth: 2,
+    borderWidth: 3,
+    shadowColor: '#FFA500',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   messageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   authorName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.primary,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textSecondary,
+    fontWeight: '500',
   },
   messageContent: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.text,
-    lineHeight: 20,
+    lineHeight: 24,
   },
   imageIndicator: {
     marginTop: 8,
