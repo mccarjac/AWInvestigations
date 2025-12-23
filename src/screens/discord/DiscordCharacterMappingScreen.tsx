@@ -11,7 +11,11 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { colors as themeColors } from '@/styles/theme';
-import { GameCharacter, DiscordCharacterAlias } from '@models/types';
+import {
+  GameCharacter,
+  DiscordCharacterAlias,
+  DiscordMessage,
+} from '@models/types';
 import {
   getDiscordMessages,
   saveDiscordMessages,
@@ -20,7 +24,6 @@ import {
 } from '@/utils/discordStorage';
 import { loadCharacters } from '@/utils/characterStorage';
 import { confirmCharacterMapping } from '@/utils/discordCharacterExtraction';
-import type { DiscordMessage } from '@models/types';
 
 interface UnmappedMessage {
   message: DiscordMessage;
@@ -38,9 +41,9 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
     DiscordCharacterAlias[]
   >([]);
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
-  const [selectedMappings, setSelectedMappings] = useState<
-    Map<string, string>
-  >(new Map());
+  const [selectedMappings, setSelectedMappings] = useState<Map<string, string>>(
+    new Map()
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -63,15 +66,13 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
 
       // Group by extracted name to avoid duplicates
       const uniqueUnmapped = Array.from(
-        new Map(
-          unmapped.map(item => [item.extractedName, item])
-        ).values()
+        new Map(unmapped.map(item => [item.extractedName, item])).values()
       );
 
       setUnmappedMessages(uniqueUnmapped);
       setExistingAliases(aliases);
       setCharacters(chars);
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to load mapping data', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
@@ -98,9 +99,11 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
 
   const handleSaveMappings = async () => {
     if (selectedMappings.size === 0) {
-      Alert.alert('No Mappings', 'Please select at least one character mapping', [
-        { text: 'OK' },
-      ]);
+      Alert.alert(
+        'No Mappings',
+        'Please select at least one character mapping',
+        [{ text: 'OK' }]
+      );
       return;
     }
 
@@ -142,7 +145,7 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
         { text: 'OK', onPress: () => loadData() },
       ]);
       setSelectedMappings(new Map());
-    } catch (error) {
+    } catch {
       Alert.alert('Error', 'Failed to save character mappings', [
         { text: 'OK' },
       ]);
@@ -185,7 +188,7 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
               await saveDiscordCharacterAliases(updated);
               await loadData();
               Alert.alert('Success', 'Mapping deleted successfully');
-            } catch (error) {
+            } catch {
               Alert.alert('Error', 'Failed to delete mapping');
             }
           },
@@ -213,7 +216,8 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         <Text style={styles.aliasInfo}>
-          Mapped to: <Text style={styles.characterNameText}>{characterName}</Text>
+          Mapped to:{' '}
+          <Text style={styles.characterNameText}>{characterName}</Text>
         </Text>
         <Text style={styles.aliasInfo}>
           User ID: {item.discordUserId.substring(0, 18)}...
@@ -342,7 +346,8 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
           <>
             <View style={styles.statsContainer}>
               <Text style={styles.statsText}>
-                {unmappedMessages.length} unique name{unmappedMessages.length !== 1 ? 's' : ''} need mapping
+                {unmappedMessages.length} unique name
+                {unmappedMessages.length !== 1 ? 's' : ''} need mapping
               </Text>
               <Text style={styles.statsText}>
                 {selectedMappings.size} selected
@@ -367,30 +372,31 @@ export const DiscordCharacterMappingScreen: React.FC = () => {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <Text style={styles.saveButtonText}>
-                    Save {selectedMappings.size} Mapping{selectedMappings.size !== 1 ? 's' : ''}
+                    Save {selectedMappings.size} Mapping
+                    {selectedMappings.size !== 1 ? 's' : ''}
                   </Text>
                 )}
               </TouchableOpacity>
             </View>
           </>
         )
+      ) : existingAliases.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No existing mappings found.</Text>
+          <Text style={styles.emptySubtext}>
+            Create mappings by linking Discord messages to characters.
+          </Text>
+        </View>
       ) : (
-        existingAliases.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No existing mappings found.</Text>
-            <Text style={styles.emptySubtext}>
-              Create mappings by linking Discord messages to characters.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={existingAliases}
-            renderItem={renderExistingAlias}
-            keyExtractor={(item, index) => `${item.alias}-${item.discordUserId}-${index}`}
-            style={styles.list}
-            contentContainerStyle={styles.listContent}
-          />
-        )
+        <FlatList
+          data={existingAliases}
+          renderItem={renderExistingAlias}
+          keyExtractor={(item, index) =>
+            `${item.alias}-${item.discordUserId}-${index}`
+          }
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+        />
       )}
     </View>
   );

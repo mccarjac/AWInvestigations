@@ -38,6 +38,7 @@ interface FactionFormData {
   imageUri?: string;
   imageUris?: string[];
   relationships?: FactionRelationship[];
+  retired?: boolean;
 }
 
 export const FactionFormScreen: React.FC = () => {
@@ -51,6 +52,7 @@ export const FactionFormScreen: React.FC = () => {
     imageUri: undefined,
     imageUris: [],
     relationships: [],
+    retired: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,6 +85,7 @@ export const FactionFormScreen: React.FC = () => {
             imageUris:
               faction.imageUris || (faction.imageUri ? [faction.imageUri] : []),
             relationships: faction.relationships || [],
+            retired: faction.retired ?? false,
           });
         }
       }
@@ -248,6 +251,7 @@ export const FactionFormScreen: React.FC = () => {
           imageUri: formData.imageUri,
           imageUris: formData.imageUris,
           relationships: formData.relationships || [],
+          retired: formData.retired,
         });
 
         if (updated) {
@@ -272,6 +276,7 @@ export const FactionFormScreen: React.FC = () => {
           imageUri: formData.imageUri,
           imageUris: formData.imageUris,
           relationships: formData.relationships || [],
+          retired: formData.retired,
         });
 
         if (success) {
@@ -459,6 +464,36 @@ export const FactionFormScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {factionName && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Faction Status</Text>
+            <Text style={styles.helperText}>
+              Retired factions will not appear in faction lists, influence
+              reports, or be available for characters and events to join.
+            </Text>
+            <TouchableOpacity
+              style={styles.retiredToggle}
+              onPress={() =>
+                setFormData({ ...formData, retired: !formData.retired })
+              }
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  formData.retired && styles.checkboxChecked,
+                ]}
+              >
+                {formData.retired && (
+                  <Text style={styles.checkboxCheckmark}>✓</Text>
+                )}
+              </View>
+              <Text style={styles.retiredToggleText}>
+                {formData.retired ? 'Faction is Retired' : 'Faction is Active'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Relationship Modal */}
@@ -865,6 +900,40 @@ const styles = StyleSheet.create({
   },
   modalAddButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+  },
+  retiredToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    backgroundColor: themeColors.elevated,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: themeColors.border,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: themeColors.surface,
+  },
+  checkboxChecked: {
+    backgroundColor: themeColors.accent.warning,
+    borderColor: themeColors.accent.warning,
+  },
+  checkboxCheckmark: {
+    color: themeColors.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  retiredToggleText: {
+    fontSize: 15,
     fontWeight: '600',
     color: themeColors.text.primary,
   },

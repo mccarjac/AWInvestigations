@@ -192,8 +192,7 @@ export const addDiscordMessages = async (
   const allMessages = Array.from(existingMap.values());
   // Sort by timestamp (oldest first)
   allMessages.sort(
-    (a, b) =>
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
   await saveDiscordMessages(allMessages);

@@ -139,6 +139,7 @@ To avoid hitting Expo's free tier build limits (15 builds per month) and prevent
 ### Combined Behavior
 
 **Both conditions must be met** for a build to proceed:
+
 - ✅ Time >= 48 hours AND source changes detected = **Build proceeds**
 - ❌ Time < 48 hours OR no source changes = **Build skipped**
 

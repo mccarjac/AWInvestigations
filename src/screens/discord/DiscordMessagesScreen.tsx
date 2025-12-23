@@ -23,7 +23,7 @@ import {
 import { loadCharacters } from '@/utils/characterStorage';
 import { confirmCharacterMapping } from '@/utils/discordCharacterExtraction';
 
-type FilterType = 'all' | 'untagged' | 'tagged';
+type FilterType = 'all' | 'untagged' | 'tagged' | 'ignored';
 
 export const DiscordMessagesScreen: React.FC = () => {
   const [messages, setMessages] = useState<DiscordMessage[]>([]);
@@ -81,9 +81,14 @@ export const DiscordMessagesScreen: React.FC = () => {
   const applyFilter = (msgs: DiscordMessage[], filterType: FilterType) => {
     let filtered = msgs;
     if (filterType === 'untagged') {
-      filtered = msgs.filter(m => !m.characterId);
+      filtered = msgs.filter(m => !m.characterId && !m.ignored);
     } else if (filterType === 'tagged') {
-      filtered = msgs.filter(m => m.characterId);
+      filtered = msgs.filter(m => m.characterId && !m.ignored);
+    } else if (filterType === 'ignored') {
+      filtered = msgs.filter(m => m.ignored);
+    } else {
+      // 'all' - exclude ignored messages
+      filtered = msgs.filter(m => !m.ignored);
     }
     setFilteredMessages(filtered);
   };
@@ -167,6 +172,44 @@ export const DiscordMessagesScreen: React.FC = () => {
     }
   };
 
+  const handleIgnoreMessage = async (message: DiscordMessage) => {
+    const newIgnoredState = !message.ignored;
+    const actionText = newIgnoredState ? 'ignore' : 'unignore';
+
+    Alert.alert(
+      `${newIgnoredState ? 'Ignore' : 'Unignore'} Message`,
+      `Are you sure you want to ${actionText} this message? ${
+        newIgnoredState
+          ? 'Ignored messages will not appear in the main message list.'
+          : 'This message will appear in the main message list again.'
+      }`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: newIgnoredState ? 'Ignore' : 'Unignore',
+          onPress: async () => {
+            try {
+              const updatedMessages = messages.map(m =>
+                m.id === message.id ? { ...m, ignored: newIgnoredState } : m
+              );
+              await saveDiscordMessages(updatedMessages);
+              await loadData();
+              Alert.alert(
+                'Success',
+                `Message ${newIgnoredState ? 'ignored' : 'unignored'} successfully`,
+                [{ text: 'OK' }]
+              );
+            } catch {
+              Alert.alert('Error', `Failed to ${actionText} message`, [
+                { text: 'OK' },
+              ]);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
@@ -181,54 +224,81 @@ export const DiscordMessagesScreen: React.FC = () => {
   const renderMessage = ({ item }: { item: DiscordMessage }) => {
     const characterName = getCharacterName(item.characterId);
     const isUntagged = !item.characterId;
+    const isIgnored = item.ignored;
 
     return (
-      <TouchableOpacity
-        style={[styles.messageCard, isUntagged && styles.untaggedCard]}
-        onPress={() => openMappingModal(item)}
-        activeOpacity={0.7}
+      <View
+        style={[
+          styles.messageCard,
+          isUntagged && styles.untaggedCard,
+          isIgnored && styles.ignoredCard,
+        ]}
       >
-        <View style={styles.messageHeader}>
-          <View style={styles.authorInfo}>
-            <Text style={styles.authorName}>{item.authorUsername}</Text>
-            <Text style={styles.discordId}>ID: {item.authorId}</Text>
+        <TouchableOpacity
+          onPress={() => openMappingModal(item)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.messageHeader}>
+            <View style={styles.authorInfo}>
+              <Text style={styles.authorName}>{item.authorUsername}</Text>
+              <Text style={styles.discordId}>ID: {item.authorId}</Text>
+            </View>
+            <View style={styles.tagInfo}>
+              {isIgnored ? (
+                <View style={styles.ignoredBadge}>
+                  <Text style={styles.ignoredBadgeText}>IGNORED</Text>
+                </View>
+              ) : isUntagged ? (
+                <View style={styles.untaggedBadge}>
+                  <Text style={styles.untaggedBadgeText}>UNTAGGED</Text>
+                </View>
+              ) : (
+                <View style={styles.taggedBadge}>
+                  <Text style={styles.taggedBadgeText}>{characterName}</Text>
+                </View>
+              )}
+            </View>
           </View>
-          <View style={styles.tagInfo}>
-            {isUntagged ? (
-              <View style={styles.untaggedBadge}>
-                <Text style={styles.untaggedBadgeText}>UNTAGGED</Text>
-              </View>
-            ) : (
-              <View style={styles.taggedBadge}>
-                <Text style={styles.taggedBadgeText}>{characterName}</Text>
-              </View>
-            )}
-          </View>
-        </View>
 
-        {item.extractedCharacterName && (
-          <View style={styles.extractedNameContainer}>
-            <Text style={styles.extractedNameLabel}>Extracted Name:</Text>
-            <Text style={styles.extractedName}>
-              {item.extractedCharacterName}
-            </Text>
-          </View>
-        )}
+          {item.extractedCharacterName && (
+            <View style={styles.extractedNameContainer}>
+              <Text style={styles.extractedNameLabel}>Extracted Name:</Text>
+              <Text style={styles.extractedName}>
+                {item.extractedCharacterName}
+              </Text>
+            </View>
+          )}
 
-        <Text style={styles.messageContent} numberOfLines={4}>
-          {item.content ? item.content : '[No text content]'}
-        </Text>
+          <Text style={styles.messageContent} numberOfLines={4}>
+            {item.content ? item.content : '[No text content]'}
+          </Text>
 
-        {item.imageUris && item.imageUris.length > 0 && (
-          <View style={styles.imagesContainer}>
-            <Text style={styles.imagesLabel}>
-              📷 {item.imageUris.length} image(s)
-            </Text>
-          </View>
-        )}
+          {item.imageUris && item.imageUris.length > 0 && (
+            <View style={styles.imagesContainer}>
+              <Text style={styles.imagesLabel}>
+                📷 {item.imageUris.length} image(s)
+              </Text>
+            </View>
+          )}
 
-        <Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
-      </TouchableOpacity>
+          <Text style={styles.timestamp}>
+            {formatTimestamp(item.timestamp)}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Ignore/Unignore Button */}
+        <TouchableOpacity
+          style={styles.ignoreButton}
+          onPress={e => {
+            e.stopPropagation();
+            handleIgnoreMessage(item);
+          }}
+        >
+          <Text style={styles.ignoreButtonText}>
+            {isIgnored ? '↻ Unignore' : '✕ Ignore'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -378,7 +448,7 @@ export const DiscordMessagesScreen: React.FC = () => {
               filter === 'all' && styles.activeFilterText,
             ]}
           >
-            All ({messages.length})
+            All ({messages.filter(m => !m.ignored).length})
           </Text>
         </TouchableOpacity>
 
@@ -395,7 +465,8 @@ export const DiscordMessagesScreen: React.FC = () => {
               filter === 'untagged' && styles.activeFilterText,
             ]}
           >
-            Untagged ({messages.filter(m => !m.characterId).length})
+            Untagged (
+            {messages.filter(m => !m.characterId && !m.ignored).length})
           </Text>
         </TouchableOpacity>
 
@@ -412,7 +483,24 @@ export const DiscordMessagesScreen: React.FC = () => {
               filter === 'tagged' && styles.activeFilterText,
             ]}
           >
-            Tagged ({messages.filter(m => m.characterId).length})
+            Tagged ({messages.filter(m => m.characterId && !m.ignored).length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            filter === 'ignored' && styles.activeFilter,
+          ]}
+          onPress={() => handleFilterChange('ignored')}
+        >
+          <Text
+            style={[
+              styles.filterText,
+              filter === 'ignored' && styles.activeFilterText,
+            ]}
+          >
+            Ignored ({messages.filter(m => m.ignored).length})
           </Text>
         </TouchableOpacity>
       </View>
@@ -515,6 +603,11 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: themeColors.accent.warning,
   },
+  ignoredCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: themeColors.text.muted,
+    opacity: 0.6,
+  },
   messageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -560,6 +653,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
+  ignoredBadge: {
+    backgroundColor: themeColors.text.muted,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  ignoredBadgeText: {
+    color: themeColors.primary,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   extractedNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -596,6 +700,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: themeColors.text.muted,
     marginTop: 4,
+  },
+  ignoreButton: {
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: themeColors.elevated,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    alignSelf: 'flex-start',
+  },
+  ignoreButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: themeColors.text.secondary,
   },
   emptyContainer: {
     flex: 1,

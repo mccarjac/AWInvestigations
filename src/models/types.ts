@@ -165,6 +165,7 @@ export interface DiscordMessage {
   imageUris?: string[]; // Downloaded image URIs
   attachments?: DiscordAttachment[]; // Original attachment metadata
   createdAt: string; // When stored locally
+  ignored?: boolean; // Whether to ignore this message (not from any character)
 }
 
 export interface DiscordCharacterAlias {
