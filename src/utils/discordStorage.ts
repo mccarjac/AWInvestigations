@@ -696,9 +696,24 @@ export const importDiscordDataset = async (
     await saveDiscordCharacterAliases(Array.from(aliasMap.values()));
 
     // Merge messages (by message ID)
+    // When merging, prefer imported values but preserve local-only fields if not in import
     const messageMap = new Map<string, DiscordMessage>();
     existingMessages.forEach(m => messageMap.set(m.id, m));
-    dataset.messages.forEach(m => messageMap.set(m.id, m));
+    dataset.messages.forEach(m => {
+      const existing = messageMap.get(m.id);
+      if (existing) {
+        // Merge: prefer imported data, but preserve local fields if not in import
+        messageMap.set(m.id, {
+          ...existing, // Start with existing (for any fields not in import)
+          ...m, // Override with imported data
+          // Special handling: if imported has explicit 'ignored' value, use it;
+          // otherwise preserve existing
+          ignored: m.ignored !== undefined ? m.ignored : existing.ignored,
+        });
+      } else {
+        messageMap.set(m.id, m);
+      }
+    });
     const mergedMessages = Array.from(messageMap.values());
     mergedMessages.sort(
       (a, b) =>
