@@ -44,6 +44,23 @@ export const getDiscordConfig = async (): Promise<DiscordConfig> => {
         updatedAt: new Date().toISOString(),
       };
       config.serverConfigs.push(legacyConfig);
+      
+      // Update existing messages to tag them with the legacy server config ID
+      const existingMessages = await SafeAsyncStorageJSONParser.getItem<DiscordMessage[]>(
+        DISCORD_MESSAGES_KEY
+      );
+      if (existingMessages && existingMessages.length > 0) {
+        const updatedMessages = existingMessages.map(msg => ({
+          ...msg,
+          serverConfigId: msg.serverConfigId || 'legacy-default',
+          guildId: msg.guildId || config.guildId,
+        }));
+        await SafeAsyncStorageJSONParser.setItem(DISCORD_MESSAGES_KEY, updatedMessages);
+        console.log(
+          `[Discord Storage] Tagged ${updatedMessages.length} existing messages with legacy-default serverConfigId`
+        );
+      }
+      
       // Save migrated config
       await saveDiscordConfig(config);
       console.log('[Discord Storage] Migrated legacy config to multi-server format');

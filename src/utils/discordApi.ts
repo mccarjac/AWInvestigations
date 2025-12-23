@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { DiscordMessage, DiscordAttachment, DiscordServerConfig } from '@models/types';
+import { DiscordMessage, DiscordAttachment } from '@models/types';
 import {
   getDiscordConfig,
   getDiscordServerConfig,

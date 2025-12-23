@@ -14,13 +14,12 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
-import { DiscordServerConfig } from '@models/types';
 import {
   addDiscordServerConfig,
   updateDiscordServerConfig,
   getDiscordServerConfig,
 } from '@/utils/discordStorage';
-import { testDiscordConnection } from '@/utils/discordApi';
+import { verifyDiscordToken, verifyChannelAccess } from '@/utils/discordApi';
 
 type DiscordServerFormRouteProp = RouteProp<
   RootStackParamList,
@@ -79,32 +78,25 @@ export const DiscordServerFormScreen: React.FC = () => {
 
     setTesting(true);
     try {
-      // For testing, we need to temporarily save or test directly
-      // For now, we'll test if we're editing an existing config
-      if (isEditing && serverConfigId) {
-        // Update temporarily to test
-        await updateDiscordServerConfig(serverConfigId, {
-          botToken: botToken.trim(),
-          channelId: channelId.trim(),
-          guildId: guildId.trim() || undefined,
-        });
-        const result = await testDiscordConnection(serverConfigId);
-        if (result.success) {
-          Alert.alert('Success', 'Connection test successful!', [{ text: 'OK' }]);
-        } else {
-          Alert.alert('Connection Failed', result.error || 'Unknown error', [
-            { text: 'OK' },
-          ]);
-        }
-      } else {
-        // For new configs, we can't easily test without saving
-        // So we'll do basic validation
-        Alert.alert(
-          'Info',
-          'Connection testing is available after saving. Please save the configuration first.',
-          [{ text: 'OK' }]
-        );
+      // Test without saving by using the direct API verification functions
+      const tokenValid = await verifyDiscordToken(botToken.trim());
+      if (!tokenValid) {
+        Alert.alert('Connection Failed', 'Invalid bot token', [{ text: 'OK' }]);
+        return;
       }
+
+      const channelAccessible = await verifyChannelAccess(
+        botToken.trim(),
+        channelId.trim()
+      );
+      if (!channelAccessible) {
+        Alert.alert('Connection Failed', 'Cannot access channel', [
+          { text: 'OK' },
+        ]);
+        return;
+      }
+
+      Alert.alert('Success', 'Connection test successful!', [{ text: 'OK' }]);
     } catch (error) {
       Alert.alert(
         'Connection Failed',
@@ -391,7 +383,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   required: {
-    color: '#F44336',
+    color: themeColors.accent.danger,
   },
   input: {
     backgroundColor: themeColors.surface,

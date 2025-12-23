@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#F44336',
+    borderColor: themeColors.accent.danger,
   },
   actionButtonDisabled: {
     opacity: 0.5,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteButtonText: {
-    color: '#F44336',
+    color: themeColors.accent.danger,
   },
   emptyContainer: {
     flex: 1,

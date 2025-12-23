@@ -45,6 +45,14 @@ export const DiscordMessageContextScreen: React.FC = () => {
         console.log(
           `[DiscordMessageContext] Filtered to ${contextMessages.length} messages from same server config`
         );
+      } else if (targetMessage && targetMessage.channelId) {
+        // Fallback for legacy messages without serverConfigId: filter by channelId
+        contextMessages = allMessages.filter(
+          m => m.channelId === targetMessage.channelId
+        );
+        console.log(
+          `[DiscordMessageContext] Filtered to ${contextMessages.length} messages from same channel (no serverConfigId)`
+        );
       }
       
       // Sort by timestamp (oldest first for conversation context)

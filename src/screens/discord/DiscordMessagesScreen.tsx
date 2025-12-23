@@ -626,10 +626,6 @@ const styles = StyleSheet.create({
     color: themeColors.text.secondary,
     fontWeight: '500',
   },
-  subtitle: {
-    fontSize: 14,
-    color: themeColors.text.secondary,
-  },
   filterContainer: {
     flexDirection: 'row',
     padding: 8,
