@@ -14,9 +14,10 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import { colors as themeColors } from '@/styles/theme';
-import type { DiscordMessage, GameCharacter } from '@models/types';
+import type { DiscordMessage, GameCharacter, DiscordServerConfig } from '@models/types';
 import {
   getDiscordMessages,
+  getDiscordServerConfigs,
   saveDiscordMessages,
   applyAliasToMessages,
 } from '@/utils/discordStorage';
@@ -30,6 +31,8 @@ export const DiscordMessagesScreen: React.FC = () => {
   const [filteredMessages, setFilteredMessages] = useState<DiscordMessage[]>(
     []
   );
+  const [serverConfigs, setServerConfigs] = useState<DiscordServerConfig[]>([]);
+  const [selectedServerConfigId, setSelectedServerConfigId] = useState<string>('all');
   const [characters, setCharacters] = useState<GameCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>('all');
@@ -43,9 +46,10 @@ export const DiscordMessagesScreen: React.FC = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [msgs, chars] = await Promise.all([
-        getDiscordMessages(),
+      const [msgs, chars, configs] = await Promise.all([
+        getDiscordMessages(selectedServerConfigId === 'all' ? undefined : selectedServerConfigId),
         loadCharacters(),
+        getDiscordServerConfigs(),
       ]);
 
       console.log(`[Discord Messages Screen] Loaded ${msgs.length} messages`);
@@ -57,6 +61,7 @@ export const DiscordMessagesScreen: React.FC = () => {
             content: msgs[0].content?.substring(0, 100) || '(empty)',
             contentLength: msgs[0].content?.length || 0,
             contentType: typeof msgs[0].content,
+            serverConfigId: msgs[0].serverConfigId,
           })
         );
       }
@@ -69,6 +74,7 @@ export const DiscordMessagesScreen: React.FC = () => {
 
       setMessages(sortedMsgs);
       setCharacters(chars);
+      setServerConfigs(configs);
       applyFilter(sortedMsgs, filter);
     } catch (error) {
       console.error('[Discord Messages Screen] Error loading data:', error);
@@ -76,7 +82,7 @@ export const DiscordMessagesScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, selectedServerConfigId]);
 
   const applyFilter = (msgs: DiscordMessage[], filterType: FilterType) => {
     let filtered = msgs;
@@ -225,6 +231,7 @@ export const DiscordMessagesScreen: React.FC = () => {
     const characterName = getCharacterName(item.characterId);
     const isUntagged = !item.characterId;
     const isIgnored = item.ignored;
+    const serverConfig = serverConfigs.find(sc => sc.id === item.serverConfigId);
 
     return (
       <View
@@ -238,6 +245,15 @@ export const DiscordMessagesScreen: React.FC = () => {
           onPress={() => openMappingModal(item)}
           activeOpacity={0.7}
         >
+          {/* Server/Channel indicator */}
+          {serverConfig && (
+            <View style={styles.serverIndicator}>
+              <Text style={styles.serverIndicatorText}>
+                📡 {serverConfig.name}
+              </Text>
+            </View>
+          )}
+          
           <View style={styles.messageHeader}>
             <View style={styles.authorInfo}>
               <Text style={styles.authorName}>{item.authorUsername}</Text>
@@ -437,6 +453,30 @@ export const DiscordMessagesScreen: React.FC = () => {
         <Text style={styles.subtitle}>{messages.length} total messages</Text>
       </View>
 
+      {/* Server/Channel Filter */}
+      {serverConfigs.length > 0 && (
+        <View style={styles.serverFilterContainer}>
+          <Text style={styles.serverFilterLabel}>Server/Channel:</Text>
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={selectedServerConfigId}
+              onValueChange={(value) => setSelectedServerConfigId(value)}
+              style={styles.picker}
+              dropdownIconColor={'#FFFFFF'}
+            >
+              <Picker.Item label="All Servers/Channels" value="all" />
+              {serverConfigs.map((config) => (
+                <Picker.Item
+                  key={config.id}
+                  label={config.name}
+                  value={config.id}
+                />
+              ))}
+            </Picker>
+          </View>
+        </View>
+      )}
+
       <View style={styles.filterContainer}>
         <TouchableOpacity
           style={[styles.filterButton, filter === 'all' && styles.activeFilter]}
@@ -561,6 +601,30 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: themeColors.text.secondary,
+  },
+  serverFilterContainer: {
+    backgroundColor: themeColors.surface,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.border,
+  },
+  serverFilterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.text.primary,
+    marginBottom: 8,
+  },
+  serverIndicator: {
+    backgroundColor: themeColors.elevated,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  serverIndicatorText: {
+    fontSize: 11,
+    color: themeColors.text.secondary,
+    fontWeight: '500',
   },
   filterContainer: {
     flexDirection: 'row',

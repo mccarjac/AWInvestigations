@@ -37,6 +37,8 @@ import { EventsFormScreen } from './src/screens/events/EventsFormScreen';
 import { EventsDetailScreen } from './src/screens/events/EventsDetailScreen';
 import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
 import { DiscordConfigScreen } from './src/screens/discord/DiscordConfigScreen';
+import { DiscordServerListScreen } from './src/screens/discord/DiscordServerListScreen';
+import { DiscordServerFormScreen } from './src/screens/discord/DiscordServerFormScreen';
 import { DiscordCharacterMappingScreen } from './src/screens/discord/DiscordCharacterMappingScreen';
 import { DiscordMessagesScreen } from './src/screens/discord/DiscordMessagesScreen';
 import { DiscordMessageContextScreen } from './src/screens/discord/DiscordMessageContextScreen';
@@ -142,9 +144,18 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
       {discordExpanded && (
         <View style={drawerStyles.sectionContent}>
           <DrawerItem
-            label="Discord Setup"
+            label="Discord Setup (Legacy)"
             onPress={() => navigation.navigate('DiscordConfig')}
             focused={isActive('DiscordConfig')}
+            activeTintColor="#6C5CE7"
+            inactiveTintColor="#B8B8CC"
+            activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+            labelStyle={drawerStyles.drawerLabelIndented}
+          />
+          <DrawerItem
+            label="Server/Channel Management"
+            onPress={() => navigation.navigate('DiscordServers')}
+            focused={isActive('DiscordServers')}
             activeTintColor="#6C5CE7"
             inactiveTintColor="#B8B8CC"
             activeBackgroundColor="rgba(108, 92, 231, 0.1)"
@@ -290,8 +301,16 @@ function MainDrawer() {
         name="DiscordConfig"
         component={DiscordConfigScreen}
         options={{
-          title: 'Discord Setup',
-          drawerLabel: 'Discord Setup',
+          title: 'Discord Setup (Legacy)',
+          drawerLabel: 'Discord Setup (Legacy)',
+        }}
+      />
+      <Drawer.Screen
+        name="DiscordServers"
+        component={DiscordServerListScreen}
+        options={{
+          title: 'Discord Servers',
+          drawerLabel: 'Discord Servers',
         }}
       />
       <Drawer.Screen
@@ -440,6 +459,11 @@ export default function App() {
                 name="DiscordMessageContext"
                 component={DiscordMessageContextScreen}
                 options={{ title: 'Message Context' }}
+              />
+              <Stack.Screen
+                name="DiscordServerForm"
+                component={DiscordServerFormScreen}
+                options={{ title: 'Server Configuration' }}
               />
             </Stack.Navigator>
           </NavigationContainer>

@@ -2,7 +2,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { DiscordMessage, DiscordAttachment } from '@models/types';
 import {
   getDiscordConfig,
-  saveDiscordConfig,
+  getDiscordServerConfig,
+  updateDiscordServerConfig,
   addDiscordMessages,
   getCharacterIdForDiscordUser,
   getDiscordMessages,
@@ -17,10 +18,32 @@ const DISCORD_API_BASE = 'https://discord.com/api/v10';
 
 /**
  * Check if Discord is configured and enabled
+ * Can check globally or for a specific server config
  */
-export const isDiscordConfigured = async (): Promise<boolean> => {
+export const isDiscordConfigured = async (
+  serverConfigId?: string
+): Promise<boolean> => {
   const config = await getDiscordConfig();
-  return config.enabled && !!config.botToken && !!config.channelId;
+  
+  if (!config.enabled) {
+    return false;
+  }
+
+  // If no specific server config, check if ANY server config is valid
+  if (!serverConfigId) {
+    // Legacy check
+    if (config.botToken && config.channelId) {
+      return true;
+    }
+    // Multi-server check
+    return (config.serverConfigs || []).some(
+      sc => sc.enabled && sc.botToken && sc.channelId
+    );
+  }
+
+  // Check specific server config
+  const serverConfig = await getDiscordServerConfig(serverConfigId);
+  return !!serverConfig && serverConfig.enabled && !!serverConfig.botToken && !!serverConfig.channelId;
 };
 
 /**
@@ -78,25 +101,30 @@ interface DiscordApiMessage {
 }
 
 /**
- * Fetch messages from a Discord channel
+ * Fetch messages from a Discord channel using a specific server config
  */
 export const fetchDiscordMessages = async (
+  serverConfigId: string,
   limit: number = 100,
   before?: string
 ): Promise<DiscordMessage[]> => {
-  const config = await getDiscordConfig();
-  if (!config.botToken || !config.channelId) {
-    throw new Error('Discord not configured');
+  const serverConfig = await getDiscordServerConfig(serverConfigId);
+  if (!serverConfig) {
+    throw new Error(`Server config not found: ${serverConfigId}`);
+  }
+  
+  if (!serverConfig.botToken || !serverConfig.channelId) {
+    throw new Error('Discord server config incomplete');
   }
 
-  let url = `${DISCORD_API_BASE}/channels/${config.channelId}/messages?limit=${limit}`;
+  let url = `${DISCORD_API_BASE}/channels/${serverConfig.channelId}/messages?limit=${limit}`;
   if (before) {
     url += `&before=${before}`;
   }
 
   const response = await fetch(url, {
     headers: {
-      Authorization: `Bot ${config.botToken}`,
+      Authorization: `Bot ${serverConfig.botToken}`,
     },
   });
 
@@ -110,7 +138,7 @@ export const fetchDiscordMessages = async (
   const messages: DiscordApiMessage[] = await response.json();
 
   console.log(
-    `[Discord API] Fetched ${messages.length} messages from Discord API`
+    `[Discord API] Fetched ${messages.length} messages from Discord API for ${serverConfig.name}`
   );
   if (messages.length > 0) {
     console.log(
@@ -196,6 +224,8 @@ export const fetchDiscordMessages = async (
       return {
         id: msg.id,
         channelId: msg.channel_id,
+        guildId: serverConfig.guildId,
+        serverConfigId: serverConfig.id,
         authorId: msg.author.id,
         authorUsername: `${msg.author.username}#${msg.author.discriminator}`,
         content: msg.content,
@@ -302,17 +332,22 @@ const downloadDiscordImage = async (
 };
 
 /**
- * Sync Discord messages (fetch new messages and store them)
+ * Sync Discord messages for a specific server config
  */
-export const syncDiscordMessages = async (
+export const syncDiscordMessagesForServer = async (
+  serverConfigId: string,
   onProgress?: (status: string) => void
 ): Promise<{ newMessages: number; totalMessages: number }> => {
-  const configured = await isDiscordConfigured();
-  if (!configured) {
-    throw new Error('Discord is not configured');
+  const serverConfig = await getDiscordServerConfig(serverConfigId);
+  if (!serverConfig) {
+    throw new Error(`Server config not found: ${serverConfigId}`);
   }
 
-  onProgress?.('Fetching messages from Discord...');
+  if (!serverConfig.enabled || !serverConfig.botToken || !serverConfig.channelId) {
+    throw new Error('Server config is not properly configured or enabled');
+  }
+
+  onProgress?.(`Fetching messages from ${serverConfig.name}...`);
 
   // Fetch initial batch
   let allMessages: DiscordMessage[] = [];
@@ -322,31 +357,31 @@ export const syncDiscordMessages = async (
   const maxFetches = 10; // Limit to 1000 messages per sync (100 per fetch)
 
   while (hasMore && fetchCount < maxFetches) {
-    const messages = await fetchDiscordMessages(100, lastMessageId);
+    const messages = await fetchDiscordMessages(serverConfigId, 100, lastMessageId);
     if (messages.length === 0) {
       hasMore = false;
     } else {
       allMessages = [...allMessages, ...messages];
       lastMessageId = messages[messages.length - 1].id;
       fetchCount++;
-      onProgress?.(`Fetched ${allMessages.length} messages from Discord...`);
+      onProgress?.(`Fetched ${allMessages.length} messages from ${serverConfig.name}...`);
     }
   }
 
   // Store messages
   onProgress?.('Saving messages to local storage...');
-  const existingMessages = await getDiscordMessages();
+  const existingMessages = await getDiscordMessages(serverConfigId);
   const beforeCount = existingMessages.length;
   await addDiscordMessages(allMessages);
-  const updatedMessages = await getDiscordMessages();
+  const updatedMessages = await getDiscordMessages(serverConfigId);
   const afterCount = updatedMessages.length;
 
-  // Update last sync timestamp
-  const config = await getDiscordConfig();
-  config.lastSync = new Date().toISOString();
-  await saveDiscordConfig(config);
+  // Update last sync timestamp for this server
+  await updateDiscordServerConfig(serverConfigId, {
+    lastSync: new Date().toISOString(),
+  });
 
-  onProgress?.('Sync complete!');
+  onProgress?.(`Sync complete for ${serverConfig.name}!`);
 
   return {
     newMessages: afterCount - beforeCount,
@@ -355,13 +390,87 @@ export const syncDiscordMessages = async (
 };
 
 /**
- * Test Discord connection
+ * Sync Discord messages for all enabled server configs
  */
-export const testDiscordConnection = async (): Promise<{
+export const syncDiscordMessages = async (
+  onProgress?: (status: string) => void
+): Promise<{ newMessages: number; totalMessages: number; servers: number }> => {
+  const config = await getDiscordConfig();
+  const serverConfigs = (config.serverConfigs || []).filter(sc => sc.enabled);
+
+  if (serverConfigs.length === 0) {
+    throw new Error('No Discord server configurations are enabled');
+  }
+
+  let totalNewMessages = 0;
+  let totalMessages = 0;
+
+  for (let i = 0; i < serverConfigs.length; i++) {
+    const serverConfig = serverConfigs[i];
+    onProgress?.(`Syncing ${i + 1}/${serverConfigs.length}: ${serverConfig.name}...`);
+    
+    try {
+      const result = await syncDiscordMessagesForServer(
+        serverConfig.id,
+        (status) => onProgress?.(`[${serverConfig.name}] ${status}`)
+      );
+      totalNewMessages += result.newMessages;
+      totalMessages += result.totalMessages;
+    } catch (error) {
+      console.error(`[Discord Sync] Failed to sync ${serverConfig.name}:`, error);
+      onProgress?.(`⚠️ Failed to sync ${serverConfig.name}`);
+    }
+  }
+
+  onProgress?.('All servers synced!');
+
+  return {
+    newMessages: totalNewMessages,
+    totalMessages: totalMessages,
+    servers: serverConfigs.length,
+  };
+};
+
+/**
+ * Test Discord connection for a specific server config
+ */
+export const testDiscordConnection = async (
+  serverConfigId?: string
+): Promise<{
   success: boolean;
   error?: string;
 }> => {
   try {
+    // If specific server config provided, test that one
+    if (serverConfigId) {
+      const serverConfig = await getDiscordServerConfig(serverConfigId);
+      if (!serverConfig) {
+        return { success: false, error: 'Server config not found' };
+      }
+      if (!serverConfig.botToken) {
+        return { success: false, error: 'Bot token not configured' };
+      }
+      if (!serverConfig.channelId) {
+        return { success: false, error: 'Channel ID not configured' };
+      }
+
+      const tokenValid = await verifyDiscordToken(serverConfig.botToken);
+      if (!tokenValid) {
+        return { success: false, error: 'Invalid bot token' };
+      }
+
+      const channelAccessible = await verifyChannelAccess(
+        serverConfig.botToken,
+        serverConfig.channelId
+      );
+      if (!channelAccessible) {
+        return { success: false, error: 'Cannot access channel' };
+      }
+
+      return { success: true };
+    }
+
+    // Legacy: Test old config format
     const config = await getDiscordConfig();
     if (!config.botToken) {
       return { success: false, error: 'Bot token not configured' };
