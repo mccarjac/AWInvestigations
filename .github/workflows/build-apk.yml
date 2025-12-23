@@ -109,14 +109,14 @@ jobs:
           fi
           
           # Check for changes in /src directory since last build
-          if git diff --quiet "$LAST_BUILD_COMMIT" HEAD -- 'src/'; then
+          if git diff --quiet "$LAST_BUILD_COMMIT" HEAD -- src/; then
             echo "⏭️  No changes detected in /src directory since last build."
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "✅ Source file changes detected in /src directory."
             # Show what changed
             echo "Changed files:"
-            git diff --name-only "$LAST_BUILD_COMMIT" HEAD -- 'src/' | sed 's/^/  - /'
+            git diff --name-only "$LAST_BUILD_COMMIT" HEAD -- src/ | sed 's/^/  - /'
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
