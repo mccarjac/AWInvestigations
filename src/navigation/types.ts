@@ -7,6 +7,9 @@ export type RootDrawerParamList = {
   Locations: undefined;
   Events: undefined;
   InfluenceReport: undefined;
+  DiscordConfig: undefined;
+  DiscordCharacterMapping: undefined;
+  DiscordMessages: undefined;
 };
 
 export type RootStackParamList = {
@@ -27,4 +30,5 @@ export type RootStackParamList = {
   EventsTimeline: undefined;
   EventsForm: { event?: GameEvent };
   EventsDetail: { eventId: string };
+  DiscordMessageContext: { messageId: string; characterId?: string };
 };

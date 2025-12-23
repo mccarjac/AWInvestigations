@@ -9,6 +9,7 @@ import {
 } from '@models/types';
 import { v4 as uuidv4 } from 'uuid';
 import { SafeAsyncStorageJSONParser } from './safeAsyncStorageJSONParser';
+import { exportDiscordDataset, importDiscordDataset } from './discordStorage';
 
 export interface FactionRelationship {
   factionName: string;
@@ -142,11 +143,15 @@ export const exportDataset = async (): Promise<string> => {
   };
   const events = eventData || { events: [], version: '1.0', lastUpdated: '' };
 
+  // Export Discord data
+  const discordData = await exportDiscordDataset();
+
   const combinedDataset = {
     characters: characters.characters || [],
     factions: factions.factions || [],
     locations: locations.locations || [],
     events: events.events || [],
+    discord: discordData,
     version: '1.0',
     lastUpdated: new Date().toISOString(),
   };
@@ -376,6 +381,13 @@ export const importDataset = async (jsonData: string): Promise<boolean> => {
       };
       await SafeAsyncStorageJSONParser.setItem(EVENT_STORAGE_KEY, eventDataset);
       console.log(`[importDataset] Saved ${dataset.events.length} events`);
+    }
+
+    // Import Discord data if present
+    if (dataset.discord) {
+      console.log('[importDataset] Importing Discord data...');
+      await importDiscordDataset(dataset.discord, true); // Merge mode
+      console.log('[importDataset] Discord data imported');
     }
 
     console.log('[importDataset] Import completed successfully');
