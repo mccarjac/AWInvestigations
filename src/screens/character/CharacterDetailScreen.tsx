@@ -401,6 +401,13 @@ export const CharacterDetailScreen: React.FC = () => {
     );
   };
 
+  const handleViewMessageContext = (messageId: string) => {
+    navigation.navigate('DiscordMessageContext', {
+      messageId,
+      characterId: character.id,
+    });
+  };
+
   const renderDiscordConversations = () => {
     if (!discordMessages || discordMessages.length === 0) {
       return null;
@@ -433,6 +440,12 @@ export const CharacterDetailScreen: React.FC = () => {
                 📷 {msg.images.length} image{msg.images.length !== 1 ? 's' : ''}
               </Text>
             )}
+            <TouchableOpacity
+              style={styles.viewContextButton}
+              onPress={() => handleViewMessageContext(msg.id)}
+            >
+              <Text style={styles.viewContextButtonText}>View Context</Text>
+            </TouchableOpacity>
           </View>
         ))}
       </CollapsibleSection>
@@ -755,5 +768,18 @@ const styles = StyleSheet.create({
     color: themeColors.text.secondary,
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  viewContextButton: {
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: themeColors.primary,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  viewContextButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

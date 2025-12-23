@@ -30,4 +30,5 @@ export type RootStackParamList = {
   EventsTimeline: undefined;
   EventsForm: { event?: GameEvent };
   EventsDetail: { eventId: string };
+  DiscordMessageContext: { messageId: string; characterId?: string };
 };

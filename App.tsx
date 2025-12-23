@@ -1,8 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItem,
+  DrawerContentComponentProps,
+} from '@react-navigation/drawer';
+import {
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import {
   RootStackParamList,
   RootDrawerParamList,
@@ -28,6 +39,7 @@ import { InfluenceReportScreen } from './src/screens/InfluenceReportScreen';
 import { DiscordConfigScreen } from './src/screens/discord/DiscordConfigScreen';
 import { DiscordCharacterMappingScreen } from './src/screens/discord/DiscordCharacterMappingScreen';
 import { DiscordMessagesScreen } from './src/screens/discord/DiscordMessagesScreen';
+import { DiscordMessageContextScreen } from './src/screens/discord/DiscordMessageContextScreen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from './src/components';
@@ -49,11 +61,165 @@ const DarkTheme = {
 const Drawer = createDrawerNavigator<RootDrawerParamList>();
 const Stack = createStackNavigator<RootStackParamList>();
 
+// Custom drawer content with collapsible Discord section
+function CustomDrawerContent(props: DrawerContentComponentProps) {
+  const [discordExpanded, setDiscordExpanded] = useState(false);
+  const { state, navigation } = props;
+
+  const isActive = (routeName: string) => {
+    const currentRoute = state.routes[state.index];
+    return currentRoute.name === routeName;
+  };
+
+  return (
+    <DrawerContentScrollView {...props} style={{ backgroundColor: '#262647' }}>
+      <DrawerItem
+        label="Characters"
+        onPress={() => navigation.navigate('CharacterList')}
+        focused={isActive('CharacterList')}
+        activeTintColor="#6C5CE7"
+        inactiveTintColor="#B8B8CC"
+        activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+        labelStyle={drawerStyles.drawerLabel}
+      />
+      <DrawerItem
+        label="Factions"
+        onPress={() => navigation.navigate('Factions')}
+        focused={isActive('Factions')}
+        activeTintColor="#6C5CE7"
+        inactiveTintColor="#B8B8CC"
+        activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+        labelStyle={drawerStyles.drawerLabel}
+      />
+      <DrawerItem
+        label="Locations"
+        onPress={() => navigation.navigate('Locations')}
+        focused={isActive('Locations')}
+        activeTintColor="#6C5CE7"
+        inactiveTintColor="#B8B8CC"
+        activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+        labelStyle={drawerStyles.drawerLabel}
+      />
+      <DrawerItem
+        label="Events"
+        onPress={() => navigation.navigate('Events')}
+        focused={isActive('Events')}
+        activeTintColor="#6C5CE7"
+        inactiveTintColor="#B8B8CC"
+        activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+        labelStyle={drawerStyles.drawerLabel}
+      />
+      <DrawerItem
+        label="Influence Report"
+        onPress={() => navigation.navigate('InfluenceReport')}
+        focused={isActive('InfluenceReport')}
+        activeTintColor="#6C5CE7"
+        inactiveTintColor="#B8B8CC"
+        activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+        labelStyle={drawerStyles.drawerLabel}
+      />
+      <DrawerItem
+        label="Data Management"
+        onPress={() => navigation.navigate('DataManagement')}
+        focused={isActive('DataManagement')}
+        activeTintColor="#6C5CE7"
+        inactiveTintColor="#B8B8CC"
+        activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+        labelStyle={drawerStyles.drawerLabel}
+      />
+
+      {/* Collapsible Discord Section */}
+      <TouchableOpacity
+        style={drawerStyles.sectionHeader}
+        onPress={() => setDiscordExpanded(!discordExpanded)}
+      >
+        <Text style={drawerStyles.sectionHeaderText}>Discord</Text>
+        <Text style={drawerStyles.sectionHeaderArrow}>
+          {discordExpanded ? '▼' : '▶'}
+        </Text>
+      </TouchableOpacity>
+
+      {discordExpanded && (
+        <View style={drawerStyles.sectionContent}>
+          <DrawerItem
+            label="Discord Setup"
+            onPress={() => navigation.navigate('DiscordConfig')}
+            focused={isActive('DiscordConfig')}
+            activeTintColor="#6C5CE7"
+            inactiveTintColor="#B8B8CC"
+            activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+            labelStyle={drawerStyles.drawerLabelIndented}
+          />
+          <DrawerItem
+            label="Character Name Mapping"
+            onPress={() => navigation.navigate('DiscordCharacterMapping')}
+            focused={isActive('DiscordCharacterMapping')}
+            activeTintColor="#6C5CE7"
+            inactiveTintColor="#B8B8CC"
+            activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+            labelStyle={drawerStyles.drawerLabelIndented}
+          />
+          <DrawerItem
+            label="Discord Messages"
+            onPress={() => navigation.navigate('DiscordMessages')}
+            focused={isActive('DiscordMessages')}
+            activeTintColor="#6C5CE7"
+            inactiveTintColor="#B8B8CC"
+            activeBackgroundColor="rgba(108, 92, 231, 0.1)"
+            labelStyle={drawerStyles.drawerLabelIndented}
+          />
+        </View>
+      )}
+    </DrawerContentScrollView>
+  );
+}
+
+const drawerStyles = StyleSheet.create({
+  drawerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  drawerLabelIndented: {
+    fontSize: 15,
+    fontWeight: '500',
+    letterSpacing: 0.3,
+    marginLeft: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(108, 92, 231, 0.05)',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#404066',
+    marginTop: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: '#B8B8CC',
+    textTransform: 'uppercase',
+  },
+  sectionHeaderArrow: {
+    fontSize: 14,
+    color: '#B8B8CC',
+  },
+  sectionContent: {
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+  },
+});
+
 // Main drawer navigator for primary screens
 function MainDrawer() {
   return (
     <Drawer.Navigator
       initialRouteName="CharacterList"
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#262647',
@@ -70,14 +236,6 @@ function MainDrawer() {
           backgroundColor: '#262647',
           width: 280,
         },
-        drawerLabelStyle: {
-          fontSize: 16,
-          fontWeight: '600',
-          letterSpacing: 0.3,
-        },
-        drawerActiveTintColor: '#6C5CE7',
-        drawerInactiveTintColor: '#B8B8CC',
-        drawerActiveBackgroundColor: 'rgba(108, 92, 231, 0.1)',
       }}
     >
       <Drawer.Screen
@@ -277,6 +435,11 @@ export default function App() {
                 name="EventsDetail"
                 component={EventsDetailScreen}
                 options={{ title: 'Event Details' }}
+              />
+              <Stack.Screen
+                name="DiscordMessageContext"
+                component={DiscordMessageContextScreen}
+                options={{ title: 'Message Context' }}
               />
             </Stack.Navigator>
           </NavigationContainer>
