@@ -105,7 +105,9 @@ export const CharacterDetailScreen: React.FC = () => {
       if (character?.id) {
         const messages = await getDiscordMessagesForCharacter(character.id);
         // eslint-disable-next-line no-console
-        console.log(`[CharacterDetail] Loaded ${messages.length} Discord messages`);
+        console.log(
+          `[CharacterDetail] Loaded ${messages.length} Discord messages`
+        );
         setDiscordMessages(messages);
       }
 

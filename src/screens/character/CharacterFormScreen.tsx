@@ -194,9 +194,7 @@ export const CharacterFormScreen: React.FC = () => {
           const reciprocalRelationship: Relationship = {
             characterName: currentCharacter.name,
             relationshipType: relationship.relationshipType,
-            description: relationship.description
-              ? `Reciprocal: ${relationship.description}`
-              : `${currentCharacter.name}'s ${relationship.relationshipType.toLowerCase()}`,
+            description: relationship.description || '',
           };
 
           targetChar.relationships.push(reciprocalRelationship);

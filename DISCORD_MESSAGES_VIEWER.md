@@ -112,6 +112,7 @@ When you save a character mapping:
 - Full message details and context
 
 Both screens work together:
+
 - Use Character Name Mapping for bulk operations on extracted names
 - Use Discord Messages for individual message review and linking
 
@@ -126,25 +127,30 @@ Both screens work together:
 ## Troubleshooting
 
 **Q: I don't see any messages**
+
 - A: Sync messages first using the Discord Setup screen
 - Check that you've configured and connected to Discord
 
 **Q: All messages show as "Untagged"**
+
 - A: This is normal for first sync
 - Start linking messages using the modal
 - Future messages will auto-link based on your mappings
 
 **Q: Character name extraction isn't working**
+
 - A: Messages must start with exactly `>>[Name]` format
 - Example: `>[Marcus] Hello there!`
 - Spaces around brackets are okay: `> [Marcus] Hello`
 
 **Q: How do I see Discord user IDs?**
+
 - A: They're shown under each username in gray text
 - Format: `ID: 123456789012345678`
 - Use these IDs for creating user mappings
 
 **Q: Can I change a character mapping?**
+
 - A: Yes! Click the message again and select a different character
 - The alias will be updated automatically
 

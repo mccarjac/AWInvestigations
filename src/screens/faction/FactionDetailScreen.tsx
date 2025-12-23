@@ -23,7 +23,6 @@ import {
   migrateFactionDescriptions,
   loadFactions,
   deleteFactionCompletely,
-  toggleFactionRetired,
 } from '@utils/characterStorage';
 import {
   useNavigation,
@@ -64,7 +63,6 @@ export const FactionDetailsScreen: React.FC = () => {
   const [factionRelationships, setFactionRelationships] = useState<
     Array<{ factionName: string; relationshipType: RelationshipStanding }>
   >([]);
-  const [isRetired, setIsRetired] = useState<boolean>(false);
   const [showStandingModal, setShowStandingModal] = useState(false);
   const [selectedMember, setSelectedMember] =
     useState<FactionMemberInfo | null>(null);
@@ -120,11 +118,9 @@ export const FactionDetailsScreen: React.FC = () => {
     if (faction) {
       setFactionImageUris(faction.imageUris || []);
       setFactionRelationships(faction.relationships || []);
-      setIsRetired(faction.retired ?? false);
     } else {
       setFactionImageUris([]);
       setFactionRelationships([]);
-      setIsRetired(false);
     }
   }, [factionName]);
 
@@ -244,52 +240,6 @@ export const FactionDetailsScreen: React.FC = () => {
         'Failed to update relationship standing. Please try again.'
       );
     }
-  };
-
-  const handleToggleRetired = async () => {
-    const newStatus = !isRetired;
-    const statusText = newStatus ? 'retire' : 'unretire';
-
-    Alert.alert(
-      `${newStatus ? 'Retire' : 'Unretire'} Faction`,
-      `Are you sure you want to ${statusText} "${factionName}"?${
-        newStatus
-          ? '\n\nRetired factions will not appear in faction lists, influence reports, or be available for characters and events to join.'
-          : ''
-      }`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: newStatus ? 'Retire' : 'Unretire',
-          style: newStatus ? 'destructive' : 'default',
-          onPress: async () => {
-            try {
-              const success = await toggleFactionRetired(factionName);
-              if (success) {
-                setIsRetired(newStatus);
-                Alert.alert(
-                  'Success',
-                  `Faction "${factionName}" has been ${
-                    newStatus ? 'retired' : 'unretired'
-                  }.`
-                );
-              } else {
-                throw new Error('Failed to toggle faction retired status');
-              }
-            } catch (error) {
-              console.error('Error toggling faction retired status:', error);
-              Alert.alert(
-                'Error',
-                `Failed to ${statusText} faction. Please try again.`
-              );
-            }
-          },
-        },
-      ]
-    );
   };
 
   const getStandingStyle = (standing: string) => {
@@ -525,19 +475,6 @@ export const FactionDetailsScreen: React.FC = () => {
             )}
           </View>
         </View>
-
-        {/* Retire/Unretire Button */}
-        <TouchableOpacity
-          style={[
-            styles.retireButton,
-            isRetired ? styles.unretireButton : styles.retireButtonActive,
-          ]}
-          onPress={handleToggleRetired}
-        >
-          <Text style={styles.retireButtonText}>
-            {isRetired ? '↻ Unretire Faction' : '✓ Retire Faction'}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Faction Statistics */}
@@ -1086,26 +1023,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 12,
     backgroundColor: themeColors.surface,
-  },
-  retireButton: {
-    marginTop: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retireButtonActive: {
-    backgroundColor: themeColors.accent.warning,
-  },
-  unretireButton: {
-    backgroundColor: themeColors.accent.success,
-  },
-  retireButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: themeColors.text.primary,
-    letterSpacing: 0.2,
   },
   relationshipsContainer: {
     gap: 8,

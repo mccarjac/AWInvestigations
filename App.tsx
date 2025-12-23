@@ -219,7 +219,7 @@ function MainDrawer() {
   return (
     <Drawer.Navigator
       initialRouteName="CharacterList"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      drawerContent={props => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#262647',
