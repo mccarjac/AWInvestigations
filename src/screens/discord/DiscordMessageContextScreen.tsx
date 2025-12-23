@@ -33,9 +33,22 @@ export const DiscordMessageContextScreen: React.FC = () => {
     try {
       const allMessages = await getDiscordMessages();
       
-      // Show ALL messages, not filtered by character
+      // Filter messages to only show from the same channel/server as the target message
+      const targetMessage = allMessages.find(m => m.id === messageId);
+      
+      let contextMessages = allMessages;
+      if (targetMessage && targetMessage.serverConfigId) {
+        // Show only messages from the same server/channel configuration
+        contextMessages = allMessages.filter(
+          m => m.serverConfigId === targetMessage.serverConfigId
+        );
+        console.log(
+          `[DiscordMessageContext] Filtered to ${contextMessages.length} messages from same server config`
+        );
+      }
+      
       // Sort by timestamp (oldest first for conversation context)
-      const sorted = allMessages.sort(
+      const sorted = contextMessages.sort(
         (a, b) =>
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
