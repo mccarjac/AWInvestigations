@@ -467,29 +467,23 @@ export const FactionFormScreen: React.FC = () => {
 
         {factionName && (
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Faction Status</Text>
-            <Text style={styles.helperText}>
-              Retired factions will not appear in faction lists, influence
-              reports, or be available for characters and events to join.
-            </Text>
+            <Text style={styles.inputLabel}>Status</Text>
             <TouchableOpacity
-              style={styles.retiredToggle}
+              style={[
+                styles.statusButton,
+                formData.retired && styles.statusButtonRetired,
+              ]}
               onPress={() =>
                 setFormData({ ...formData, retired: !formData.retired })
               }
             >
-              <View
+              <Text
                 style={[
-                  styles.checkbox,
-                  formData.retired && styles.checkboxChecked,
+                  styles.statusButtonText,
+                  formData.retired && styles.statusButtonTextRetired,
                 ]}
               >
-                {formData.retired && (
-                  <Text style={styles.checkboxCheckmark}>✓</Text>
-                )}
-              </View>
-              <Text style={styles.retiredToggleText}>
-                {formData.retired ? 'Faction is Retired' : 'Faction is Active'}
+                {formData.retired ? '🔒 Retired' : '✓ Active'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -903,38 +897,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: themeColors.text.primary,
   },
-  retiredToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    backgroundColor: themeColors.elevated,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: themeColors.border,
+  statusButton: {
+    ...commonStyles.button.base,
+    ...commonStyles.button.success,
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: themeColors.border,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: themeColors.surface,
+  statusButtonRetired: {
+    backgroundColor: themeColors.status.error,
+    borderColor: themeColors.status.error,
   },
-  checkboxChecked: {
-    backgroundColor: themeColors.accent.warning,
-    borderColor: themeColors.accent.warning,
-  },
-  checkboxCheckmark: {
-    color: themeColors.text.primary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  retiredToggleText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: themeColors.text.primary,
-  },
+  statusButtonText: commonStyles.button.text,
+  statusButtonTextRetired: commonStyles.button.text,
 });
