@@ -7,8 +7,10 @@ import {
   StyleSheet,
   Alert,
   Image,
+  ScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import MapView, { Marker, PROVIDER_DEFAULT, MapPressEvent } from 'react-native-maps';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -16,6 +18,14 @@ import { createLocation, updateLocation } from '@utils/characterStorage';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { BaseFormScreen } from '@/components';
+
+// Coordinates for Noti, Oregon
+const NOTI_OREGON = {
+  latitude: 42.936,
+  longitude: -122.079,
+  latitudeDelta: 5,
+  longitudeDelta: 5,
+};
 
 type LocationFormNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -29,6 +39,10 @@ interface LocationFormData {
   description: string;
   imageUri?: string;
   imageUris?: string[];
+  mapCoordinates?: {
+    x: number;
+    y: number;
+  };
 }
 
 export const LocationFormScreen: React.FC = () => {
@@ -41,6 +55,7 @@ export const LocationFormScreen: React.FC = () => {
     description: '',
     imageUri: undefined,
     imageUris: [],
+    mapCoordinates: undefined,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,6 +70,7 @@ export const LocationFormScreen: React.FC = () => {
         imageUri: location.imageUri,
         imageUris:
           location.imageUris || (location.imageUri ? [location.imageUri] : []),
+        mapCoordinates: location.mapCoordinates,
       });
     }
   }, [location]);
@@ -101,6 +117,32 @@ export const LocationFormScreen: React.FC = () => {
     });
   };
 
+  const handleMapPress = (event: MapPressEvent) => {
+    const { coordinate } = event.nativeEvent;
+    // Convert absolute coordinates to normalized coordinates (0-1) relative to the map region
+    const normalizedX =
+      (coordinate.longitude - (NOTI_OREGON.longitude - NOTI_OREGON.longitudeDelta)) /
+      (NOTI_OREGON.longitudeDelta * 2);
+    const normalizedY =
+      (coordinate.latitude - (NOTI_OREGON.latitude - NOTI_OREGON.latitudeDelta)) /
+      (NOTI_OREGON.latitudeDelta * 2);
+
+    setFormData({
+      ...formData,
+      mapCoordinates: {
+        x: Math.max(0, Math.min(1, normalizedX)),
+        y: Math.max(0, Math.min(1, normalizedY)),
+      },
+    });
+  };
+
+  const clearMapCoordinates = () => {
+    setFormData({
+      ...formData,
+      mapCoordinates: undefined,
+    });
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -129,6 +171,7 @@ export const LocationFormScreen: React.FC = () => {
           description: formData.description.trim(),
           imageUri: formData.imageUri,
           imageUris: formData.imageUris,
+          mapCoordinates: formData.mapCoordinates,
         });
 
         if (updated) {
@@ -148,6 +191,7 @@ export const LocationFormScreen: React.FC = () => {
           description: formData.description.trim(),
           imageUri: formData.imageUri,
           imageUris: formData.imageUris,
+          mapCoordinates: formData.mapCoordinates,
         });
 
         if (newLocation) {
@@ -280,6 +324,49 @@ export const LocationFormScreen: React.FC = () => {
             {formData.description.length}/500 characters
           </Text>
         </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Map Coordinates (Optional)</Text>
+          <Text style={styles.inputHint}>
+            Tap on the map to set the location's position
+          </Text>
+          <View style={styles.mapContainer}>
+            <MapView
+              provider={PROVIDER_DEFAULT}
+              style={styles.mapPicker}
+              initialRegion={NOTI_OREGON}
+              onPress={handleMapPress}
+            >
+              {formData.mapCoordinates && (
+                <Marker
+                  coordinate={{
+                    latitude:
+                      NOTI_OREGON.latitude +
+                      (formData.mapCoordinates.y - 0.5) *
+                        NOTI_OREGON.latitudeDelta *
+                        2,
+                    longitude:
+                      NOTI_OREGON.longitude +
+                      (formData.mapCoordinates.x - 0.5) *
+                        NOTI_OREGON.longitudeDelta *
+                        2,
+                  }}
+                  title={formData.name || 'Location'}
+                />
+              )}
+            </MapView>
+          </View>
+          {formData.mapCoordinates && (
+            <TouchableOpacity
+              style={styles.clearMapButton}
+              onPress={clearMapCoordinates}
+            >
+              <Text style={styles.clearMapButtonText}>
+                Clear Map Coordinates
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.buttonContainer}>
@@ -353,6 +440,35 @@ const styles = StyleSheet.create({
     color: themeColors.text.muted,
     textAlign: 'right',
     marginTop: 6,
+  },
+  inputHint: {
+    fontSize: 12,
+    color: themeColors.text.muted,
+    marginBottom: 8,
+  },
+  mapContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: themeColors.border,
+  },
+  mapPicker: {
+    width: '100%',
+    height: 250,
+  },
+  clearMapButton: {
+    marginTop: 12,
+    backgroundColor: themeColors.surface,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  clearMapButtonText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+    fontWeight: '600',
   },
   imageGalleryContainer: {
     gap: 12,

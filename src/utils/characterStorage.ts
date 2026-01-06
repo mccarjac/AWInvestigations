@@ -1248,6 +1248,10 @@ export const createLocation = async (locationData: {
   description: string;
   imageUri?: string;
   imageUris?: string[];
+  mapCoordinates?: {
+    x: number;
+    y: number;
+  };
 }): Promise<GameLocation | null> => {
   const existingLocations = await loadLocations();
 
@@ -1266,6 +1270,7 @@ export const createLocation = async (locationData: {
     description: locationData.description,
     imageUri: locationData.imageUri,
     imageUris: locationData.imageUris,
+    mapCoordinates: locationData.mapCoordinates,
     createdAt: now,
     updatedAt: now,
   };
