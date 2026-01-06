@@ -825,6 +825,30 @@ describe('characterStorage', () => {
         expect(result?.createdAt).toBe(mockDate);
         expect(result?.updatedAt).toBe(mockDate);
       });
+
+      it('should create a new location with map coordinates', async () => {
+        (SafeAsyncStorageJSONParser.getItem as jest.Mock).mockResolvedValue({
+          locations: [],
+          version: '1.0',
+          lastUpdated: mockDate,
+        });
+
+        const newLocationData = {
+          name: 'Noti',
+          description: 'Small town in Oregon',
+          mapCoordinates: {
+            x: 0.5,
+            y: 0.5,
+          },
+        };
+
+        const result = await createLocation(newLocationData);
+
+        expect(result).not.toBeNull();
+        expect(result?.mapCoordinates).toBeDefined();
+        expect(result?.mapCoordinates?.x).toBe(0.5);
+        expect(result?.mapCoordinates?.y).toBe(0.5);
+      });
     });
 
     describe('updateLocation', () => {
@@ -841,6 +865,26 @@ describe('characterStorage', () => {
 
         expect(result).not.toBeNull();
         expect(result?.name).toBe('Updated Location');
+      });
+
+      it('should update location with map coordinates', async () => {
+        (SafeAsyncStorageJSONParser.getItem as jest.Mock).mockResolvedValue({
+          locations: [mockLocation],
+          version: '1.0',
+          lastUpdated: mockDate,
+        });
+
+        const result = await updateLocation('loc-1', {
+          mapCoordinates: {
+            x: 0.7,
+            y: 0.3,
+          },
+        });
+
+        expect(result).not.toBeNull();
+        expect(result?.mapCoordinates).toBeDefined();
+        expect(result?.mapCoordinates?.x).toBe(0.7);
+        expect(result?.mapCoordinates?.y).toBe(0.3);
       });
 
       it('should return null for non-existent location', async () => {
