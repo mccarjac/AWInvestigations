@@ -7,10 +7,13 @@ import {
   StyleSheet,
   Alert,
   Image,
-  ScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import MapView, { Marker, PROVIDER_DEFAULT, MapPressEvent } from 'react-native-maps';
+import MapView, {
+  Marker,
+  PROVIDER_DEFAULT,
+  MapPressEvent,
+} from 'react-native-maps';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -121,10 +124,12 @@ export const LocationFormScreen: React.FC = () => {
     const { coordinate } = event.nativeEvent;
     // Convert absolute coordinates to normalized coordinates (0-1) relative to the map region
     const normalizedX =
-      (coordinate.longitude - (NOTI_OREGON.longitude - NOTI_OREGON.longitudeDelta)) /
+      (coordinate.longitude -
+        (NOTI_OREGON.longitude - NOTI_OREGON.longitudeDelta)) /
       (NOTI_OREGON.longitudeDelta * 2);
     const normalizedY =
-      (coordinate.latitude - (NOTI_OREGON.latitude - NOTI_OREGON.latitudeDelta)) /
+      (coordinate.latitude -
+        (NOTI_OREGON.latitude - NOTI_OREGON.latitudeDelta)) /
       (NOTI_OREGON.latitudeDelta * 2);
 
     setFormData({

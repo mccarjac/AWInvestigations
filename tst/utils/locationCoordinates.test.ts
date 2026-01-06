@@ -44,9 +44,7 @@ describe('Location Coordinates', () => {
         (testLocation.mapCoordinates!.y - 0.5) * NOTI_OREGON.latitudeDelta * 2;
       const absoluteLng =
         NOTI_OREGON.longitude +
-        (testLocation.mapCoordinates!.x - 0.5) *
-          NOTI_OREGON.longitudeDelta *
-          2;
+        (testLocation.mapCoordinates!.x - 0.5) * NOTI_OREGON.longitudeDelta * 2;
 
       // Center point should match NOTI_OREGON
       expect(absoluteLat).toBeCloseTo(NOTI_OREGON.latitude, 5);
@@ -109,10 +107,12 @@ describe('Location Coordinates', () => {
       };
 
       expect(location.mapCoordinates).toBeDefined();
-      expect(location.mapCoordinates!.x).toBeGreaterThanOrEqual(0);
-      expect(location.mapCoordinates!.x).toBeLessThanOrEqual(1);
-      expect(location.mapCoordinates!.y).toBeGreaterThanOrEqual(0);
-      expect(location.mapCoordinates!.y).toBeLessThanOrEqual(1);
+      if (location.mapCoordinates) {
+        expect(location.mapCoordinates.x).toBeGreaterThanOrEqual(0);
+        expect(location.mapCoordinates.x).toBeLessThanOrEqual(1);
+        expect(location.mapCoordinates.y).toBeGreaterThanOrEqual(0);
+        expect(location.mapCoordinates.y).toBeLessThanOrEqual(1);
+      }
     });
 
     it('should allow location without coordinates', () => {

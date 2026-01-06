@@ -21,7 +21,10 @@ import {
   getDiscordConfig,
   saveDiscordConfig,
 } from '@/utils/discordStorage';
-import { testDiscordConnection, syncDiscordMessagesForServer } from '@/utils/discordApi';
+import {
+  testDiscordConnection,
+  syncDiscordMessagesForServer,
+} from '@/utils/discordApi';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -100,9 +103,11 @@ export const DiscordServerListScreen: React.FC = () => {
     try {
       const result = await testDiscordConnection(serverId);
       if (result.success) {
-        Alert.alert('Success', `Connection test successful for ${serverName}!`, [
-          { text: 'OK' },
-        ]);
+        Alert.alert(
+          'Success',
+          `Connection test successful for ${serverName}!`,
+          [{ text: 'OK' }]
+        );
       } else {
         Alert.alert('Connection Failed', result.error || 'Unknown error', [
           { text: 'OK' },

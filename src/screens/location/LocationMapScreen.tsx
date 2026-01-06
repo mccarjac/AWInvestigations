@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
-import MapView, { Marker, PROVIDER_DEFAULT, Region } from 'react-native-maps';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/types';
@@ -34,6 +34,10 @@ export const LocationMapScreen: React.FC = () => {
     setLocations(loadedLocations);
   };
 
+  const handleMarkerPress = (location: GameLocation) => {
+    setSelectedLocation(location);
+  };
+
   // Reload locations when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
@@ -41,21 +45,15 @@ export const LocationMapScreen: React.FC = () => {
     }, [])
   );
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleMarkerPress = (location: GameLocation) => {
-    setSelectedLocation(location);
-  };
-
   const handleMarkerDeselect = () => {
     setSelectedLocation(null);
   };
 
   const handleViewLocationDetails = () => {
     if (selectedLocation) {
-      navigation.navigate('LocationDetails', { locationId: selectedLocation.id });
+      navigation.navigate('LocationDetails', {
+        locationId: selectedLocation.id,
+      });
       setSelectedLocation(null);
     }
   };
@@ -75,26 +73,27 @@ export const LocationMapScreen: React.FC = () => {
         showsMyLocationButton={false}
         onPress={handleMarkerDeselect}
       >
-        {locationsWithCoordinates.map(location => (
-          <Marker
-            key={location.id}
-            coordinate={{
-              latitude:
-                NOTI_OREGON.latitude +
-                (location.mapCoordinates!.y - 0.5) *
-                  NOTI_OREGON.latitudeDelta *
-                  2,
-              longitude:
-                NOTI_OREGON.longitude +
-                (location.mapCoordinates!.x - 0.5) *
-                  NOTI_OREGON.longitudeDelta *
-                  2,
-            }}
-            title={location.name}
-            description={location.description}
-            onPress={() => handleMarkerPress(location)}
-          />
-        ))}
+        {locationsWithCoordinates.map(location => {
+          const coords = location.mapCoordinates;
+          if (!coords) return null;
+          
+          return (
+            <Marker
+              key={location.id}
+              coordinate={{
+                latitude:
+                  NOTI_OREGON.latitude +
+                  (coords.y - 0.5) * NOTI_OREGON.latitudeDelta * 2,
+                longitude:
+                  NOTI_OREGON.longitude +
+                  (coords.x - 0.5) * NOTI_OREGON.longitudeDelta * 2,
+              }}
+              title={location.name}
+              description={location.description}
+              onPress={() => handleMarkerPress(location)}
+            />
+          );
+        })}
       </MapView>
 
       {selectedLocation && (

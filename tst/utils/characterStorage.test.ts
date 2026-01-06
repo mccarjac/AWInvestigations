@@ -846,8 +846,10 @@ describe('characterStorage', () => {
 
         expect(result).not.toBeNull();
         expect(result?.mapCoordinates).toBeDefined();
-        expect(result?.mapCoordinates?.x).toBe(0.5);
-        expect(result?.mapCoordinates?.y).toBe(0.5);
+        if (result?.mapCoordinates) {
+          expect(result.mapCoordinates.x).toBe(0.5);
+          expect(result.mapCoordinates.y).toBe(0.5);
+        }
       });
     });
 
@@ -883,8 +885,10 @@ describe('characterStorage', () => {
 
         expect(result).not.toBeNull();
         expect(result?.mapCoordinates).toBeDefined();
-        expect(result?.mapCoordinates?.x).toBe(0.7);
-        expect(result?.mapCoordinates?.y).toBe(0.3);
+        if (result?.mapCoordinates) {
+          expect(result.mapCoordinates.x).toBe(0.7);
+          expect(result.mapCoordinates.y).toBe(0.3);
+        }
       });
 
       it('should return null for non-existent location', async () => {
