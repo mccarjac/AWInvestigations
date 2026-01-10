@@ -7,6 +7,8 @@ import {
   Text,
   TouchableOpacity,
   Modal,
+  ScrollView,
+  Alert,
 } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, {
@@ -22,7 +24,7 @@ import { RootStackParamList } from '@/navigation/types';
 import { colors as themeColors } from '@/styles/theme';
 import { commonStyles } from '@/styles/commonStyles';
 import { GameLocation } from '@models/types';
-import { loadLocations } from '@utils/characterStorage';
+import { loadLocations, updateLocation } from '@utils/characterStorage';
 import {
   transformMapCoordinatesToScreen,
   calculatePanBoundaries,
@@ -91,9 +93,15 @@ export const LocationMapScreen: React.FC = () => {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
   const [locations, setLocations] = useState<GameLocation[]>([]);
+  const [allLocations, setAllLocations] = useState<GameLocation[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<GameLocation | null>(
     null
   );
+  const [placementModalVisible, setPlacementModalVisible] = useState(false);
+  const [placementCoords, setPlacementCoords] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -104,8 +112,9 @@ export const LocationMapScreen: React.FC = () => {
 
   // Load locations with coordinates
   const loadLocationsData = useCallback(async () => {
-    const allLocations = await loadLocations();
-    const locationsWithCoords = allLocations.filter(
+    const loadedLocations = await loadLocations();
+    setAllLocations(loadedLocations);
+    const locationsWithCoords = loadedLocations.filter(
       loc => loc.mapCoordinates && loc.mapCoordinates.x && loc.mapCoordinates.y
     );
     setLocations(locationsWithCoords);
@@ -205,6 +214,7 @@ export const LocationMapScreen: React.FC = () => {
 
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
+    .maxDuration(250)
     .onEnd(() => {
       if (scale.value > 1) {
         // Zoom out
@@ -222,8 +232,49 @@ export const LocationMapScreen: React.FC = () => {
       }
     });
 
-  const composedGesture = Gesture.Simultaneous(
+  // Convert screen coordinates to normalized map coordinates
+  const screenToNormalizedCoords = (
+    screenX: number,
+    screenY: number
+  ): { x: number; y: number } => {
+    // Reverse the transformation logic
+    const imageOffsetX = (screenSize.width - imageSize.width) / 2;
+    const imageOffsetY = (screenSize.height - imageSize.height) / 2;
+
+    // Remove screen centering offset and translation
+    const imageX =
+      (screenX - imageOffsetX - translateX.value) / scale.value +
+      imageSize.width / 2 -
+      imageSize.width / (2 * scale.value);
+    const imageY =
+      (screenY - imageOffsetY - translateY.value) / scale.value +
+      imageSize.height / 2 -
+      imageSize.height / (2 * scale.value);
+
+    // Normalize to 0-1 range
+    const normalizedX = Math.max(0, Math.min(1, imageX / imageSize.width));
+    const normalizedY = Math.max(0, Math.min(1, imageY / imageSize.height));
+
+    return { x: normalizedX, y: normalizedY };
+  };
+
+  const handleLongPress = (x: number, y: number) => {
+    const coords = screenToNormalizedCoords(x, y);
+    setPlacementCoords(coords);
+    setPlacementModalVisible(true);
+  };
+
+  const longPress = Gesture.LongPress()
+    .minDuration(500)
+    .onEnd((e, success) => {
+      if (success) {
+        runOnJS(handleLongPress)(e.x, e.y);
+      }
+    });
+
+  const composedGesture = Gesture.Race(
     doubleTap,
+    longPress,
     Gesture.Simultaneous(pinchGesture, panGesture)
   );
 
@@ -243,6 +294,34 @@ export const LocationMapScreen: React.FC = () => {
     setSelectedLocation(null);
     navigation.navigate('LocationDetails', { locationId: location.id });
   };
+
+  const handlePlaceLocation = async (location: GameLocation) => {
+    if (!placementCoords) return;
+
+    try {
+      const updatedLocation = {
+        ...location,
+        mapCoordinates: placementCoords,
+        updatedAt: new Date().toISOString(),
+      };
+      await updateLocation(updatedLocation);
+      setPlacementModalVisible(false);
+      setPlacementCoords(null);
+      // Reload locations to show the newly placed marker
+      await loadLocationsData();
+      Alert.alert(
+        'Success',
+        `Location "${location.name}" has been placed on the map.`
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to place location on map.');
+    }
+  };
+
+  // Get locations without map coordinates for the placement modal
+  const unplacedLocations = allLocations.filter(
+    loc => !loc.mapCoordinates || !loc.mapCoordinates.x || !loc.mapCoordinates.y
+  );
 
   return (
     <View style={styles.container}>
@@ -311,6 +390,64 @@ export const LocationMapScreen: React.FC = () => {
               }
             >
               <Text style={styles.modalButtonText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Location placement modal */}
+      <Modal
+        visible={placementModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setPlacementModalVisible(false);
+          setPlacementCoords(null);
+        }}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => {
+            setPlacementModalVisible(false);
+            setPlacementCoords(null);
+          }}
+        >
+          <View
+            style={[styles.modalContent, styles.placementModalContent]}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text style={styles.modalTitle}>Place Location</Text>
+            <Text style={styles.modalDescription}>
+              Select a location to place at this position:
+            </Text>
+            <ScrollView style={styles.locationList}>
+              {unplacedLocations.length > 0 ? (
+                unplacedLocations.map(location => (
+                  <TouchableOpacity
+                    key={location.id}
+                    style={styles.locationItem}
+                    onPress={() => handlePlaceLocation(location)}
+                  >
+                    <Text style={styles.locationItemText}>
+                      {location.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>
+                  All locations have been placed on the map.
+                </Text>
+              )}
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => {
+                setPlacementModalVisible(false);
+                setPlacementCoords(null);
+              }}
+            >
+              <Text style={styles.modalButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -408,5 +545,35 @@ const styles = StyleSheet.create({
     ...commonStyles.text.body,
     color: themeColors.text.primary,
     fontWeight: '600',
+  },
+  placementModalContent: {
+    maxHeight: '70%',
+  },
+  locationList: {
+    maxHeight: 300,
+    marginBottom: 16,
+  },
+  locationItem: {
+    padding: 12,
+    backgroundColor: themeColors.elevated,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: themeColors.border,
+  },
+  locationItemText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.primary,
+  },
+  emptyText: {
+    ...commonStyles.text.body,
+    color: themeColors.text.secondary,
+    textAlign: 'center',
+    padding: 20,
+  },
+  cancelButton: {
+    backgroundColor: themeColors.surface,
+    borderWidth: 1,
+    borderColor: themeColors.border,
   },
 });
