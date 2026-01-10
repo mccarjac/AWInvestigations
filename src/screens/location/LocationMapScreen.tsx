@@ -14,6 +14,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   runOnJS,
+  SharedValue,
 } from 'react-native-reanimated';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -30,6 +31,60 @@ import {
 import mapImage from '../../../assets/JunktownMap.png';
 
 type LocationMapNavigationProp = StackNavigationProp<RootStackParamList>;
+
+// Separate component for each marker to properly use hooks
+interface LocationMarkerProps {
+  location: GameLocation;
+  imageSize: { width: number; height: number };
+  screenSize: { width: number; height: number };
+  scale: SharedValue<number>;
+  translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
+  onPress: (location: GameLocation) => void;
+}
+
+const LocationMarker: React.FC<LocationMarkerProps> = ({
+  location,
+  imageSize,
+  screenSize,
+  scale,
+  translateX,
+  translateY,
+  onPress,
+}) => {
+  if (!location.mapCoordinates) return null;
+
+  const markerAnimatedStyle = useAnimatedStyle(() => {
+    const position = transformMapCoordinatesToScreen(
+      location.mapCoordinates!.x,
+      location.mapCoordinates!.y,
+      imageSize.width,
+      imageSize.height,
+      screenSize.width,
+      screenSize.height,
+      scale.value,
+      translateX.value,
+      translateY.value
+    );
+
+    return {
+      left: position.x,
+      top: position.y,
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.marker, markerAnimatedStyle]}>
+      <TouchableOpacity
+        style={styles.markerButton}
+        onPress={() => onPress(location)}
+      >
+        <View style={styles.markerPin} />
+        <View style={styles.markerDot} />
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
 
 export const LocationMapScreen: React.FC = () => {
   const navigation = useNavigation<LocationMapNavigationProp>();
@@ -180,48 +235,9 @@ export const LocationMapScreen: React.FC = () => {
     ],
   }));
 
-  // Calculate marker positions
-  const getMarkerPosition = (location: GameLocation) => {
-    if (!location.mapCoordinates) return null;
-
-    return transformMapCoordinatesToScreen(
-      location.mapCoordinates.x,
-      location.mapCoordinates.y,
-      imageSize.width,
-      imageSize.height,
-      screenSize.width,
-      screenSize.height,
-      scale.value,
-      translateX.value,
-      translateY.value
-    );
-  };
-
-  const renderMarker = (location: GameLocation) => {
-    const position = getMarkerPosition(location);
-    if (!position) return null;
-
-    return (
-      <Animated.View
-        key={location.id}
-        style={[
-          styles.marker,
-          {
-            left: position.x,
-            top: position.y,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.markerButton}
-          onPress={() => setSelectedLocation(location)}
-        >
-          <View style={styles.markerPin} />
-          <View style={styles.markerDot} />
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
+  const handleMarkerPress = useCallback((location: GameLocation) => {
+    setSelectedLocation(location);
+  }, []);
 
   const handleLocationPress = (location: GameLocation) => {
     setSelectedLocation(null);
@@ -246,7 +262,18 @@ export const LocationMapScreen: React.FC = () => {
                 resizeMode="contain"
               />
               {/* Render location markers */}
-              {locations.map(renderMarker)}
+              {locations.map(location => (
+                <LocationMarker
+                  key={location.id}
+                  location={location}
+                  imageSize={imageSize}
+                  screenSize={screenSize}
+                  scale={scale}
+                  translateX={translateX}
+                  translateY={translateY}
+                  onPress={handleMarkerPress}
+                />
+              ))}
             </>
           ) : (
             <View style={styles.loadingContainer}>
