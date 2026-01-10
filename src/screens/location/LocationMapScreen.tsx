@@ -115,7 +115,10 @@ export const LocationMapScreen: React.FC = () => {
     const loadedLocations = await loadLocations();
     setAllLocations(loadedLocations);
     const locationsWithCoords = loadedLocations.filter(
-      loc => loc.mapCoordinates && loc.mapCoordinates.x && loc.mapCoordinates.y
+      loc =>
+        loc.mapCoordinates &&
+        loc.mapCoordinates.x !== undefined &&
+        loc.mapCoordinates.y !== undefined
     );
     setLocations(locationsWithCoords);
   }, []);
@@ -320,7 +323,10 @@ export const LocationMapScreen: React.FC = () => {
 
   // Get locations without map coordinates for the placement modal
   const unplacedLocations = allLocations.filter(
-    loc => !loc.mapCoordinates || !loc.mapCoordinates.x || !loc.mapCoordinates.y
+    loc =>
+      !loc.mapCoordinates ||
+      loc.mapCoordinates.x === undefined ||
+      loc.mapCoordinates.y === undefined
   );
 
   return (
