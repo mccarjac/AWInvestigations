@@ -12,6 +12,7 @@ export const normalizedToPixels = (
   normalized: number,
   imageSize: number
 ): number => {
+  'worklet';
   return normalized * imageSize;
 };
 
@@ -31,6 +32,7 @@ export const applyTransform = (
   scale: number,
   translate: number
 ): number => {
+  'worklet';
   // Center the image on screen
   const imageOffset = (screenSize - imageSize) / 2;
 
@@ -55,6 +57,7 @@ export const calculatePanBoundaries = (
   screenSize: number,
   scale: number
 ): { min: number; max: number } => {
+  'worklet';
   // When zoomed out (scale = 1), image should be centered with no panning
   if (scale <= 1) {
     return { min: 0, max: 0 };
@@ -87,6 +90,7 @@ export const constrainTranslation = (
   translate: number,
   boundaries: { min: number; max: number }
 ): number => {
+  'worklet';
   return Math.max(boundaries.min, Math.min(boundaries.max, translate));
 };
 
@@ -114,6 +118,7 @@ export const transformMapCoordinatesToScreen = (
   translateX: number,
   translateY: number
 ): { x: number; y: number } => {
+  'worklet';
   // Convert normalized coordinates to pixel coordinates on the image
   const pixelX = normalizedToPixels(normalizedX, imageWidth);
   const pixelY = normalizedToPixels(normalizedY, imageHeight);
