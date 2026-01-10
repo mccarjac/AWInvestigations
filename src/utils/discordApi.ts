@@ -24,7 +24,7 @@ export const isDiscordConfigured = async (
   serverConfigId?: string
 ): Promise<boolean> => {
   const config = await getDiscordConfig();
-  
+
   if (!config.enabled) {
     return false;
   }
@@ -43,7 +43,12 @@ export const isDiscordConfigured = async (
 
   // Check specific server config
   const serverConfig = await getDiscordServerConfig(serverConfigId);
-  return !!serverConfig && serverConfig.enabled && !!serverConfig.botToken && !!serverConfig.channelId;
+  return (
+    !!serverConfig &&
+    serverConfig.enabled &&
+    !!serverConfig.botToken &&
+    !!serverConfig.channelId
+  );
 };
 
 /**
@@ -112,7 +117,7 @@ export const fetchDiscordMessages = async (
   if (!serverConfig) {
     throw new Error(`Server config not found: ${serverConfigId}`);
   }
-  
+
   if (!serverConfig.botToken || !serverConfig.channelId) {
     throw new Error('Discord server config incomplete');
   }
@@ -343,7 +348,11 @@ export const syncDiscordMessagesForServer = async (
     throw new Error(`Server config not found: ${serverConfigId}`);
   }
 
-  if (!serverConfig.enabled || !serverConfig.botToken || !serverConfig.channelId) {
+  if (
+    !serverConfig.enabled ||
+    !serverConfig.botToken ||
+    !serverConfig.channelId
+  ) {
     throw new Error('Server config is not properly configured or enabled');
   }
 
@@ -357,14 +366,20 @@ export const syncDiscordMessagesForServer = async (
   const maxFetches = 10; // Limit to 1000 messages per sync (100 per fetch)
 
   while (hasMore && fetchCount < maxFetches) {
-    const messages = await fetchDiscordMessages(serverConfigId, 100, lastMessageId);
+    const messages = await fetchDiscordMessages(
+      serverConfigId,
+      100,
+      lastMessageId
+    );
     if (messages.length === 0) {
       hasMore = false;
     } else {
       allMessages = [...allMessages, ...messages];
       lastMessageId = messages[messages.length - 1].id;
       fetchCount++;
-      onProgress?.(`Fetched ${allMessages.length} messages from ${serverConfig.name}...`);
+      onProgress?.(
+        `Fetched ${allMessages.length} messages from ${serverConfig.name}...`
+      );
     }
   }
 
@@ -407,17 +422,22 @@ export const syncDiscordMessages = async (
 
   for (let i = 0; i < serverConfigs.length; i++) {
     const serverConfig = serverConfigs[i];
-    onProgress?.(`Syncing ${i + 1}/${serverConfigs.length}: ${serverConfig.name}...`);
-    
+    onProgress?.(
+      `Syncing ${i + 1}/${serverConfigs.length}: ${serverConfig.name}...`
+    );
+
     try {
       const result = await syncDiscordMessagesForServer(
         serverConfig.id,
-        (status) => onProgress?.(`[${serverConfig.name}] ${status}`)
+        status => onProgress?.(`[${serverConfig.name}] ${status}`)
       );
       totalNewMessages += result.newMessages;
       totalMessages += result.totalMessages;
     } catch (error) {
-      console.error(`[Discord Sync] Failed to sync ${serverConfig.name}:`, error);
+      console.error(
+        `[Discord Sync] Failed to sync ${serverConfig.name}:`,
+        error
+      );
       onProgress?.(`⚠️ Failed to sync ${serverConfig.name}`);
     }
   }
