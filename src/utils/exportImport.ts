@@ -11,6 +11,7 @@ import {
   MergeConflict,
   updateCharacter,
 } from './characterStorage';
+import { sortDatasetDeterministically } from './datasetSorting';
 
 /**
  * Extract image data from a data URI
@@ -510,11 +511,14 @@ const exportCharacterDataNative = async (): Promise<void> => {
       }
     }
 
+    // Sort the dataset deterministically to minimize diff noise
+    const sortedDataset = sortDatasetDeterministically(dataset);
+
     // Write the modified JSON to the temp directory
     const dataJsonPath = tempDir + 'data.json';
     await FileSystem.writeAsStringAsync(
       dataJsonPath,
-      JSON.stringify(dataset, null, 2)
+      JSON.stringify(sortedDataset, null, 2)
     );
 
     // Create the zip file from the directory
