@@ -111,7 +111,7 @@ jobs:
           # Check for changes in /src directory since last build
           if git diff --quiet "$LAST_BUILD_COMMIT" HEAD -- src/; then
             echo "⏭️  No changes detected in /src directory since last build."
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "✅ Source file changes detected in /src directory."
             # Show what changed
@@ -145,7 +145,7 @@ jobs:
             echo "should_build=false" >> $GITHUB_OUTPUT
             echo "skip_reason=$SKIP_REASON" >> $GITHUB_OUTPUT
           # Time check passed, now check if source changes exist
-          elif [ "$TIME_CHECK" = "true" ]; then
+          elif [ "$TIME_CHECK" = "true" ] && [ "%HAS_CHANGES" = "true" ]; then
             echo "✅ Build conditions met: Time check passed and source changes detected."
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "skip_reason=" >> $GITHUB_OUTPUT
