@@ -79,7 +79,7 @@ jobs:
             HOURS_REMAINING=$(( (THRESHOLD - TIME_DIFF) / 3600 ))
             echo "⏳ Last build was less than 48 hours ago."
             echo "Time remaining until next build: $HOURS_REMAINING hours"
-            echo "time_check_passed=false" >> $GITHUB_OUTPUT
+            echo "time_check_passed=true" >> $GITHUB_OUTPUT
             echo "skip_reason=Less than 48 hours since last build ($HOURS_REMAINING hours remaining)" >> $GITHUB_OUTPUT
           fi
           
@@ -145,7 +145,7 @@ jobs:
             echo "should_build=false" >> $GITHUB_OUTPUT
             echo "skip_reason=$SKIP_REASON" >> $GITHUB_OUTPUT
           # Time check passed, now check if source changes exist
-          elif [ "$TIME_CHECK" = "true" ] || 'true'; then
+          elif [ "$TIME_CHECK" = "true" ]; then
             echo "✅ Build conditions met: Time check passed and source changes detected."
             echo "should_build=true" >> $GITHUB_OUTPUT
             echo "skip_reason=" >> $GITHUB_OUTPUT
