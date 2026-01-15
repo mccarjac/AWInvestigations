@@ -10,6 +10,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { SafeAsyncStorageJSONParser } from './safeAsyncStorageJSONParser';
 import { exportDiscordDataset, importDiscordDataset } from './discordStorage';
+import { sortDatasetDeterministically } from './datasetSorting';
 
 export interface FactionRelationship {
   factionName: string;
@@ -156,7 +157,10 @@ export const exportDataset = async (): Promise<string> => {
     lastUpdated: new Date().toISOString(),
   };
 
-  return JSON.stringify(combinedDataset);
+  // Sort the dataset deterministically to minimize diff noise
+  const sortedDataset = sortDatasetDeterministically(combinedDataset);
+
+  return JSON.stringify(sortedDataset);
 };
 
 // Migration helper to convert old location enum to location ID

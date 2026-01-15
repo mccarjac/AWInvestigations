@@ -3,6 +3,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Alert } from 'react-native';
 import { Buffer } from 'buffer';
 import { exportDataset } from './characterStorage';
+import { sortDatasetDeterministically } from './datasetSorting';
 
 /**
  * Configuration for the data library repository
@@ -359,12 +360,15 @@ export const exportToGitHub = async (): Promise<{
 
     console.log(`[GitHub Export] Total images to upload: ${totalImages}`);
 
+    // Sort the dataset deterministically to minimize diff noise
+    const sortedDataset = sortDatasetDeterministically(dataset);
+
     // Update data.json with modified paths
     // Note: This happens AFTER image processing because we need to update
     // the imageUri/imageUris fields in the dataset to point to the
     // relative paths in the repository (e.g., "images/characters/id_0.jpg")
     const updatedDataContent = Buffer.from(
-      JSON.stringify(dataset, null, 2)
+      JSON.stringify(sortedDataset, null, 2)
     ).toString('base64');
 
     // Create or update the data.json file
