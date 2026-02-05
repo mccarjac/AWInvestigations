@@ -19,7 +19,7 @@ const DISCORD_ALIASES_KEY = 'gameCharacterManager_discord_aliases';
 export const getDiscordConfig = async (): Promise<DiscordConfig> => {
   const config =
     await SafeAsyncStorageJSONParser.getItem<DiscordConfig>(DISCORD_CONFIG_KEY);
-  
+
   if (!config) {
     return {
       enabled: false,
@@ -44,26 +44,32 @@ export const getDiscordConfig = async (): Promise<DiscordConfig> => {
         updatedAt: new Date().toISOString(),
       };
       config.serverConfigs.push(legacyConfig);
-      
+
       // Update existing messages to tag them with the legacy server config ID
-      const existingMessages = await SafeAsyncStorageJSONParser.getItem<DiscordMessage[]>(
-        DISCORD_MESSAGES_KEY
-      );
+      const existingMessages =
+        await SafeAsyncStorageJSONParser.getItem<DiscordMessage[]>(
+          DISCORD_MESSAGES_KEY
+        );
       if (existingMessages && existingMessages.length > 0) {
         const updatedMessages = existingMessages.map(msg => ({
           ...msg,
           serverConfigId: msg.serverConfigId || 'legacy-default',
           guildId: msg.guildId || config.guildId,
         }));
-        await SafeAsyncStorageJSONParser.setItem(DISCORD_MESSAGES_KEY, updatedMessages);
+        await SafeAsyncStorageJSONParser.setItem(
+          DISCORD_MESSAGES_KEY,
+          updatedMessages
+        );
         console.log(
           `[Discord Storage] Tagged ${updatedMessages.length} existing messages with legacy-default serverConfigId`
         );
       }
-      
+
       // Save migrated config
       await saveDiscordConfig(config);
-      console.log('[Discord Storage] Migrated legacy config to multi-server format');
+      console.log(
+        '[Discord Storage] Migrated legacy config to multi-server format'
+      );
     }
   }
 
@@ -102,7 +108,7 @@ export const addDiscordServerConfig = async (
 ): Promise<DiscordServerConfig> => {
   const config = await getDiscordConfig();
   const now = new Date().toISOString();
-  
+
   const newServerConfig: DiscordServerConfig = {
     ...serverConfig,
     id: `server-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -112,10 +118,12 @@ export const addDiscordServerConfig = async (
 
   config.serverConfigs = config.serverConfigs || [];
   config.serverConfigs.push(newServerConfig);
-  
+
   await saveDiscordConfig(config);
-  console.log(`[Discord Storage] Added server config: ${newServerConfig.name} (${newServerConfig.id})`);
-  
+  console.log(
+    `[Discord Storage] Added server config: ${newServerConfig.name} (${newServerConfig.id})`
+  );
+
   return newServerConfig;
 };
 
@@ -128,10 +136,12 @@ export const updateDiscordServerConfig = async (
 ): Promise<DiscordServerConfig | null> => {
   const config = await getDiscordConfig();
   const serverConfigs = config.serverConfigs || [];
-  
+
   const index = serverConfigs.findIndex(sc => sc.id === serverConfigId);
   if (index === -1) {
-    console.error(`[Discord Storage] Server config not found: ${serverConfigId}`);
+    console.error(
+      `[Discord Storage] Server config not found: ${serverConfigId}`
+    );
     return null;
   }
 
@@ -143,8 +153,10 @@ export const updateDiscordServerConfig = async (
 
   serverConfigs[index] = updatedServerConfig;
   await saveDiscordConfig(config);
-  console.log(`[Discord Storage] Updated server config: ${updatedServerConfig.name} (${serverConfigId})`);
-  
+  console.log(
+    `[Discord Storage] Updated server config: ${updatedServerConfig.name} (${serverConfigId})`
+  );
+
   return updatedServerConfig;
 };
 
@@ -156,7 +168,7 @@ export const removeDiscordServerConfig = async (
 ): Promise<void> => {
   const config = await getDiscordConfig();
   const serverConfigs = config.serverConfigs || [];
-  
+
   config.serverConfigs = serverConfigs.filter(sc => sc.id !== serverConfigId);
   await saveDiscordConfig(config);
   console.log(`[Discord Storage] Removed server config: ${serverConfigId}`);
@@ -261,11 +273,11 @@ export const getDiscordMessages = async (
       DISCORD_MESSAGES_KEY
     );
   const allMessages = messages || [];
-  
+
   if (!serverConfigId) {
     return allMessages;
   }
-  
+
   // Filter by server config ID
   return allMessages.filter(m => m.serverConfigId === serverConfigId);
 };
@@ -650,7 +662,8 @@ export const importDiscordDataset = async (
     // Ensure serverConfigs is properly set
     const configToSave = {
       ...dataset.config,
-      serverConfigs: dataset.serverConfigs || dataset.config.serverConfigs || [],
+      serverConfigs:
+        dataset.serverConfigs || dataset.config.serverConfigs || [],
     };
     await saveDiscordConfig(configToSave);
     await saveDiscordUserMappings(dataset.userMappings);

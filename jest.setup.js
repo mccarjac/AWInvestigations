@@ -1,3 +1,24 @@
+// Mock PixelRatio first - this needs to be before any other react-native imports
+jest.mock('react-native/Libraries/Utilities/PixelRatio', () => ({
+  get: jest.fn(() => 1),
+  getFontScale: jest.fn(() => 1),
+  getPixelSizeForLayoutSize: jest.fn(size => size),
+  roundToNearestPixel: jest.fn(size => size),
+}));
+
+// Mock Dimensions
+jest.mock('react-native/Libraries/Utilities/Dimensions', () => ({
+  get: jest.fn(() => ({
+    width: 400,
+    height: 600,
+    scale: 1,
+    fontScale: 1,
+  })),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  set: jest.fn(),
+}));
+
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -80,17 +101,45 @@ jest.mock('react-native-gesture-handler', () => ({
   PanGestureHandler: 'PanGestureHandler',
   TouchableWithoutFeedback: 'TouchableWithoutFeedback',
   FlatList: 'FlatList',
+  GestureDetector: ({ children }) => children,
+  Gesture: {
+    Pan: jest.fn(() => ({
+      onUpdate: jest.fn().mockReturnThis(),
+      onEnd: jest.fn().mockReturnThis(),
+    })),
+    Pinch: jest.fn(() => ({
+      onUpdate: jest.fn().mockReturnThis(),
+      onEnd: jest.fn().mockReturnThis(),
+    })),
+    Tap: jest.fn(() => ({
+      numberOfTaps: jest.fn().mockReturnThis(),
+      onEnd: jest.fn().mockReturnThis(),
+    })),
+    Simultaneous: jest.fn((...args) => args),
+  },
 }));
 
 // Mock react-native-reanimated
-jest.mock('react-native-reanimated', () => ({
-  default: {
+jest.mock('react-native-reanimated', () => {
+  const React = require('react');
+
+  const MockAnimated = {
+    View: 'Animated.View',
+    Image: 'Animated.Image',
     createAnimatedComponent: component => component,
-  },
-  Easing: {
-    bezier: () => ({ factory: () => x => x }),
-  },
-}));
+  };
+
+  return {
+    default: MockAnimated,
+    useSharedValue: jest.fn(val => ({ value: val })),
+    useAnimatedStyle: jest.fn(fn => fn()),
+    withTiming: jest.fn(val => val),
+    runOnJS: jest.fn(fn => fn),
+    Easing: {
+      bezier: () => ({ factory: () => x => x }),
+    },
+  };
+});
 
 // Global __DEV__ variable for development checks
 global.__DEV__ = false;
